@@ -39,9 +39,21 @@ importers:
       '@brokeros/int-mail-brevo':
         specifier: workspace:*
         version: link:../../integrations/mail/brevo
+      '@brokeros/int-mail-constant-contact':
+        specifier: workspace:*
+        version: link:../../integrations/mail/constant-contact
+      '@brokeros/int-mail-gmail':
+        specifier: workspace:*
+        version: link:../../integrations/mail/gmail
       '@brokeros/int-mail-mailchimp':
         specifier: workspace:*
         version: link:../../integrations/mail/mailchimp
+      '@brokeros/int-mail-mailgun':
+        specifier: workspace:*
+        version: link:../../integrations/mail/mailgun
+      '@brokeros/int-mail-outlook':
+        specifier: workspace:*
+        version: link:../../integrations/mail/outlook
       '@brokeros/int-mail-sendgrid':
         specifier: workspace:*
         version: link:../../integrations/mail/sendgrid
@@ -51,15 +63,30 @@ importers:
       '@brokeros/int-sms-aws-sns':
         specifier: workspace:*
         version: link:../../integrations/sms/aws-sns
+      '@brokeros/int-sms-bird':
+        specifier: workspace:*
+        version: link:../../integrations/sms/bird
       '@brokeros/int-sms-gupshup':
         specifier: workspace:*
         version: link:../../integrations/sms/gupshup
+      '@brokeros/int-sms-infobip':
+        specifier: workspace:*
+        version: link:../../integrations/sms/infobip
+      '@brokeros/int-sms-plivo':
+        specifier: workspace:*
+        version: link:../../integrations/sms/plivo
       '@brokeros/int-sms-sinch':
         specifier: workspace:*
         version: link:../../integrations/sms/sinch
+      '@brokeros/int-sms-telnyx':
+        specifier: workspace:*
+        version: link:../../integrations/sms/telnyx
       '@brokeros/int-sms-twilio':
         specifier: workspace:*
         version: link:../../integrations/sms/twilio
+      '@brokeros/int-sms-vonage':
+        specifier: workspace:*
+        version: link:../../integrations/sms/vonage
       '@brokeros/int-voice':
         specifier: workspace:*
         version: link:../../integrations/voice
@@ -525,9 +552,21 @@ importers:
       '@brokeros/int-mail-brevo':
         specifier: workspace:*
         version: link:../../integrations/mail/brevo
+      '@brokeros/int-mail-constant-contact':
+        specifier: workspace:*
+        version: link:../../integrations/mail/constant-contact
+      '@brokeros/int-mail-gmail':
+        specifier: workspace:*
+        version: link:../../integrations/mail/gmail
       '@brokeros/int-mail-mailchimp':
         specifier: workspace:*
         version: link:../../integrations/mail/mailchimp
+      '@brokeros/int-mail-mailgun':
+        specifier: workspace:*
+        version: link:../../integrations/mail/mailgun
+      '@brokeros/int-mail-outlook':
+        specifier: workspace:*
+        version: link:../../integrations/mail/outlook
       '@brokeros/int-mail-sendgrid':
         specifier: workspace:*
         version: link:../../integrations/mail/sendgrid
@@ -537,15 +576,30 @@ importers:
       '@brokeros/int-sms-aws-sns':
         specifier: workspace:*
         version: link:../../integrations/sms/aws-sns
+      '@brokeros/int-sms-bird':
+        specifier: workspace:*
+        version: link:../../integrations/sms/bird
       '@brokeros/int-sms-gupshup':
         specifier: workspace:*
         version: link:../../integrations/sms/gupshup
+      '@brokeros/int-sms-infobip':
+        specifier: workspace:*
+        version: link:../../integrations/sms/infobip
+      '@brokeros/int-sms-plivo':
+        specifier: workspace:*
+        version: link:../../integrations/sms/plivo
       '@brokeros/int-sms-sinch':
         specifier: workspace:*
         version: link:../../integrations/sms/sinch
+      '@brokeros/int-sms-telnyx':
+        specifier: workspace:*
+        version: link:../../integrations/sms/telnyx
       '@brokeros/int-sms-twilio':
         specifier: workspace:*
         version: link:../../integrations/sms/twilio
+      '@brokeros/int-sms-vonage':
+        specifier: workspace:*
+        version: link:../../integrations/sms/vonage
       '@brokeros/int-voice':
         specifier: workspace:*
         version: link:../../integrations/voice
@@ -611,7 +665,31 @@ importers:
         specifier: workspace:*
         version: link:../../../packages/types
 
+  integrations/mail/constant-contact:
+    dependencies:
+      '@brokeros/types':
+        specifier: workspace:*
+        version: link:../../../packages/types
+
+  integrations/mail/gmail:
+    dependencies:
+      '@brokeros/types':
+        specifier: workspace:*
+        version: link:../../../packages/types
+
   integrations/mail/mailchimp:
+    dependencies:
+      '@brokeros/types':
+        specifier: workspace:*
+        version: link:../../../packages/types
+
+  integrations/mail/mailgun:
+    dependencies:
+      '@brokeros/types':
+        specifier: workspace:*
+        version: link:../../../packages/types
+
+  integrations/mail/outlook:
     dependencies:
       '@brokeros/types':
         specifier: workspace:*
@@ -629,7 +707,25 @@ importers:
         specifier: workspace:*
         version: link:../../../packages/types
 
+  integrations/sms/bird:
+    dependencies:
+      '@brokeros/types':
+        specifier: workspace:*
+        version: link:../../../packages/types
+
   integrations/sms/gupshup:
+    dependencies:
+      '@brokeros/types':
+        specifier: workspace:*
+        version: link:../../../packages/types
+
+  integrations/sms/infobip:
+    dependencies:
+      '@brokeros/types':
+        specifier: workspace:*
+        version: link:../../../packages/types
+
+  integrations/sms/plivo:
     dependencies:
       '@brokeros/types':
         specifier: workspace:*
@@ -641,7 +737,19 @@ importers:
         specifier: workspace:*
         version: link:../../../packages/types
 
+  integrations/sms/telnyx:
+    dependencies:
+      '@brokeros/types':
+        specifier: workspace:*
+        version: link:../../../packages/types
+
   integrations/sms/twilio:
+    dependencies:
+      '@brokeros/types':
+        specifier: workspace:*
+        version: link:../../../packages/types
+
+  integrations/sms/vonage:
     dependencies:
       '@brokeros/types':
         specifier: workspace:*
