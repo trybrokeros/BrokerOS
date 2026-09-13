@@ -2,6 +2,8 @@
 // BrokerOS — Shared Campaign & Merge Tag Constants
 // ============================================================================
 
+export const USD_TO_INR_EXCHANGE_RATE = 95;
+
 export const CAMPAIGN_STATUS_CONFIG = {
   DRAFT: { label: 'Draft', color: 'gray', bg: 'bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300' },
   SCHEDULED: { label: 'Scheduled', color: 'amber', bg: 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400' },
