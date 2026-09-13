@@ -4,6 +4,10 @@ import { SesAdapter } from '@brokeros/int-mail-ses';
 import { SendgridAdapter } from '@brokeros/int-mail-sendgrid';
 import { BrevoAdapter } from '@brokeros/int-mail-brevo';
 import { MailchimpAdapter } from '@brokeros/int-mail-mailchimp';
+import { MailgunAdapter } from '@brokeros/int-mail-mailgun';
+import { GmailAdapter } from '@brokeros/int-mail-gmail';
+import { OutlookAdapter } from '@brokeros/int-mail-outlook';
+import { ConstantContactAdapter } from '@brokeros/int-mail-constant-contact';
 import { PROVIDER_THROTTLE_LIMITS } from '@brokeros/constants';
 import type {
   EmailProviderType,
@@ -27,6 +31,10 @@ export class MarketingEmailProcessor implements OnModuleInit, OnModuleDestroy {
   private readonly sendgridAdapter = new SendgridAdapter();
   private readonly brevoAdapter = new BrevoAdapter();
   private readonly mailchimpAdapter = new MailchimpAdapter();
+  private readonly mailgunAdapter = new MailgunAdapter();
+  private readonly gmailAdapter = new GmailAdapter();
+  private readonly outlookAdapter = new OutlookAdapter();
+  private readonly constantContactAdapter = new ConstantContactAdapter();
 
   onModuleInit() {
     this.logger.log('MarketingEmailProcessor background auto-scanner started.');
@@ -91,11 +99,42 @@ export class MarketingEmailProcessor implements OnModuleInit, OnModuleDestroy {
         return this.brevoAdapter;
       case 'MAILCHIMP':
         return this.mailchimpAdapter;
+      case 'MAILGUN':
+        return this.mailgunAdapter;
+      case 'GMAIL':
+        return this.gmailAdapter;
+      case 'OUTLOOK':
+        return this.outlookAdapter;
+      case 'CONSTANT_CONTACT':
+        return this.constantContactAdapter;
       case 'AWS_SES':
       case 'SYSTEM_DEFAULT':
       default:
         return this.sesAdapter;
     }
+  }
+
+  private mapCredentials(
+    integration: any,
+    fromEmailOverride?: string,
+    fromNameOverride?: string,
+  ): ProviderCredentials {
+    return {
+      apiKey: integration.apiKey || undefined,
+      awsAccessKeyId: integration.awsAccessKeyId || undefined,
+      awsSecretKey: integration.awsSecretKey || undefined,
+      awsRegion: integration.awsRegion || undefined,
+      mailchimpServer: integration.mailchimpServer || undefined,
+      mailgunDomain: integration.mailgunDomain || undefined,
+      mailgunRegion: integration.mailgunRegion || undefined,
+      oauthClientId: integration.oauthClientId || undefined,
+      oauthClientSecret: integration.oauthClientSecret || undefined,
+      oauthRefreshToken: integration.oauthRefreshToken || undefined,
+      oauthTenantId: integration.oauthTenantId || undefined,
+      googleAppPassword: integration.googleAppPassword || undefined,
+      fromEmail: fromEmailOverride || integration.fromEmail,
+      fromName: fromNameOverride || integration.fromName,
+    };
   }
 
   async processCampaign(jobData: CampaignDispatchJobData): Promise<void> {
@@ -154,30 +193,14 @@ export class MarketingEmailProcessor implements OnModuleInit, OnModuleDestroy {
       let credentials: ProviderCredentials | undefined;
 
       if (campaign.integration) {
-        credentials = {
-          apiKey: campaign.integration.apiKey || undefined,
-          awsAccessKeyId: campaign.integration.awsAccessKeyId || undefined,
-          awsSecretKey: campaign.integration.awsSecretKey || undefined,
-          awsRegion: campaign.integration.awsRegion || undefined,
-          mailchimpServer: campaign.integration.mailchimpServer || undefined,
-          fromEmail: campaign.integration.fromEmail,
-          fromName: campaign.integration.fromName,
-        };
+        credentials = this.mapCredentials(campaign.integration);
       } else if (campaign.providerType !== 'SYSTEM_DEFAULT') {
         const activeIntegration = await this.prisma.marketingIntegration.findFirst({
           where: { provider: campaign.providerType as any, isActive: true },
           orderBy: [{ isDefault: 'desc' }, { createdAt: 'desc' }],
         });
         if (activeIntegration) {
-          credentials = {
-            apiKey: activeIntegration.apiKey || undefined,
-            awsAccessKeyId: activeIntegration.awsAccessKeyId || undefined,
-            awsSecretKey: activeIntegration.awsSecretKey || undefined,
-            awsRegion: activeIntegration.awsRegion || undefined,
-            mailchimpServer: activeIntegration.mailchimpServer || undefined,
-            fromEmail: activeIntegration.fromEmail,
-            fromName: activeIntegration.fromName,
-          };
+          credentials = this.mapCredentials(activeIntegration);
         }
       }
 
@@ -346,15 +369,7 @@ export class MarketingEmailProcessor implements OnModuleInit, OnModuleDestroy {
 
     let credentials: ProviderCredentials | undefined;
     if (integration) {
-      credentials = {
-        apiKey: integration.apiKey || undefined,
-        awsAccessKeyId: integration.awsAccessKeyId || undefined,
-        awsSecretKey: integration.awsSecretKey || undefined,
-        awsRegion: integration.awsRegion || undefined,
-        mailchimpServer: integration.mailchimpServer || undefined,
-        fromEmail,
-        fromName,
-      };
+      credentials = this.mapCredentials(integration, fromEmail, fromName);
     } else {
       this.logger.warn(
         `[DomainStream ${fromEmail}] No integration found in database for pool provider=${provider}. Using default adapter environment credentials.`,
