@@ -16,7 +16,17 @@ export type {
   SenderDomainAnalytics,
 };
 
-export type EmailProviderType = 'SYSTEM_DEFAULT' | 'AWS_SES' | 'SENDGRID' | 'BREVO' | 'MAILCHIMP' | 'MULTI_PROVIDER';
+export type EmailProviderType =
+  | 'SYSTEM_DEFAULT'
+  | 'AWS_SES'
+  | 'SENDGRID'
+  | 'BREVO'
+  | 'MAILCHIMP'
+  | 'MAILGUN'
+  | 'GMAIL'
+  | 'OUTLOOK'
+  | 'CONSTANT_CONTACT'
+  | 'MULTI_PROVIDER';
 export type CampaignStatus = 'DRAFT' | 'SCHEDULED' | 'PROCESSING' | 'COMPLETED' | 'PAUSED' | 'FAILED' | 'CANCELLED';
 export type AudienceSourceType = 'CRM_DATABASE' | 'CSV_UPLOAD' | 'HYBRID';
 
@@ -83,7 +93,16 @@ export type EmailIntegrationItem = IntegrationRecord;
 
 // ── SMS Types & ViewModels ──
 
-export type SmsProviderType = 'TWILIO' | 'AWS_SNS' | 'SINCH' | 'GUPSHUP';
+export type SmsProviderType =
+  | 'TWILIO'
+  | 'AWS_SNS'
+  | 'SINCH'
+  | 'GUPSHUP'
+  | 'INFOBIP'
+  | 'VONAGE'
+  | 'TELNYX'
+  | 'PLIVO'
+  | 'BIRD';
 
 export interface SmsCampaignItem {
   id: string;
@@ -130,6 +149,9 @@ export interface SmsIntegrationRecord {
   fromSender: string;
   awsRegion?: string;
   dltEntityId?: string;
+  baseUrl?: string;
+  apiSecret?: string;
+  authId?: string;
   senderNumbers?: SmsSenderNumberRecord[];
   createdAt: string;
   updatedAt?: string;
