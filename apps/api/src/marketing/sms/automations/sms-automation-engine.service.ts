@@ -32,7 +32,7 @@ export class SmsAutomationEngineService {
     private readonly integrationsService: SmsIntegrationsService,
     private readonly aiService: SmsAiService,
     private readonly audienceService: SmsAudienceService,
-  ) {}
+  ) { }
 
   /**
    * Main entry point when an inbound SMS reply is received or simulated.
@@ -299,12 +299,12 @@ export class SmsAutomationEngineService {
               if (previousAiMsgs >= maxTurns) {
                 this.logger.log(`AI Concierge reached max turns (${previousAiMsgs}/${maxTurns}) for ${recipient.phone}. Escalating prospect.`);
                 if (recipient.id && !recipient.leadId) {
-                  await this.audienceService.promoteCsvRecipientToLead(recipient.id).catch(() => {});
+                  await this.audienceService.promoteCsvRecipientToLead(recipient.id).catch(() => { });
                 } else if (recipient.leadId) {
                   await this.prisma.lead.update({
                     where: { id: recipient.leadId },
                     data: { status: 'QUALIFIED', subStatus: 'PENDING', assignedUserId: null },
-                  }).catch(() => {});
+                  }).catch(() => { });
                 }
                 actionsExecuted.push(`AI Concierge reached max turns limit (${maxTurns}) → prospect escalated to Pre-Sales queue`);
                 nextNodeToExecute =
@@ -429,7 +429,7 @@ export class SmsAutomationEngineService {
                       where: { name: bTag },
                       create: { name: bTag, color: '#3B82F6' },
                       update: {},
-                    }).catch(() => {});
+                    }).catch(() => { });
                   }
                   actionsExecuted.push(`[${branchKey.toUpperCase()}] Applied tag "${bTag}"`);
                 }
@@ -451,7 +451,7 @@ export class SmsAutomationEngineService {
               await this.prisma.lead.update({
                 where: { id: recipient.leadId },
                 data: { status: newStatus as any },
-              }).catch(() => {});
+              }).catch(() => { });
             }
             actionsExecuted.push(`Updated CRM status to ${newStatus}`);
             nextNodeToExecute =
@@ -469,7 +469,7 @@ export class SmsAutomationEngineService {
                 where: { name: tagName },
                 create: { name: tagName, color: '#3B82F6' },
                 update: {},
-              }).catch(() => {});
+              }).catch(() => { });
             }
             actionsExecuted.push(`Applied CRM tag "${tagName}"`);
             nextNodeToExecute =
@@ -492,7 +492,7 @@ export class SmsAutomationEngineService {
                     subStatus: 'PENDING',
                     assignedUserId: null,
                   },
-                }).catch(() => {});
+                }).catch(() => { });
               }
             }
             actionsExecuted.push('Escalated prospect to Pre-Sales Manager triage queue');
@@ -523,7 +523,7 @@ export class SmsAutomationEngineService {
             outboundReply: outboundReplyText || null,
             endedAt: new Date(),
           },
-        }).catch(() => {});
+        }).catch(() => { });
       }
 
       return {
@@ -608,11 +608,14 @@ export class SmsAutomationEngineService {
         authToken: integration.authToken || undefined,
         messagingServiceSid: integration.messagingServiceSid || undefined,
         apiKey: integration.apiKey || undefined,
+        apiSecret: integration.apiSecret || undefined,
         servicePlanId: integration.servicePlanId || undefined,
         awsAccessKeyId: integration.awsAccessKeyId || undefined,
         awsSecretKey: integration.awsSecretKey || undefined,
         awsRegion: integration.awsRegion || undefined,
         dltEntityId: integration.dltEntityId || undefined,
+        baseUrl: integration.baseUrl || undefined,
+        authId: integration.authId || undefined,
         fromNumber: fromPhone,
         senderId: fromPhone,
       };
