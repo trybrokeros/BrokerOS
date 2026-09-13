@@ -13,6 +13,9 @@ import {
   CreateVoiceCampaignDto,
   SaveDraftVoiceCampaignDto,
   PreviewVoiceAudienceDto,
+  CalculateVoiceCostEstimateDto,
+  BulkAssignVoiceLeadsDto,
+  ExportVoiceLeadsDto,
 } from '../dto/voice.dto.js';
 
 @Controller('api/marketing/voice/campaigns')
@@ -60,6 +63,25 @@ export class VoiceCampaignsController {
   @Post('audience-preview')
   audiencePreview(@Body() dto: PreviewVoiceAudienceDto) {
     return this.voiceService.audienceService.estimateAudience(dto);
+  }
+
+  @Post('cost-estimate')
+  calculateCostEstimate(@Body() dto: CalculateVoiceCostEstimateDto) {
+    return this.voiceService.campaignService.calculateCostEstimate(dto);
+  }
+
+  @Post('bulk-assign')
+  bulkAssignLeads(@Body() dto: BulkAssignVoiceLeadsDto, @Req() req?: any) {
+    const userId = req?.user?.id;
+    return this.voiceService.audienceService.bulkAssignRecipientsToCrm(
+      dto,
+      userId,
+    );
+  }
+
+  @Post('export')
+  exportLeads(@Body() dto: ExportVoiceLeadsDto) {
+    return this.voiceService.audienceService.getExportLeadsData(dto);
   }
 
   @Post('draft')

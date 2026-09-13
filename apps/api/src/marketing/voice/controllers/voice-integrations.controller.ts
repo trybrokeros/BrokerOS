@@ -35,6 +35,11 @@ export class VoiceIntegrationsController {
     return this.integrationsService.deleteTelephony(id);
   }
 
+  @Post('telephony/:id/verify')
+  verifyTelephony(@Param('id') id: string) {
+    return this.integrationsService.verifyTelephony(id);
+  }
+
   // ── AI Voice Agents ──
 
   @Get('agents')
@@ -50,6 +55,11 @@ export class VoiceIntegrationsController {
   @Delete('agents/:id')
   deleteAgent(@Param('id') id: string) {
     return this.integrationsService.deleteAgent(id);
+  }
+
+  @Post('agents/:id/verify')
+  verifyAgent(@Param('id') id: string) {
+    return this.integrationsService.verifyAgent(id);
   }
 
   // ── Dynamic Platform Catalog (Models & Voices) ──
