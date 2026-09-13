@@ -16,7 +16,11 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { normalizeVoiceLeadVariables } from "@brokeros/constants";
+import {
+  normalizeVoiceLeadVariables,
+  calculateVoiceCampaignCostEstimate,
+  USD_TO_INR_EXCHANGE_RATE,
+} from "@brokeros/constants";
 import type { VoiceTelephonyIntegrationRecord, VoiceAgentIntegrationRecord } from "@/features/marketing/types";
 
 export interface VoiceStep5ReviewLaunchProps {
@@ -86,6 +90,13 @@ export function VoiceStep5ReviewLaunch({
   const selectedAgent = agentIntegrations.find((a) => a.id === formData.agentPlatformId);
   const selectedProject = projects.find((p) => p.id === formData.projectId);
 
+  const costEstimate = calculateVoiceCampaignCostEstimate({
+    totalLeads: totalRecipients,
+    telephonyProvider: selectedTelephony?.provider,
+    agentPlatform: selectedAgent?.platform,
+    avgDurationMinutes: formData.maxDurationSeconds ? formData.maxDurationSeconds / 60 : 2.0,
+  });
+
   const handleTestAiCall = async () => {
     if (!testPhone.trim()) {
       setTestAiResult({ success: false, message: "Please enter a valid phone number with country code (e.g. +919876543210)." });
@@ -102,9 +113,9 @@ export function VoiceStep5ReviewLaunch({
         firstRecipient,
         selectedProject
           ? {
-              name: selectedProject.name,
-              city: selectedProject.city || undefined,
-            }
+            name: selectedProject.name,
+            city: selectedProject.city || undefined,
+          }
           : undefined
       );
 
@@ -231,6 +242,60 @@ export function VoiceStep5ReviewLaunch({
           <p className="text-[10px] font-bold text-slate-400 mt-0.5">
             Engine: {selectedAgent?.name || "AI Agent"}
           </p>
+        </div>
+      </div>
+
+      {/* Pre-Flight Cost & Budget Card */}
+      <div className="p-5 bg-linear-to-br from-slate-900 via-indigo-950 to-slate-950 rounded-2xl border border-indigo-500/20 text-white shadow-md">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-indigo-500/20">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-black uppercase tracking-wider text-indigo-300">
+                Pre-Flight Budget & Call Cost Estimate
+              </span>
+              <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-400/30 text-[9px] font-bold">
+                Rate: $1 USD = ₹{USD_TO_INR_EXCHANGE_RATE} INR
+              </Badge>
+            </div>
+            <p className="text-xs text-slate-300 mt-0.5">
+              Based on {totalRecipients.toLocaleString()} dial attempts, 68% expected pickup rate, and avg {costEstimate.avgDurationMinutes} min duration.
+            </p>
+          </div>
+
+          <div className="text-right">
+            <div className="text-2xl font-black text-amber-300">
+              ₹{costEstimate.totalCostINR.toLocaleString("en-IN")}
+            </div>
+            <div className="text-[11px] font-mono text-slate-400">
+              ~${costEstimate.totalCostUSD.toFixed(2)} USD
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 text-xs">
+          <div>
+            <span className="text-[10px] uppercase font-bold text-slate-400">Telephony Line</span>
+            <p className="font-bold text-slate-100">{costEstimate.telephony.provider} (~₹{costEstimate.telephony.costPerMinuteINR}/min)</p>
+            <p className="text-[11px] text-indigo-300 font-mono">₹{costEstimate.telephony.totalINR}</p>
+          </div>
+
+          <div>
+            <span className="text-[10px] uppercase font-bold text-slate-400">AI Voice Engine</span>
+            <p className="font-bold text-slate-100">{costEstimate.voiceAgent.platform} (~₹{costEstimate.voiceAgent.costPerMinuteINR}/min)</p>
+            <p className="text-[11px] text-indigo-300 font-mono">₹{costEstimate.voiceAgent.totalINR}</p>
+          </div>
+
+          <div>
+            <span className="text-[10px] uppercase font-bold text-slate-400">Est. Connected Mins</span>
+            <p className="font-bold text-slate-100">{costEstimate.estimatedConnectedMinutes} mins</p>
+            <p className="text-[11px] text-slate-400 font-mono">~{costEstimate.estimatedConnectedCalls} answered</p>
+          </div>
+
+          <div>
+            <span className="text-[10px] uppercase font-bold text-slate-400">Blended Rate</span>
+            <p className="font-bold text-emerald-400">₹{costEstimate.blendedRatePerMinuteINR}/min</p>
+            <p className="text-[11px] text-slate-400 font-mono">${costEstimate.blendedRatePerMinuteUSD}/min</p>
+          </div>
         </div>
       </div>
 
