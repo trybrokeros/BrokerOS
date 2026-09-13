@@ -4,7 +4,17 @@
 
 import type { AudienceSourceType, CampaignStatus } from './common.js';
 
-export type EmailProviderType = 'SYSTEM_DEFAULT' | 'AWS_SES' | 'SENDGRID' | 'BREVO' | 'MAILCHIMP' | 'MULTI_PROVIDER';
+export type EmailProviderType =
+  | 'SYSTEM_DEFAULT'
+  | 'AWS_SES'
+  | 'SENDGRID'
+  | 'BREVO'
+  | 'MAILCHIMP'
+  | 'MAILGUN'
+  | 'GMAIL'
+  | 'OUTLOOK'
+  | 'CONSTANT_CONTACT'
+  | 'MULTI_PROVIDER';
 
 export interface EmailRecipient {
   email: string;
@@ -156,6 +166,23 @@ export interface ProviderCredentials {
   awsSecretKey?: string;
   awsRegion?: string;
   mailchimpServer?: string;
+  mailgunDomain?: string;
+  mailgunRegion?: 'US' | 'EU';
+  googleClientId?: string;
+  googleClientSecret?: string;
+  googleRefreshToken?: string;
+  googleAppPassword?: string;
+  microsoftTenantId?: string;
+  microsoftClientId?: string;
+  microsoftClientSecret?: string;
+  microsoftRefreshToken?: string;
+  constantContactApiKey?: string;
+  constantContactSecret?: string;
+  constantContactRefreshToken?: string;
+  oauthClientId?: string;
+  oauthClientSecret?: string;
+  oauthRefreshToken?: string;
+  oauthTenantId?: string;
   fromEmail?: string;
   fromName?: string;
   replyTo?: string;
