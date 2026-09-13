@@ -13,6 +13,11 @@ import { TwilioSmsAdapter } from '@brokeros/int-sms-twilio';
 import { AwsSnsSmsAdapter } from '@brokeros/int-sms-aws-sns';
 import { SinchSmsAdapter } from '@brokeros/int-sms-sinch';
 import { GupshupSmsAdapter } from '@brokeros/int-sms-gupshup';
+import { InfobipSmsAdapter } from '@brokeros/int-sms-infobip';
+import { VonageSmsAdapter } from '@brokeros/int-sms-vonage';
+import { TelnyxSmsAdapter } from '@brokeros/int-sms-telnyx';
+import { PlivoSmsAdapter } from '@brokeros/int-sms-plivo';
+import { BirdSmsAdapter } from '@brokeros/int-sms-bird';
 import {
   ConnectSmsIntegrationDto,
   SendTestSmsDto,
@@ -26,8 +31,13 @@ export class SmsIntegrationsService {
   private readonly awsSnsAdapter = new AwsSnsSmsAdapter();
   private readonly sinchAdapter = new SinchSmsAdapter();
   private readonly gupshupAdapter = new GupshupSmsAdapter();
+  private readonly infobipAdapter = new InfobipSmsAdapter();
+  private readonly vonageAdapter = new VonageSmsAdapter();
+  private readonly telnyxAdapter = new TelnyxSmsAdapter();
+  private readonly plivoAdapter = new PlivoSmsAdapter();
+  private readonly birdAdapter = new BirdSmsAdapter();
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   getAdapter(providerType: string): ISmsMarketingProvider {
     switch (providerType) {
@@ -37,10 +47,39 @@ export class SmsIntegrationsService {
         return this.sinchAdapter;
       case 'GUPSHUP':
         return this.gupshupAdapter;
+      case 'INFOBIP':
+        return this.infobipAdapter;
+      case 'VONAGE':
+        return this.vonageAdapter;
+      case 'TELNYX':
+        return this.telnyxAdapter;
+      case 'PLIVO':
+        return this.plivoAdapter;
+      case 'BIRD':
+        return this.birdAdapter;
       case 'TWILIO':
       default:
         return this.twilioAdapter;
     }
+  }
+
+  private mapCredentials(record: any, fromSenderOverride?: string): SmsProviderCredentials {
+    return {
+      accountSid: record.accountSid || undefined,
+      authToken: record.authToken || undefined,
+      messagingServiceSid: record.messagingServiceSid || undefined,
+      apiKey: record.apiKey || undefined,
+      apiSecret: record.apiSecret || undefined,
+      servicePlanId: record.servicePlanId || undefined,
+      awsAccessKeyId: record.awsAccessKeyId || undefined,
+      awsSecretKey: record.awsSecretKey || undefined,
+      awsRegion: record.awsRegion || undefined,
+      dltEntityId: record.dltEntityId || undefined,
+      baseUrl: record.baseUrl || undefined,
+      authId: record.authId || undefined,
+      fromNumber: fromSenderOverride || record.fromSender,
+      senderId: fromSenderOverride || record.fromSender,
+    };
   }
 
   async sendTestSms(dto: SendTestSmsDto) {
@@ -55,19 +94,7 @@ export class SmsIntegrationsService {
         include: { senderNumbers: true },
       });
       if (intRecord) {
-        credentials = {
-          accountSid: intRecord.accountSid || undefined,
-          authToken: intRecord.authToken || undefined,
-          messagingServiceSid: intRecord.messagingServiceSid || undefined,
-          apiKey: intRecord.apiKey || undefined,
-          servicePlanId: intRecord.servicePlanId || undefined,
-          awsAccessKeyId: intRecord.awsAccessKeyId || undefined,
-          awsSecretKey: intRecord.awsSecretKey || undefined,
-          awsRegion: intRecord.awsRegion || undefined,
-          dltEntityId: intRecord.dltEntityId || undefined,
-          fromNumber: intRecord.fromSender,
-          senderId: intRecord.fromSender,
-        };
+        credentials = this.mapCredentials(intRecord);
       }
     } else {
       intRecord = await this.prisma.smsIntegration.findFirst({
@@ -76,19 +103,7 @@ export class SmsIntegrationsService {
         orderBy: [{ isDefault: 'desc' }, { createdAt: 'desc' }],
       });
       if (intRecord) {
-        credentials = {
-          accountSid: intRecord.accountSid || undefined,
-          authToken: intRecord.authToken || undefined,
-          messagingServiceSid: intRecord.messagingServiceSid || undefined,
-          apiKey: intRecord.apiKey || undefined,
-          servicePlanId: intRecord.servicePlanId || undefined,
-          awsAccessKeyId: intRecord.awsAccessKeyId || undefined,
-          awsSecretKey: intRecord.awsSecretKey || undefined,
-          awsRegion: intRecord.awsRegion || undefined,
-          dltEntityId: intRecord.dltEntityId || undefined,
-          fromNumber: intRecord.fromSender,
-          senderId: intRecord.fromSender,
-        };
+        credentials = this.mapCredentials(intRecord);
       }
     }
 
@@ -191,11 +206,14 @@ export class SmsIntegrationsService {
       authToken: dto.authToken,
       messagingServiceSid: dto.messagingServiceSid,
       apiKey: dto.apiKey,
+      apiSecret: dto.apiSecret,
       servicePlanId: dto.servicePlanId,
       awsAccessKeyId: dto.awsAccessKeyId,
       awsSecretKey: dto.awsSecretKey,
       awsRegion: dto.awsRegion,
       dltEntityId: dto.dltEntityId,
+      baseUrl: dto.baseUrl,
+      authId: dto.authId,
       fromNumber: dto.fromSender,
       senderId: dto.fromSender,
     });
@@ -222,11 +240,14 @@ export class SmsIntegrationsService {
         authToken: dto.authToken,
         messagingServiceSid: dto.messagingServiceSid,
         apiKey: dto.apiKey,
+        apiSecret: dto.apiSecret,
         servicePlanId: dto.servicePlanId,
         awsAccessKeyId: dto.awsAccessKeyId,
         awsSecretKey: dto.awsSecretKey,
         awsRegion: dto.awsRegion,
         dltEntityId: dto.dltEntityId,
+        baseUrl: dto.baseUrl,
+        authId: dto.authId,
         fromSender: dto.fromSender || 'BrokerOS',
       },
     });
@@ -249,19 +270,7 @@ export class SmsIntegrationsService {
     });
     if (!integration) throw new NotFoundException('SMS Integration not found');
 
-    const credentials: SmsProviderCredentials = {
-      accountSid: integration.accountSid || undefined,
-      authToken: integration.authToken || undefined,
-      messagingServiceSid: integration.messagingServiceSid || undefined,
-      apiKey: integration.apiKey || undefined,
-      servicePlanId: integration.servicePlanId || undefined,
-      awsAccessKeyId: integration.awsAccessKeyId || undefined,
-      awsSecretKey: integration.awsSecretKey || undefined,
-      awsRegion: integration.awsRegion || undefined,
-      dltEntityId: integration.dltEntityId || undefined,
-      fromNumber: integration.fromSender,
-      senderId: integration.fromSender,
-    };
+    const credentials: SmsProviderCredentials = this.mapCredentials(integration);
 
     const adapter = this.getAdapter(integration.provider);
     let discovered: any[] = [];
@@ -360,19 +369,7 @@ export class SmsIntegrationsService {
     let cleanSenderId = !isPhone ? input : (dto.senderId?.trim() || null);
 
     // Call carrier adapter to verify the number on the carrier account
-    const credentials: SmsProviderCredentials = {
-      accountSid: integration.accountSid || undefined,
-      authToken: integration.authToken || undefined,
-      messagingServiceSid: integration.messagingServiceSid || undefined,
-      apiKey: integration.apiKey || undefined,
-      servicePlanId: integration.servicePlanId || undefined,
-      awsAccessKeyId: integration.awsAccessKeyId || undefined,
-      awsSecretKey: integration.awsSecretKey || undefined,
-      awsRegion: integration.awsRegion || undefined,
-      dltEntityId: integration.dltEntityId || undefined,
-      fromNumber: integration.fromSender,
-      senderId: integration.fromSender,
-    };
+    const credentials: SmsProviderCredentials = this.mapCredentials(integration);
 
     const adapter = this.getAdapter(integration.provider);
     let isCarrierVerified = true;
