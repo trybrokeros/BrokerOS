@@ -38,17 +38,15 @@ export default function VoiceCampaignDetailPage({
   const [refreshing, setRefreshing] = useState(false);
   const [isDispatching, setIsDispatching] = useState(false);
 
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || "/api/proxy";
-
   const loadData = async (isManual = false) => {
     try {
       if (isManual) setRefreshing(true);
       else setLoading(true);
 
       const [analyticsRes, campaignRes, recipRes] = await Promise.all([
-        fetch(`${baseUrl}/api/marketing/voice/campaigns/${campaignId}/analytics`),
-        fetch(`${baseUrl}/api/marketing/voice/campaigns/${campaignId}`),
-        fetch(`${baseUrl}/api/marketing/voice/campaigns/${campaignId}/recipients?limit=100`),
+        fetch(`/api/marketing/voice/campaigns/${campaignId}/analytics`),
+        fetch(`/api/marketing/voice/campaigns/${campaignId}`),
+        fetch(`/api/marketing/voice/campaigns/${campaignId}/recipients?limit=100`),
       ]);
 
       if (analyticsRes.ok) {
@@ -66,7 +64,7 @@ export default function VoiceCampaignDetailPage({
         setRecipients(rData.items || []);
       }
     } catch (err) {
-      console.error("Failed to load campaign analytics", err);
+      console.error("Failed to load voice campaign details:", err);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -84,13 +82,13 @@ export default function VoiceCampaignDetailPage({
     }, 4000);
 
     return () => clearInterval(interval);
-  }, [campaignId, baseUrl, analytics?.status, campaign?.status]);
+  }, [campaignId, analytics?.status, campaign?.status]);
 
   const handleDispatchNow = async () => {
     if (!campaignId) return;
     setIsDispatching(true);
     try {
-      const res = await fetch(`${baseUrl}/api/marketing/voice/campaigns/${campaignId}/dispatch`, {
+      const res = await fetch(`/api/marketing/voice/campaigns/${campaignId}/dispatch`, {
         method: "POST",
       });
       if (res.ok) {
@@ -105,7 +103,7 @@ export default function VoiceCampaignDetailPage({
 
   const handlePromoteRecipient = async (recipientId: string) => {
     try {
-      const res = await fetch(`${baseUrl}/api/marketing/voice/recipients/${recipientId}/promote`, {
+      const res = await fetch(`/api/marketing/voice/recipients/${recipientId}/promote`, {
         method: "POST",
       });
       if (!res.ok) {
@@ -225,13 +223,12 @@ export default function VoiceCampaignDetailPage({
           <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-xs flex flex-wrap items-center justify-between gap-4">
             <div className="flex flex-wrap items-center gap-3">
               <span
-                className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-extrabold ${
-                  campaign.status === "PROCESSING"
-                    ? "bg-amber-50 text-amber-700 border border-amber-200"
-                    : campaign.status === "COMPLETED"
+                className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-extrabold ${campaign.status === "PROCESSING"
+                  ? "bg-amber-50 text-amber-700 border border-amber-200"
+                  : campaign.status === "COMPLETED"
                     ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                     : "bg-slate-100 text-slate-700 border border-slate-200"
-                }`}
+                  }`}
               >
                 {campaign.status}
               </span>
@@ -275,8 +272,10 @@ export default function VoiceCampaignDetailPage({
         {/* Detailed Call Recordings & Transcript Table */}
         <VoiceCallLogsTable
           recipients={recipients}
+          campaignId={campaignId}
           campaignTitle={analytics.title}
           onPromote={handlePromoteRecipient}
+          onRefresh={() => loadData(true)}
         />
       </div>
     </DashboardPageWrapper>
