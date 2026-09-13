@@ -351,6 +351,129 @@ export class EmailInboundService {
   }
 
   /**
+   * Parse Mailgun Inbound Webhook payload
+   */
+  async parseMailgunInbound(body: any, headers?: any) {
+    const from = body?.from || body?.sender || '';
+    const to = body?.recipient || body?.to || '';
+    const subject = body?.subject || '';
+    const text = body?.['stripped-text'] || body?.['body-plain'] || body?.text || '';
+    const html = body?.['stripped-html'] || body?.['body-html'] || body?.html || '';
+    const messageId = headers?.['message-id'] || body?.['Message-Id'] || body?.['message-id'] || body?.id;
+    const inReplyTo = headers?.['in-reply-to'] || body?.['In-Reply-To'] || body?.['in-reply-to'];
+
+    return this.handleInboundEmail({
+      from,
+      to,
+      subject,
+      text,
+      html,
+      messageId,
+      inReplyTo,
+      provider: 'MAILGUN',
+      headers,
+    });
+  }
+
+  /**
+   * Parse Gmail Inbound Push / Webhook payload
+   */
+  async parseGmailInbound(body: any, headers?: any) {
+    let parsedBody = body;
+    // Handle Cloud Pub/Sub base64 payload if wrapped
+    if (body?.message?.data && typeof body.message.data === 'string') {
+      try {
+        const decoded = Buffer.from(body.message.data, 'base64').toString('utf8');
+        parsedBody = JSON.parse(decoded);
+      } catch {
+        // use original body if decoding fails
+      }
+    }
+
+    const from = parsedBody?.from || parsedBody?.sender || parsedBody?.emailAddress || '';
+    const to = parsedBody?.to || parsedBody?.recipient || '';
+    const subject = parsedBody?.subject || '';
+    const text = parsedBody?.text || parsedBody?.snippet || parsedBody?.body || '';
+    const html = parsedBody?.html || '';
+    const messageId = headers?.['message-id'] || parsedBody?.messageId || parsedBody?.id;
+    const inReplyTo = headers?.['in-reply-to'] || parsedBody?.inReplyTo || parsedBody?.threadId;
+
+    return this.handleInboundEmail({
+      from,
+      to,
+      subject,
+      text,
+      html,
+      messageId,
+      inReplyTo,
+      provider: 'GMAIL',
+      headers,
+    });
+  }
+
+  /**
+   * Parse Microsoft 365 / Outlook Inbound Webhook payload
+   */
+  async parseOutlookInbound(body: any, headers?: any) {
+    // If MS Graph notification with resourceData
+    const item = Array.isArray(body?.value) ? body.value[0]?.resourceData || body.value[0] : body;
+
+    const from =
+      item?.from?.emailAddress?.address ||
+      item?.sender?.emailAddress?.address ||
+      item?.from ||
+      item?.sender ||
+      '';
+    const to =
+      (Array.isArray(item?.toRecipients) ? item.toRecipients[0]?.emailAddress?.address : null) ||
+      item?.to ||
+      item?.recipient ||
+      '';
+    const subject = item?.subject || '';
+    const text = item?.body?.content || item?.text || item?.bodyPreview || '';
+    const html = item?.body?.contentType === 'html' ? item.body.content : item?.html;
+    const messageId = headers?.['message-id'] || item?.internetMessageId || item?.id;
+    const inReplyTo = headers?.['in-reply-to'] || item?.conversationId || item?.inReplyTo;
+
+    return this.handleInboundEmail({
+      from,
+      to,
+      subject,
+      text,
+      html,
+      messageId,
+      inReplyTo,
+      provider: 'OUTLOOK',
+      headers,
+    });
+  }
+
+  /**
+   * Parse Constant Contact Inbound Webhook payload
+   */
+  async parseConstantContactInbound(body: any, headers?: any) {
+    const from = body?.from || body?.email_address || body?.contact_email || '';
+    const to = body?.to || body?.recipient || '';
+    const subject = body?.subject || '';
+    const text = body?.text || body?.content || '';
+    const html = body?.html || '';
+    const messageId = headers?.['message-id'] || body?.activity_id || body?.id;
+    const inReplyTo = headers?.['in-reply-to'] || body?.campaign_id;
+
+    return this.handleInboundEmail({
+      from,
+      to,
+      subject,
+      text,
+      html,
+      messageId,
+      inReplyTo,
+      provider: 'CONSTANT_CONTACT',
+      headers,
+    });
+  }
+
+  /**
    * Live Test Simulator: Injects a test lead reply without DNS MX setup
    */
   async simulateInboundReply(dto: SimulateInboundReplyDto) {

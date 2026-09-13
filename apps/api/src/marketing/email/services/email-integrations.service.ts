@@ -9,6 +9,10 @@ import { SesAdapter } from '@brokeros/int-mail-ses';
 import { SendgridAdapter } from '@brokeros/int-mail-sendgrid';
 import { BrevoAdapter } from '@brokeros/int-mail-brevo';
 import { MailchimpAdapter } from '@brokeros/int-mail-mailchimp';
+import { MailgunAdapter } from '@brokeros/int-mail-mailgun';
+import { GmailAdapter } from '@brokeros/int-mail-gmail';
+import { OutlookAdapter } from '@brokeros/int-mail-outlook';
+import { ConstantContactAdapter } from '@brokeros/int-mail-constant-contact';
 import {
   ConnectIntegrationDto,
   SendTestEmailDto,
@@ -22,6 +26,10 @@ export class EmailIntegrationsService {
   private readonly sendgridAdapter = new SendgridAdapter();
   private readonly brevoAdapter = new BrevoAdapter();
   private readonly mailchimpAdapter = new MailchimpAdapter();
+  private readonly mailgunAdapter = new MailgunAdapter();
+  private readonly gmailAdapter = new GmailAdapter();
+  private readonly outlookAdapter = new OutlookAdapter();
+  private readonly constantContactAdapter = new ConstantContactAdapter();
 
   constructor(private readonly prisma: PrismaService) { }
 
@@ -33,11 +41,45 @@ export class EmailIntegrationsService {
         return this.brevoAdapter;
       case 'MAILCHIMP':
         return this.mailchimpAdapter;
+      case 'MAILGUN':
+        return this.mailgunAdapter;
+      case 'GMAIL':
+        return this.gmailAdapter;
+      case 'OUTLOOK':
+        return this.outlookAdapter;
+      case 'CONSTANT_CONTACT':
+        return this.constantContactAdapter;
       case 'AWS_SES':
       case 'SYSTEM_DEFAULT':
       default:
         return this.sesAdapter;
     }
+  }
+
+  private mapCredentials(intOrDto: any): ProviderCredentials {
+    return {
+      apiKey: intOrDto.apiKey || intOrDto.constantContactApiKey || undefined,
+      awsAccessKeyId: intOrDto.awsAccessKeyId || undefined,
+      awsSecretKey: intOrDto.awsSecretKey || undefined,
+      awsRegion: intOrDto.awsRegion || undefined,
+      mailchimpServer: intOrDto.mailchimpServer || undefined,
+      mailgunDomain: intOrDto.mailgunDomain || undefined,
+      mailgunRegion: (intOrDto.mailgunRegion as any) || undefined,
+      googleClientId: intOrDto.oauthClientId || intOrDto.googleClientId || undefined,
+      googleClientSecret: intOrDto.oauthClientSecret || intOrDto.googleClientSecret || undefined,
+      googleRefreshToken: intOrDto.oauthRefreshToken || intOrDto.googleRefreshToken || undefined,
+      googleAppPassword: intOrDto.googleAppPassword || undefined,
+      microsoftTenantId: intOrDto.oauthTenantId || intOrDto.microsoftTenantId || undefined,
+      microsoftClientId: intOrDto.oauthClientId || intOrDto.microsoftClientId || undefined,
+      microsoftClientSecret: intOrDto.oauthClientSecret || intOrDto.microsoftClientSecret || undefined,
+      microsoftRefreshToken: intOrDto.oauthRefreshToken || intOrDto.microsoftRefreshToken || undefined,
+      constantContactApiKey: intOrDto.constantContactApiKey || intOrDto.apiKey || undefined,
+      constantContactSecret: intOrDto.constantContactSecret || intOrDto.oauthClientSecret || undefined,
+      constantContactRefreshToken: intOrDto.constantContactRefreshToken || intOrDto.oauthRefreshToken || undefined,
+      fromEmail: intOrDto.fromEmail,
+      fromName: intOrDto.fromName,
+      replyTo: intOrDto.replyTo,
+    };
   }
 
   renderMergeTags(
@@ -89,15 +131,7 @@ export class EmailIntegrationsService {
         where: { id: dto.integrationId },
       });
       if (integration) {
-        credentials = {
-          apiKey: integration.apiKey || undefined,
-          awsAccessKeyId: integration.awsAccessKeyId || undefined,
-          awsSecretKey: integration.awsSecretKey || undefined,
-          awsRegion: integration.awsRegion || undefined,
-          mailchimpServer: integration.mailchimpServer || undefined,
-          fromEmail: integration.fromEmail,
-          fromName: integration.fromName,
-        };
+        credentials = this.mapCredentials(integration);
       }
     } else if (providerType !== 'SYSTEM_DEFAULT') {
       const activeIntegration =
@@ -106,15 +140,7 @@ export class EmailIntegrationsService {
           orderBy: [{ isDefault: 'desc' }, { createdAt: 'desc' }],
         });
       if (activeIntegration) {
-        credentials = {
-          apiKey: activeIntegration.apiKey || undefined,
-          awsAccessKeyId: activeIntegration.awsAccessKeyId || undefined,
-          awsSecretKey: activeIntegration.awsSecretKey || undefined,
-          awsRegion: activeIntegration.awsRegion || undefined,
-          mailchimpServer: activeIntegration.mailchimpServer || undefined,
-          fromEmail: activeIntegration.fromEmail,
-          fromName: activeIntegration.fromName,
-        };
+        credentials = this.mapCredentials(activeIntegration);
       }
     }
 
@@ -192,13 +218,8 @@ export class EmailIntegrationsService {
 
   async connectIntegration(dto: ConnectIntegrationDto) {
     const adapter = this.getAdapter(dto.provider);
-    const isValid = await adapter.validateCredentials({
-      apiKey: dto.apiKey,
-      awsAccessKeyId: dto.awsAccessKeyId,
-      awsSecretKey: dto.awsSecretKey,
-      awsRegion: dto.awsRegion,
-      mailchimpServer: dto.mailchimpServer,
-    });
+    const credentials = this.mapCredentials(dto);
+    const isValid = await adapter.validateCredentials(credentials);
 
     if (!isValid) {
       throw new BadRequestException(
@@ -223,6 +244,13 @@ export class EmailIntegrationsService {
         awsSecretKey: dto.awsSecretKey,
         awsRegion: dto.awsRegion,
         mailchimpServer: dto.mailchimpServer,
+        mailgunDomain: dto.mailgunDomain,
+        mailgunRegion: dto.mailgunRegion,
+        oauthClientId: dto.oauthClientId,
+        oauthClientSecret: dto.oauthClientSecret,
+        oauthRefreshToken: dto.oauthRefreshToken,
+        oauthTenantId: dto.oauthTenantId,
+        googleAppPassword: dto.googleAppPassword,
         fromEmail: dto.fromEmail || 'marketing@example.com',
         fromName: dto.fromName || 'Sales Team',
         replyTo: dto.replyTo,
@@ -248,15 +276,7 @@ export class EmailIntegrationsService {
     });
     if (!integration) throw new NotFoundException('Integration not found');
 
-    const credentials: ProviderCredentials = {
-      apiKey: integration.apiKey || undefined,
-      awsAccessKeyId: integration.awsAccessKeyId || undefined,
-      awsSecretKey: integration.awsSecretKey || undefined,
-      awsRegion: integration.awsRegion || undefined,
-      mailchimpServer: integration.mailchimpServer || undefined,
-      fromEmail: integration.fromEmail,
-      fromName: integration.fromName,
-    };
+    const credentials = this.mapCredentials(integration);
 
     const adapter = this.getAdapter(integration.provider);
     let discovered: any[] = [];
@@ -368,15 +388,7 @@ export class EmailIntegrationsService {
     }
 
     // Call provider adapter to verify the sender email/domain on the provider account
-    const credentials: ProviderCredentials = {
-      apiKey: integration.apiKey || undefined,
-      awsAccessKeyId: integration.awsAccessKeyId || undefined,
-      awsSecretKey: integration.awsSecretKey || undefined,
-      awsRegion: integration.awsRegion || undefined,
-      mailchimpServer: integration.mailchimpServer || undefined,
-      fromEmail: integration.fromEmail,
-      fromName: integration.fromName,
-    };
+    const credentials = this.mapCredentials(integration);
 
     const adapter = this.getAdapter(integration.provider);
     let isProviderVerified = true;
