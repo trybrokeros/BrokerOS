@@ -268,6 +268,18 @@ export class ConnectSmsIntegrationDto {
 
   @IsOptional()
   @IsString()
+  baseUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  apiSecret?: string;
+
+  @IsOptional()
+  @IsString()
+  authId?: string;
+
+  @IsOptional()
+  @IsString()
   fromSender?: string;
 }
 
