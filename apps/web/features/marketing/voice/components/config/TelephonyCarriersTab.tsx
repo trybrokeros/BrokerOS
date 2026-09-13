@@ -9,10 +9,14 @@ import {
   ExternalLink,
   X,
   Loader2,
+  ShieldCheck,
+  Activity,
+  AlertCircle,
 } from 'lucide-react';
 import { VOICE_TELEPHONY_PROVIDERS } from '@brokeros/constants';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
+import { toast } from 'sonner';
 import type {
   VoiceTelephonyIntegrationRecord,
   VoiceTelephonyType,
@@ -40,6 +44,37 @@ export const TelephonyCarriersTab: React.FC<TelephonyCarriersTabProps> = ({
   const [telFromNumbers, setTelFromNumbers] = useState('');
   const [telSubdomain, setTelSubdomain] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [verifyingId, setVerifyingId] = useState<string | null>(null);
+  const [verifyResults, setVerifyResults] = useState<Record<string, { isValid: boolean; latencyMs: number }>>({});
+
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || '/api/proxy';
+
+  const handleVerifyCarrier = async (id: string) => {
+    try {
+      setVerifyingId(id);
+      const res = await fetch(`${baseUrl}/api/marketing/voice/integrations/telephony/${id}/verify`, {
+        method: 'POST',
+      });
+      const data = await res.json();
+      if (res.ok && data.isValid) {
+        setVerifyResults((prev) => ({
+          ...prev,
+          [id]: { isValid: true, latencyMs: data.latencyMs },
+        }));
+        toast.success(`Carrier verified successfully in ${data.latencyMs}ms!`);
+      } else {
+        setVerifyResults((prev) => ({
+          ...prev,
+          [id]: { isValid: false, latencyMs: data.latencyMs || 0 },
+        }));
+        toast.error('Carrier authentication failed. Please update credentials.');
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to ping carrier API');
+    } finally {
+      setVerifyingId(null);
+    }
+  };
 
   const handleOpenTelephonyModal = (prov: VoiceTelephonyType) => {
     setSelectedTelephonyProvider(prov);
@@ -151,9 +186,39 @@ export const TelephonyCarriersTab: React.FC<TelephonyCarriersTabProps> = ({
                 </div>
 
                 <div className="flex items-center justify-between pt-3 mt-4 border-t border-slate-100 text-[11px]">
-                  <span className="text-emerald-600 font-bold flex items-center gap-1">
-                    <CheckCircle2 className="w-3.5 h-3.5" /> Ready for dialing
-                  </span>
+                  <div className="flex items-center gap-2">
+                    {verifyResults[item.id] ? (
+                      verifyResults[item.id].isValid ? (
+                        <span className="text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md font-extrabold text-[10px] flex items-center gap-1">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Verified ({verifyResults[item.id].latencyMs}ms)
+                        </span>
+                      ) : (
+                        <span className="text-rose-700 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-md font-extrabold text-[10px] flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3 text-rose-600" /> Auth Error
+                        </span>
+                      )
+                    ) : (
+                      <span className="text-emerald-600 font-bold flex items-center gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5" /> Ready for dialing
+                      </span>
+                    )}
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleVerifyCarrier(item.id)}
+                      disabled={verifyingId === item.id}
+                      className="h-6 px-2 text-[10px] font-bold gap-1 text-slate-700 bg-slate-50 hover:bg-slate-100"
+                    >
+                      {verifyingId === item.id ? (
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                      ) : (
+                        <Activity className="w-3 h-3 text-indigo-600" />
+                      )}
+                      <span>Ping Check</span>
+                    </Button>
+                  </div>
+
                   <span className="text-[var(--text-muted)]">
                     Connected {new Date(item.createdAt).toLocaleDateString()}
                   </span>
@@ -253,6 +318,13 @@ export const TelephonyCarriersTab: React.FC<TelephonyCarriersTabProps> = ({
               >
                 <X className="w-4 h-4" />
               </Button>
+            </div>
+
+            <div className="p-3 bg-indigo-50/80 border border-indigo-100/90 rounded-xl text-[11px] text-indigo-900 flex items-start gap-2">
+              <ShieldCheck className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
+              <p className="leading-snug">
+                <strong>Live Credential Validation:</strong> Your SID, API Key, and Token will be authenticated directly with the <strong>{selectedTelephonyProvider}</strong> API server before saving to prevent invalid configurations.
+              </p>
             </div>
 
             <form onSubmit={handleSaveTelephony} className="space-y-4">
