@@ -4,6 +4,11 @@ import { TwilioSmsAdapter } from '@brokeros/int-sms-twilio';
 import { AwsSnsSmsAdapter } from '@brokeros/int-sms-aws-sns';
 import { SinchSmsAdapter } from '@brokeros/int-sms-sinch';
 import { GupshupSmsAdapter } from '@brokeros/int-sms-gupshup';
+import { InfobipSmsAdapter } from '@brokeros/int-sms-infobip';
+import { VonageSmsAdapter } from '@brokeros/int-sms-vonage';
+import { TelnyxSmsAdapter } from '@brokeros/int-sms-telnyx';
+import { PlivoSmsAdapter } from '@brokeros/int-sms-plivo';
+import { BirdSmsAdapter } from '@brokeros/int-sms-bird';
 import {
   SMS_PROVIDER_THROTTLE_LIMITS,
   calculateSmsSegments,
@@ -30,6 +35,11 @@ export class MarketingSmsProcessor implements OnModuleInit, OnModuleDestroy {
   private readonly awsSnsAdapter = new AwsSnsSmsAdapter();
   private readonly sinchAdapter = new SinchSmsAdapter();
   private readonly gupshupAdapter = new GupshupSmsAdapter();
+  private readonly infobipAdapter = new InfobipSmsAdapter();
+  private readonly vonageAdapter = new VonageSmsAdapter();
+  private readonly telnyxAdapter = new TelnyxSmsAdapter();
+  private readonly plivoAdapter = new PlivoSmsAdapter();
+  private readonly birdAdapter = new BirdSmsAdapter();
 
   onModuleInit() {
     this.logger.log('MarketingSmsProcessor background auto-scanner started.');
@@ -91,10 +101,39 @@ export class MarketingSmsProcessor implements OnModuleInit, OnModuleDestroy {
         return this.sinchAdapter;
       case 'GUPSHUP':
         return this.gupshupAdapter;
+      case 'INFOBIP':
+        return this.infobipAdapter;
+      case 'VONAGE':
+        return this.vonageAdapter;
+      case 'TELNYX':
+        return this.telnyxAdapter;
+      case 'PLIVO':
+        return this.plivoAdapter;
+      case 'BIRD':
+        return this.birdAdapter;
       case 'TWILIO':
       default:
         return this.twilioAdapter;
     }
+  }
+
+  private mapCredentials(record: any, fromSenderOverride?: string): SmsProviderCredentials {
+    return {
+      accountSid: record?.accountSid || undefined,
+      authToken: record?.authToken || undefined,
+      messagingServiceSid: record?.messagingServiceSid || undefined,
+      apiKey: record?.apiKey || undefined,
+      apiSecret: record?.apiSecret || undefined,
+      servicePlanId: record?.servicePlanId || undefined,
+      awsAccessKeyId: record?.awsAccessKeyId || undefined,
+      awsSecretKey: record?.awsSecretKey || undefined,
+      awsRegion: record?.awsRegion || undefined,
+      dltEntityId: record?.dltEntityId || undefined,
+      baseUrl: record?.baseUrl || undefined,
+      authId: record?.authId || undefined,
+      fromNumber: fromSenderOverride || record?.fromSender,
+      senderId: fromSenderOverride || record?.fromSender,
+    };
   }
 
   // E.164 standard phone normalization (with Excel scientific notation un-exponential support)
@@ -203,19 +242,7 @@ export class MarketingSmsProcessor implements OnModuleInit, OnModuleDestroy {
           }
         }
 
-        credentials = {
-          accountSid: campaign.integration.accountSid || undefined,
-          authToken: campaign.integration.authToken || undefined,
-          messagingServiceSid: campaign.integration.messagingServiceSid || undefined,
-          apiKey: campaign.integration.apiKey || undefined,
-          servicePlanId: campaign.integration.servicePlanId || undefined,
-          awsAccessKeyId: campaign.integration.awsAccessKeyId || undefined,
-          awsSecretKey: campaign.integration.awsSecretKey || undefined,
-          awsRegion: campaign.integration.awsRegion || undefined,
-          dltEntityId: campaign.integration.dltEntityId || undefined,
-          fromNumber: effectiveFromPhone,
-          senderId: effectiveFromPhone,
-        };
+        credentials = this.mapCredentials(campaign.integration, effectiveFromPhone);
       } else {
         const activeIntegration = await this.prisma.smsIntegration.findFirst({
           where: { provider: campaign.providerType as any, isActive: true },
@@ -235,19 +262,7 @@ export class MarketingSmsProcessor implements OnModuleInit, OnModuleDestroy {
             }
           }
 
-          credentials = {
-            accountSid: activeIntegration.accountSid || undefined,
-            authToken: activeIntegration.authToken || undefined,
-            messagingServiceSid: activeIntegration.messagingServiceSid || undefined,
-            apiKey: activeIntegration.apiKey || undefined,
-            servicePlanId: activeIntegration.servicePlanId || undefined,
-            awsAccessKeyId: activeIntegration.awsAccessKeyId || undefined,
-            awsSecretKey: activeIntegration.awsSecretKey || undefined,
-            awsRegion: activeIntegration.awsRegion || undefined,
-            dltEntityId: activeIntegration.dltEntityId || undefined,
-            fromNumber: effectiveFromPhone,
-            senderId: effectiveFromPhone,
-          };
+          credentials = this.mapCredentials(activeIntegration, effectiveFromPhone);
         }
       }
 
@@ -444,19 +459,7 @@ export class MarketingSmsProcessor implements OnModuleInit, OnModuleDestroy {
 
     let credentials: SmsProviderCredentials | undefined;
     if (integration) {
-      credentials = {
-        accountSid: integration.accountSid || undefined,
-        authToken: integration.authToken || undefined,
-        messagingServiceSid: integration.messagingServiceSid || undefined,
-        apiKey: integration.apiKey || undefined,
-        servicePlanId: integration.servicePlanId || undefined,
-        awsAccessKeyId: integration.awsAccessKeyId || undefined,
-        awsSecretKey: integration.awsSecretKey || undefined,
-        awsRegion: integration.awsRegion || undefined,
-        dltEntityId: integration.dltEntityId || undefined,
-        fromNumber: fromPhone,
-        senderId: fromPhone,
-      };
+      credentials = this.mapCredentials(integration, fromPhone);
     }
 
     await this.prisma.campaignSmsSenderPool.update({
