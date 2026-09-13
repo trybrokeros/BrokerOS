@@ -480,6 +480,10 @@ enum EmailProviderType {
   SENDGRID
   BREVO
   MAILCHIMP
+  MAILGUN
+  GMAIL
+  OUTLOOK
+  CONSTANT_CONTACT
   MULTI_PROVIDER
 }
 
@@ -3039,6 +3043,13 @@ model MarketingIntegration {
   awsSecretKey    String?
   awsRegion       String?
   mailchimpServer String?
+  mailgunDomain   String?
+  mailgunRegion   String?
+  oauthClientId   String?
+  oauthClientSecret String?
+  oauthRefreshToken String?
+  oauthTenantId   String?
+  googleAppPassword String?
 
   fromEmail String
   fromName  String
@@ -3479,6 +3490,7 @@ enum SmsProviderType {
   VONAGE
   TELNYX
   PLIVO
+  BIRD
 }
 
 model SmsIntegration {
@@ -3498,6 +3510,9 @@ model SmsIntegration {
   awsSecretKey        String?
   awsRegion           String?
   dltEntityId         String?
+  baseUrl             String?
+  apiSecret           String?
+  authId              String?
 
   fromSender String // Phone number (e.g. +14155550199) or Sender Header (e.g. SKYLIN)
 
