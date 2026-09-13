@@ -1,5 +1,5 @@
 // ============================================================================
-// BrokerOS — Voice Analytics & Audience Estimation Types
+// BrokerOS — Voice Analytics, Audience & Lead Assignment Types
 // ============================================================================
 
 import type { CampaignStatus } from '../common.js';
@@ -41,7 +41,31 @@ export interface VoiceCampaignAnalyticsSummary {
     durationSec: number;
     disposition: string;
     sentiment?: string;
+    mappedTemperature?: 'HOT' | 'WARM' | 'COLD';
     summary?: string;
     recordingUrl?: string;
+    transcript?: string;
   }>;
+}
+
+export interface BulkAssignVoiceLeadsDto {
+  recipientIds?: string[];
+  campaignId?: string;
+  sentimentFilter?: 'POSITIVE' | 'NEUTRAL' | 'NEGATIVE' | 'ALL';
+  sourceId?: string;
+}
+
+export interface ExportVoiceLeadsDto {
+  campaignIds?: string[];
+  recipientIds?: string[];
+  sentimentFilter?: 'POSITIVE' | 'NEUTRAL' | 'NEGATIVE' | 'ALL';
+  dispositionFilter?: string;
+}
+
+export interface CalculateVoiceCostEstimateDto {
+  totalLeads: number;
+  telephonyProvider?: string;
+  agentPlatform?: string;
+  expectedConnectRate?: number;
+  avgDurationMinutes?: number;
 }
