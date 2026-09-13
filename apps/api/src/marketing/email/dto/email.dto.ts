@@ -292,6 +292,46 @@ export class ConnectIntegrationDto {
 
   @IsOptional()
   @IsString()
+  mailgunDomain?: string;
+
+  @IsOptional()
+  @IsString()
+  mailgunRegion?: string;
+
+  @IsOptional()
+  @IsString()
+  oauthClientId?: string;
+
+  @IsOptional()
+  @IsString()
+  oauthClientSecret?: string;
+
+  @IsOptional()
+  @IsString()
+  oauthRefreshToken?: string;
+
+  @IsOptional()
+  @IsString()
+  oauthTenantId?: string;
+
+  @IsOptional()
+  @IsString()
+  googleAppPassword?: string;
+
+  @IsOptional()
+  @IsString()
+  constantContactApiKey?: string;
+
+  @IsOptional()
+  @IsString()
+  constantContactSecret?: string;
+
+  @IsOptional()
+  @IsString()
+  constantContactRefreshToken?: string;
+
+  @IsOptional()
+  @IsString()
   fromEmail?: string;
 
   @IsOptional()
