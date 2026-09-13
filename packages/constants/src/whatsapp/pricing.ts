@@ -2,10 +2,7 @@
 // BrokerOS — WhatsApp Marketing Meta Conversation Pricing & Tier Constants
 // ============================================================================
 
-/**
- * Exchange rate defined by business policy: 1 USD = 95 INR
- */
-export const USD_TO_INR_EXCHANGE_RATE = 95;
+import { USD_TO_INR_EXCHANGE_RATE } from '../campaign.js';
 
 export type WhatsAppConversationCategory =
   | 'MARKETING'
