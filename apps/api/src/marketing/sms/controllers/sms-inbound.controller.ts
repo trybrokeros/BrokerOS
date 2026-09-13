@@ -13,6 +13,11 @@ import { TwilioSmsWebhookParser } from '@brokeros/int-sms-twilio';
 import { AwsSnsWebhookParser } from '@brokeros/int-sms-aws-sns';
 import { SinchSmsWebhookParser } from '@brokeros/int-sms-sinch';
 import { GupshupWebhookParser } from '@brokeros/int-sms-gupshup';
+import { InfobipSmsWebhookParser } from '@brokeros/int-sms-infobip';
+import { VonageSmsWebhookParser } from '@brokeros/int-sms-vonage';
+import { TelnyxSmsWebhookParser } from '@brokeros/int-sms-telnyx';
+import { PlivoSmsWebhookParser } from '@brokeros/int-sms-plivo';
+import { BirdSmsWebhookParser } from '@brokeros/int-sms-bird';
 
 @Controller(['api/marketing/sms/inbound', 'api/marketing/sms/inbound-webhooks'])
 export class SmsInboundController {
@@ -123,6 +128,126 @@ export class SmsInboundController {
         to: parsed.toPhone || '',
         text: parsed.textBody,
         provider: 'GUPSHUP',
+        messageId: parsed.providerMsgId,
+        headers,
+      });
+    }
+    return { received: true, handled: false };
+  }
+
+  /**
+   * Infobip Inbound SMS Webhook
+   */
+  @Public()
+  @Post(['infobip', 'infobip/inbound'])
+  @HttpCode(200)
+  async handleInfobipInbound(
+    @Body() body: any,
+    @Headers() headers: Record<string, any>,
+  ) {
+    const parsed = InfobipSmsWebhookParser.parseInbound(headers, body);
+    if (parsed) {
+      return this.inboundService.handleInboundSms({
+        from: parsed.fromPhone,
+        to: parsed.toPhone || '',
+        text: parsed.textBody,
+        provider: 'INFOBIP',
+        messageId: parsed.providerMsgId,
+        headers,
+      });
+    }
+    return { received: true, handled: false };
+  }
+
+  /**
+   * Vonage Inbound SMS Webhook
+   */
+  @Public()
+  @Post(['vonage', 'vonage/inbound', 'nexmo', 'nexmo/inbound'])
+  @HttpCode(200)
+  async handleVonageInbound(
+    @Body() body: any,
+    @Headers() headers: Record<string, any>,
+  ) {
+    const parsed = VonageSmsWebhookParser.parseInbound(headers, body);
+    if (parsed) {
+      return this.inboundService.handleInboundSms({
+        from: parsed.fromPhone,
+        to: parsed.toPhone || '',
+        text: parsed.textBody,
+        provider: 'VONAGE',
+        messageId: parsed.providerMsgId,
+        headers,
+      });
+    }
+    return { received: true, handled: false };
+  }
+
+  /**
+   * Telnyx Inbound SMS Webhook
+   */
+  @Public()
+  @Post(['telnyx', 'telnyx/inbound'])
+  @HttpCode(200)
+  async handleTelnyxInbound(
+    @Body() body: any,
+    @Headers() headers: Record<string, any>,
+  ) {
+    const parsed = TelnyxSmsWebhookParser.parseInbound(headers, body);
+    if (parsed) {
+      return this.inboundService.handleInboundSms({
+        from: parsed.fromPhone,
+        to: parsed.toPhone || '',
+        text: parsed.textBody,
+        provider: 'TELNYX',
+        messageId: parsed.providerMsgId,
+        headers,
+      });
+    }
+    return { received: true, handled: false };
+  }
+
+  /**
+   * Plivo Inbound SMS Webhook
+   */
+  @Public()
+  @Post(['plivo', 'plivo/inbound'])
+  @HttpCode(200)
+  async handlePlivoInbound(
+    @Body() body: any,
+    @Headers() headers: Record<string, any>,
+  ) {
+    const parsed = PlivoSmsWebhookParser.parseInbound(headers, body);
+    if (parsed) {
+      return this.inboundService.handleInboundSms({
+        from: parsed.fromPhone,
+        to: parsed.toPhone || '',
+        text: parsed.textBody,
+        provider: 'PLIVO',
+        messageId: parsed.providerMsgId,
+        headers,
+      });
+    }
+    return { received: true, handled: false };
+  }
+
+  /**
+   * Bird Inbound SMS Webhook
+   */
+  @Public()
+  @Post(['bird', 'bird/inbound', 'messagebird', 'messagebird/inbound'])
+  @HttpCode(200)
+  async handleBirdInbound(
+    @Body() body: any,
+    @Headers() headers: Record<string, any>,
+  ) {
+    const parsed = BirdSmsWebhookParser.parseInbound(headers, body);
+    if (parsed) {
+      return this.inboundService.handleInboundSms({
+        from: parsed.fromPhone,
+        to: parsed.toPhone || '',
+        text: parsed.textBody,
+        provider: 'BIRD',
         messageId: parsed.providerMsgId,
         headers,
       });
