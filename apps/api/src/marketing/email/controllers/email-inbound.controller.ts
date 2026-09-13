@@ -80,6 +80,58 @@ export class EmailInboundController {
   }
 
   /**
+   * Mailgun Inbound Webhook
+   */
+  @Public()
+  @Post(['mailgun', 'mailgun/inbound'])
+  @HttpCode(200)
+  async handleMailgunInbound(
+    @Body() body: any,
+    @Headers() headers: Record<string, any>,
+  ) {
+    return this.inboundService.parseMailgunInbound(body, headers);
+  }
+
+  /**
+   * Gmail Push / Inbound Webhook
+   */
+  @Public()
+  @Post(['gmail', 'gmail/inbound'])
+  @HttpCode(200)
+  async handleGmailInbound(
+    @Body() body: any,
+    @Headers() headers: Record<string, any>,
+  ) {
+    return this.inboundService.parseGmailInbound(body, headers);
+  }
+
+  /**
+   * Microsoft 365 / Outlook Inbound Webhook
+   */
+  @Public()
+  @Post(['outlook', 'outlook/inbound'])
+  @HttpCode(200)
+  async handleOutlookInbound(
+    @Body() body: any,
+    @Headers() headers: Record<string, any>,
+  ) {
+    return this.inboundService.parseOutlookInbound(body, headers);
+  }
+
+  /**
+   * Constant Contact Inbound Webhook
+   */
+  @Public()
+  @Post(['constant-contact', 'constant-contact/inbound'])
+  @HttpCode(200)
+  async handleConstantContactInbound(
+    @Body() body: any,
+    @Headers() headers: Record<string, any>,
+  ) {
+    return this.inboundService.parseConstantContactInbound(body, headers);
+  }
+
+  /**
    * Test Inbound Simulation Endpoint
    */
   @Public()
