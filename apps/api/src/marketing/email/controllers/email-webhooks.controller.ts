@@ -5,6 +5,10 @@ import { SesWebhookParser } from '@brokeros/int-mail-ses';
 import { SendgridWebhookParser } from '@brokeros/int-mail-sendgrid';
 import { BrevoWebhookParser } from '@brokeros/int-mail-brevo';
 import { MailchimpWebhookParser } from '@brokeros/int-mail-mailchimp';
+import { MailgunWebhookParser } from '@brokeros/int-mail-mailgun';
+import { GmailWebhookParser } from '@brokeros/int-mail-gmail';
+import { OutlookWebhookParser } from '@brokeros/int-mail-outlook';
+import { ConstantContactWebhookParser } from '@brokeros/int-mail-constant-contact';
 
 @Controller('api/marketing/webhooks')
 export class EmailWebhooksController {
@@ -60,6 +64,62 @@ export class EmailWebhooksController {
     @Body() body: any,
   ) {
     const events = MailchimpWebhookParser.parse(headers, body);
+    if (events.length > 0) {
+      await this.emailService.processWebhookEvents(events);
+    }
+    return { status: 'ok', processed: events.length };
+  }
+
+  @Public()
+  @Post('mailgun')
+  @HttpCode(200)
+  async handleMailgunWebhook(
+    @Headers() headers: Record<string, any>,
+    @Body() body: any,
+  ) {
+    const events = MailgunWebhookParser.parse(headers, body);
+    if (events.length > 0) {
+      await this.emailService.processWebhookEvents(events);
+    }
+    return { status: 'ok', processed: events.length };
+  }
+
+  @Public()
+  @Post('gmail')
+  @HttpCode(200)
+  async handleGmailWebhook(
+    @Headers() headers: Record<string, any>,
+    @Body() body: any,
+  ) {
+    const events = GmailWebhookParser.parse(headers, body);
+    if (events.length > 0) {
+      await this.emailService.processWebhookEvents(events);
+    }
+    return { status: 'ok', processed: events.length };
+  }
+
+  @Public()
+  @Post('outlook')
+  @HttpCode(200)
+  async handleOutlookWebhook(
+    @Headers() headers: Record<string, any>,
+    @Body() body: any,
+  ) {
+    const events = OutlookWebhookParser.parse(headers, body);
+    if (events.length > 0) {
+      await this.emailService.processWebhookEvents(events);
+    }
+    return { status: 'ok', processed: events.length };
+  }
+
+  @Public()
+  @Post('constant-contact')
+  @HttpCode(200)
+  async handleConstantContactWebhook(
+    @Headers() headers: Record<string, any>,
+    @Body() body: any,
+  ) {
+    const events = ConstantContactWebhookParser.parse(headers, body);
     if (events.length > 0) {
       await this.emailService.processWebhookEvents(events);
     }
