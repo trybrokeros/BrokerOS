@@ -319,8 +319,20 @@ export function SmsProviderConfigCard({
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {(["TWILIO", "AWS_SNS", "SINCH", "GUPSHUP"] as const).map((prov) => {
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {(
+            [
+              "TWILIO",
+              "AWS_SNS",
+              "SINCH",
+              "GUPSHUP",
+              "INFOBIP",
+              "VONAGE",
+              "TELNYX",
+              "PLIVO",
+              "BIRD",
+            ] as const
+          ).map((prov) => {
             const config = SMS_PROVIDERS[prov];
             return (
               <div
