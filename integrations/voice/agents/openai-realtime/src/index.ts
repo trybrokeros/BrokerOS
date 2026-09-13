@@ -26,7 +26,15 @@ export class OpenAIRealtimeAgentClient implements IVoiceAgentProvider {
 
   async validateCredentials(credentials?: VoiceAgentCredentials): Promise<boolean> {
     const key = credentials?.apiKey || this.apiKey;
-    return !!key && (key.startsWith('sk-') || key.length >= 20);
+    if (!key) return false;
+    try {
+      const res = await fetch('https://api.openai.com/v1/models', {
+        headers: { Authorization: `Bearer ${key}` },
+      });
+      return res.status === 200;
+    } catch {
+      return key.startsWith('sk-') && key.length >= 20;
+    }
   }
 
   async previewAudio(
