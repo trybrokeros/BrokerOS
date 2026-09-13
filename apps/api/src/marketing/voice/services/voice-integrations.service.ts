@@ -54,6 +54,12 @@ export class VoiceIntegrationsService {
       sipDomain: dto.sipDomain,
     });
 
+    if (!isValid) {
+      throw new BadRequestException(
+        `Failed to validate credentials with telephony carrier ${dto.provider}. Please verify your Account SID, Auth Token / API Key, and carrier permissions.`,
+      );
+    }
+
     if (dto.isDefault) {
       await this.prisma.voiceTelephonyIntegration.updateMany({
         data: { isDefault: false },
@@ -79,6 +85,44 @@ export class VoiceIntegrationsService {
         isActive: true,
       },
     });
+  }
+
+  async verifyTelephony(id: string) {
+    const integration = await this.prisma.voiceTelephonyIntegration.findUnique({
+      where: { id },
+    });
+    if (!integration) {
+      throw new NotFoundException(`Telephony Gateway ${id} not found`);
+    }
+
+    const provider = getVoiceTelephonyProvider(integration.provider, {
+      accountSid: integration.accountSid || undefined,
+      authToken: integration.authToken || undefined,
+      apiKey: integration.apiKey || undefined,
+      apiToken: integration.apiToken || undefined,
+      subdomain: integration.subdomain || undefined,
+      sipDomain: integration.sipDomain || undefined,
+    });
+
+    const startTime = Date.now();
+    const isValid = await provider.validateCredentials({
+      accountSid: integration.accountSid || undefined,
+      authToken: integration.authToken || undefined,
+      apiKey: integration.apiKey || undefined,
+      apiToken: integration.apiToken || undefined,
+      subdomain: integration.subdomain || undefined,
+      sipDomain: integration.sipDomain || undefined,
+    });
+    const latencyMs = Date.now() - startTime;
+
+    return {
+      id: integration.id,
+      provider: integration.provider,
+      isValid,
+      latencyMs,
+      fromNumbersCount: (integration.fromNumbers || []).length,
+      verifiedAt: new Date().toISOString(),
+    };
   }
 
   async deleteTelephony(id: string) {
@@ -112,6 +156,12 @@ export class VoiceIntegrationsService {
       serverUrl: dto.serverUrl,
     });
 
+    if (!isValid) {
+      throw new BadRequestException(
+        `Failed to validate credentials with AI voice platform ${dto.platform}. Please verify your API Key and workspace access.`,
+      );
+    }
+
     if (dto.isDefault) {
       await this.prisma.voiceAgentIntegration.updateMany({
         data: { isDefault: false },
@@ -129,6 +179,42 @@ export class VoiceIntegrationsService {
         isActive: true,
       },
     });
+  }
+
+  async verifyAgent(id: string) {
+    const integration = await this.prisma.voiceAgentIntegration.findUnique({
+      where: { id },
+    });
+    if (!integration) {
+      throw new NotFoundException(`AI Voice Platform ${id} not found`);
+    }
+
+    const provider = getVoiceAgentProvider(integration.platform, {
+      apiKey: integration.apiKey,
+      orgId: integration.orgId || undefined,
+      serverUrl: integration.serverUrl || undefined,
+    });
+
+    const startTime = Date.now();
+    const isValid = await provider.validateCredentials({
+      apiKey: integration.apiKey,
+      orgId: integration.orgId || undefined,
+      serverUrl: integration.serverUrl || undefined,
+    });
+    const latencyMs = Date.now() - startTime;
+
+    const catalog = await this.getPlatformCatalog(integration.platform, integration.id);
+
+    return {
+      id: integration.id,
+      platform: integration.platform,
+      isValid,
+      latencyMs,
+      assistantsCount: catalog.assistants?.length || 0,
+      modelsCount: catalog.models?.length || 0,
+      voicesCount: catalog.voices?.length || 0,
+      verifiedAt: new Date().toISOString(),
+    };
   }
 
   async deleteAgent(id: string) {

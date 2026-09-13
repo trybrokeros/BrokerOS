@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { prismaClient } from '@brokeros/prisma';
 import type { VoiceWebhookEvent } from '@brokeros/types';
+import { mapVoiceSentimentToTemperature } from '@brokeros/constants';
 
 @Injectable()
 export class VoiceTrackingService {
@@ -32,17 +33,23 @@ export class VoiceTrackingService {
         const isSuccess = event.disposition === 'COMPLETED';
         const extractedJson =
           event.extractedData || (recipient.extractedData as any) || undefined;
+        const finalSentiment = event.sentiment || recipient.sentiment;
+        const mappedTemperature = mapVoiceSentimentToTemperature(finalSentiment);
+        const recording = event.recordingUrl || recipient.recordingUrl;
+        const transcript = event.transcript || recipient.transcript;
+        const summary = event.summary || recipient.summary;
+        const duration = event.durationSec || recipient.callDurationSec || 0;
 
         await this.prisma.voiceRecipient.update({
           where: { id: recipient.id },
           data: {
             status: isSuccess ? 'DELIVERED' : 'FAILED',
             disposition: event.disposition,
-            callDurationSec: event.durationSec || recipient.callDurationSec,
-            recordingUrl: event.recordingUrl || recipient.recordingUrl,
-            transcript: event.transcript || recipient.transcript,
-            summary: event.summary || recipient.summary,
-            sentiment: event.sentiment || recipient.sentiment,
+            callDurationSec: duration,
+            recordingUrl: recording,
+            transcript: transcript,
+            summary: summary,
+            sentiment: finalSentiment,
             extractedData: extractedJson ? extractedJson : undefined,
             completedAt: new Date(),
           },
@@ -54,34 +61,92 @@ export class VoiceTrackingService {
             campaignId: recipient.campaignId,
             recipientId: recipient.id,
             disposition: event.disposition,
-            durationSec: event.durationSec || 0,
-            recordingUrl: event.recordingUrl,
-            transcript: event.transcript,
-            summary: event.summary,
-            sentiment: event.sentiment,
+            durationSec: duration,
+            recordingUrl: recording,
+            transcript: transcript,
+            summary: summary,
+            sentiment: finalSentiment,
             extractedData: extractedJson ? extractedJson : undefined,
             timestamp: event.timestamp || new Date(),
           },
         });
 
-        // Upgrade lead to HOT if sentiment is POSITIVE
-        if (recipient.leadId && event.sentiment === 'POSITIVE') {
+        // If linked to CRM Lead, synchronize Temperature, CallRecord, and Audit Note
+        if (recipient.leadId) {
           await this.prisma.lead.update({
             where: { id: recipient.leadId },
             data: {
-              temperature: 'HOT',
-              status: 'QUALIFIED',
+              ...(mappedTemperature ? { temperature: mappedTemperature } : {}),
+              ...(mappedTemperature === 'HOT' ? { status: 'QUALIFIED' } : {}),
             },
           });
 
-          const noteUserId =
+          let noteUserId =
             recipient.lead?.assignedUserId || recipient.lead?.createdById;
+          if (!noteUserId) {
+            const fallbackUser = await this.prisma.user.findFirst({
+              where: { status: 'ACTIVE' },
+              select: { id: true },
+            });
+            noteUserId = fallbackUser?.id;
+          }
+
           if (noteUserId) {
+            let noteContent = `[AI Voice Broadcast - ${event.disposition || 'CALL'}]\n`;
+            noteContent += `• Temperature: ${mappedTemperature || 'UNCHANGED'} (Sentiment: ${finalSentiment || 'UNKNOWN'})\n`;
+            noteContent += `• Call Duration: ${duration}s\n`;
+            if (summary) {
+              noteContent += `• AI Summary: ${summary}\n`;
+            }
+            if (recording) {
+              noteContent += `• Call Recording: ${recording}\n`;
+            }
+            if (transcript) {
+              const snippet =
+                transcript.length > 500
+                  ? transcript.slice(0, 500) + '...'
+                  : transcript;
+              noteContent += `• Transcript Excerpt:\n"${snippet}"`;
+            }
+
             await this.prisma.note.create({
               data: {
                 leadId: recipient.leadId,
                 userId: noteUserId,
-                content: `[AI Voice Broadcast] Client showed high positive interest during AI voice call. Summary: ${event.summary || 'Interested in property site visit.'}`,
+                content: noteContent,
+                noteType: 'AI_VOICE_CALL',
+              },
+            });
+
+            // Map disposition to CallStatus enum
+            let callStatus:
+              | 'CONNECTED'
+              | 'NOT_ANSWERED'
+              | 'BUSY'
+              | 'FAILED'
+              | 'VOICEMAIL' = 'CONNECTED';
+            if (event.disposition === 'BUSY') callStatus = 'BUSY';
+            else if (event.disposition === 'NO_ANSWER')
+              callStatus = 'NOT_ANSWERED';
+            else if (event.disposition === 'FAILED') callStatus = 'FAILED';
+            else if (event.disposition === 'VOICEMAIL')
+              callStatus = 'VOICEMAIL';
+
+            await this.prisma.callRecord.create({
+              data: {
+                leadId: recipient.leadId,
+                userId: noteUserId,
+                phoneNumber: recipient.phone,
+                direction: 'OUTBOUND',
+                status: callStatus,
+                duration: duration,
+                startedAt: new Date(Date.now() - duration * 1000),
+                endedAt: new Date(),
+                recordingUrl: recording,
+                aiTranscript: transcript,
+                aiSummary: summary,
+                aiSentiment: finalSentiment,
+                aiExtractedData: extractedJson,
               },
             });
           }

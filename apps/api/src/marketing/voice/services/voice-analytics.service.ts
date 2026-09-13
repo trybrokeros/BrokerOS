@@ -1,6 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { prismaClient } from '@brokeros/prisma';
 import type { VoiceCampaignAnalyticsSummary } from '@brokeros/types';
+import { mapVoiceSentimentToTemperature } from '@brokeros/constants';
 
 @Injectable()
 export class VoiceAnalyticsService {
@@ -16,7 +17,7 @@ export class VoiceAnalyticsService {
         telephony: true,
         agentIntegration: true,
         recipients: {
-          take: 50,
+          take: 100,
           orderBy: { updatedAt: 'desc' },
           select: {
             id: true,
@@ -27,6 +28,7 @@ export class VoiceAnalyticsService {
             sentiment: true,
             summary: true,
             recordingUrl: true,
+            transcript: true,
           },
         },
       },
@@ -71,8 +73,10 @@ export class VoiceAnalyticsService {
       durationSec: r.callDurationSec,
       disposition: r.disposition || 'PENDING',
       sentiment: r.sentiment || undefined,
+      mappedTemperature: mapVoiceSentimentToTemperature(r.sentiment),
       summary: r.summary || undefined,
       recordingUrl: r.recordingUrl || undefined,
+      transcript: r.transcript || undefined,
     }));
 
     return {
