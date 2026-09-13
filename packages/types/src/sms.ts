@@ -13,7 +13,8 @@ export type SmsProviderType =
   | 'INFOBIP'
   | 'VONAGE'
   | 'TELNYX'
-  | 'PLIVO';
+  | 'PLIVO'
+  | 'BIRD';
 
 export interface SmsRecipient {
   phone: string;
@@ -292,17 +293,17 @@ export interface SmsFlowNodeEntity {
   flowId: string;
   nodeKey: string;
   nodeType:
-    | 'start'
-    | 'send_sms_reply'
-    | 'ai_agent'
-    | 'update_lead_status'
-    | 'add_tag'
-    | 'remove_tag'
-    | 'handoff_presales'
-    | 'condition'
-    | 'wait_delay'
-    | 'end'
-    | string;
+  | 'start'
+  | 'send_sms_reply'
+  | 'ai_agent'
+  | 'update_lead_status'
+  | 'add_tag'
+  | 'remove_tag'
+  | 'handoff_presales'
+  | 'condition'
+  | 'wait_delay'
+  | 'end'
+  | string;
   config: Record<string, any>;
   positionX?: number | null;
   positionY?: number | null;
