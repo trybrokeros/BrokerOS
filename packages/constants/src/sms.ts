@@ -135,6 +135,20 @@ export const SMS_PROVIDERS = {
     ],
     requiresCredentials: true,
   },
+  BIRD: {
+    id: 'BIRD',
+    type: 'BIRD',
+    name: 'Bird.com (MessageBird)',
+    badge: 'Omnichannel Scale',
+    color: '#2481CC',
+    docsUrl: 'https://docs.bird.com/api',
+    description: 'Modern global SMS API with intelligent fallback routing and high throughput.',
+    fields: [
+      { key: 'apiKey', label: 'Bird Access Key', type: 'password', placeholder: 'AccessKey xxxxxxxxxxxxxxxxxxxxxxxx', required: true },
+      { key: 'fromNumber', label: 'Sender ID / Phone Number', type: 'text', placeholder: '+14155550199 or SKYLIN', required: true },
+    ],
+    requiresCredentials: true,
+  },
 } as const;
 
 export const SMS_PROVIDER_LIST = Object.values(SMS_PROVIDERS);
@@ -149,6 +163,7 @@ export const SMS_PROVIDER_PRICING_ESTIMATES = {
   VONAGE: { costPerSegmentUSD: 0.0078, costPerSegmentINR: 0.64, label: 'Vonage Nexmo (~$0.0078/segment)' },
   TELNYX: { costPerSegmentUSD: 0.0050, costPerSegmentINR: 0.42, label: 'Telnyx Elastic (~$0.0050/segment)' },
   PLIVO: { costPerSegmentUSD: 0.0055, costPerSegmentINR: 0.45, label: 'Plivo Direct (~$0.0055/segment)' },
+  BIRD: { costPerSegmentUSD: 0.0070, costPerSegmentINR: 0.58, label: 'Bird.com Global (~$0.0070/segment)' },
 } as const;
 
 export const SMS_PROVIDER_THROTTLE_LIMITS = {
@@ -161,6 +176,7 @@ export const SMS_PROVIDER_THROTTLE_LIMITS = {
   VONAGE: { maxPerSecond: 25, delayMs: 15 },
   TELNYX: { maxPerSecond: 30, delayMs: 10 },
   PLIVO: { maxPerSecond: 25, delayMs: 15 },
+  BIRD: { maxPerSecond: 30, delayMs: 12 },
 } as const;
 
 export const SMS_ALLOCATION_MODES = {
