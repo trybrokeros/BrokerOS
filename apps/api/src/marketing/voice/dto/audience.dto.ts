@@ -1,9 +1,11 @@
 import {
   IsString,
+  IsNotEmpty,
   IsOptional,
   IsArray,
   IsBoolean,
   IsInt,
+  Min,
 } from 'class-validator';
 
 export class VoiceAudienceFiltersDto {
@@ -84,3 +86,66 @@ export class PreviewVoiceAudienceDto {
   @IsArray()
   csvRecipients?: any[];
 }
+
+export class BulkAssignVoiceLeadsDto {
+  @IsArray()
+  @IsOptional()
+  recipientIds?: string[];
+
+  @IsString()
+  @IsNotEmpty()
+  campaignId!: string;
+
+  @IsString()
+  @IsOptional()
+  sentimentFilter?: 'ALL' | 'POSITIVE' | 'NEUTRAL' | 'NEGATIVE';
+
+  @IsString()
+  @IsOptional()
+  customTemperature?: 'HOT' | 'WARM' | 'COLD';
+
+  @IsString()
+  @IsOptional()
+  assignToUserId?: string | null;
+
+  @IsString()
+  @IsOptional()
+  status?: string;
+
+  @IsString()
+  @IsOptional()
+  subStatus?: string;
+}
+
+export class ExportVoiceLeadsDto {
+  @IsString()
+  @IsNotEmpty()
+  campaignId!: string;
+
+  @IsArray()
+  @IsOptional()
+  recipientIds?: string[];
+
+  @IsString()
+  @IsOptional()
+  sentimentFilter?: 'ALL' | 'POSITIVE' | 'NEUTRAL' | 'NEGATIVE';
+}
+
+export class CalculateVoiceCostEstimateDto {
+  @IsString()
+  @IsOptional()
+  telephonyCarrier?: string;
+
+  @IsString()
+  @IsOptional()
+  agentPlatform?: string;
+
+  @IsInt()
+  @Min(1)
+  recipientCount!: number;
+
+  @IsInt()
+  @IsOptional()
+  expectedDurationSeconds?: number;
+}
+

@@ -13,14 +13,16 @@ import { VoiceAudienceService } from './voice-audience.service.js';
 import type {
   CreateVoiceCampaignDto,
   SaveDraftVoiceCampaignDto,
+  CalculateVoiceCostEstimateDto,
 } from '../dto/voice.dto.js';
+import { calculateVoiceCampaignCostEstimate } from '@brokeros/constants';
 
 @Injectable()
 export class VoiceCampaignService {
   private readonly logger = new Logger(VoiceCampaignService.name);
   private readonly prisma = prismaClient;
 
-  constructor(private readonly audienceService: VoiceAudienceService) {}
+  constructor(private readonly audienceService: VoiceAudienceService) { }
 
   async resolveForeignKeys(dto: {
     projectId?: string | null;
@@ -480,5 +482,16 @@ export class VoiceCampaignService {
     });
 
     return updated;
+  }
+
+  calculateCostEstimate(dto: CalculateVoiceCostEstimateDto) {
+    return calculateVoiceCampaignCostEstimate({
+      telephonyProvider: dto.telephonyCarrier,
+      agentPlatform: dto.agentPlatform,
+      totalLeads: dto.recipientCount,
+      avgDurationMinutes: dto.expectedDurationSeconds
+        ? dto.expectedDurationSeconds / 60
+        : undefined,
+    });
   }
 }
