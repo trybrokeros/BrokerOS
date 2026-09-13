@@ -24,6 +24,9 @@ export function SmsConnectModal({
     authToken: "",
     messagingServiceSid: "",
     apiKey: "",
+    apiSecret: "",
+    baseUrl: "",
+    authId: "",
     servicePlanId: "",
     awsAccessKeyId: "",
     awsSecretKey: "",
@@ -42,6 +45,9 @@ export function SmsConnectModal({
         authToken: "",
         messagingServiceSid: "",
         apiKey: "",
+        apiSecret: "",
+        baseUrl: selectedProvider === "INFOBIP" ? "https://api.infobip.com" : "",
+        authId: "",
         servicePlanId: "",
         awsAccessKeyId: "",
         awsSecretKey: "",
@@ -66,6 +72,9 @@ export function SmsConnectModal({
         authToken: formData.authToken || undefined,
         messagingServiceSid: formData.messagingServiceSid || undefined,
         apiKey: formData.apiKey || undefined,
+        apiSecret: formData.apiSecret || undefined,
+        baseUrl: formData.baseUrl || undefined,
+        authId: formData.authId || undefined,
         servicePlanId: formData.servicePlanId || undefined,
         awsAccessKeyId: formData.awsAccessKeyId || undefined,
         awsSecretKey: formData.awsSecretKey || undefined,
@@ -276,6 +285,171 @@ export function SmsConnectModal({
                   placeholder="e.g. 1701159123456789"
                   value={formData.dltEntityId}
                   onChange={(e) => setFormData({ ...formData, dltEntityId: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-500)] focus:bg-white transition-all shadow-xs"
+                />
+              </div>
+            </>
+          )}
+
+          {selectedProvider === "INFOBIP" && (
+            <>
+              <div>
+                <label className="block text-xs font-extrabold text-[var(--text-primary)] mb-1.5">
+                  Infobip Base URL / API Domain <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. https://xxxxxx.api.infobip.com"
+                  value={formData.baseUrl}
+                  onChange={(e) => setFormData({ ...formData, baseUrl: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-500)] focus:bg-white transition-all shadow-xs"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-extrabold text-[var(--text-primary)] mb-1.5">
+                  Infobip API Key <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="password"
+                  required
+                  placeholder="App xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                  value={formData.apiKey}
+                  onChange={(e) => setFormData({ ...formData, apiKey: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-500)] focus:bg-white transition-all shadow-xs"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-extrabold text-[var(--text-primary)] mb-1.5">
+                  DLT Principal Entity ID (Optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. 1701159123456789"
+                  value={formData.dltEntityId}
+                  onChange={(e) => setFormData({ ...formData, dltEntityId: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-500)] focus:bg-white transition-all shadow-xs"
+                />
+              </div>
+            </>
+          )}
+
+          {selectedProvider === "VONAGE" && (
+            <>
+              <div>
+                <label className="block text-xs font-extrabold text-[var(--text-primary)] mb-1.5">
+                  Vonage API Key <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. 1a2b3c4d"
+                  value={formData.apiKey}
+                  onChange={(e) => setFormData({ ...formData, apiKey: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-500)] focus:bg-white transition-all shadow-xs"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-extrabold text-[var(--text-primary)] mb-1.5">
+                  Vonage API Secret <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="password"
+                  required
+                  placeholder="Vonage API secret"
+                  value={formData.apiSecret}
+                  onChange={(e) => setFormData({ ...formData, apiSecret: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-500)] focus:bg-white transition-all shadow-xs"
+                />
+              </div>
+            </>
+          )}
+
+          {selectedProvider === "TELNYX" && (
+            <>
+              <div>
+                <label className="block text-xs font-extrabold text-[var(--text-primary)] mb-1.5">
+                  Telnyx API Key (v2) <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="password"
+                  required
+                  placeholder="KEY01xxxxxxxxxxxxxxxxxxxxxxxx"
+                  value={formData.apiKey}
+                  onChange={(e) => setFormData({ ...formData, apiKey: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-500)] focus:bg-white transition-all shadow-xs"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-extrabold text-[var(--text-primary)] mb-1.5">
+                  Messaging Profile ID (Optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. 40017xxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                  value={formData.messagingServiceSid}
+                  onChange={(e) => setFormData({ ...formData, messagingServiceSid: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-500)] focus:bg-white transition-all shadow-xs"
+                />
+              </div>
+            </>
+          )}
+
+          {selectedProvider === "PLIVO" && (
+            <>
+              <div>
+                <label className="block text-xs font-extrabold text-[var(--text-primary)] mb-1.5">
+                  Plivo Auth ID <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. MAMZXXXXXXXXXXXXXX"
+                  value={formData.authId}
+                  onChange={(e) => setFormData({ ...formData, authId: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-500)] focus:bg-white transition-all shadow-xs"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-extrabold text-[var(--text-primary)] mb-1.5">
+                  Plivo Auth Token <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="password"
+                  required
+                  placeholder="Plivo Auth Token"
+                  value={formData.authToken}
+                  onChange={(e) => setFormData({ ...formData, authToken: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-500)] focus:bg-white transition-all shadow-xs"
+                />
+              </div>
+            </>
+          )}
+
+          {selectedProvider === "BIRD" && (
+            <>
+              <div>
+                <label className="block text-xs font-extrabold text-[var(--text-primary)] mb-1.5">
+                  Bird / MessageBird Live Access Key <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="password"
+                  required
+                  placeholder="Live access key from Bird Developer console"
+                  value={formData.apiKey}
+                  onChange={(e) => setFormData({ ...formData, apiKey: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-500)] focus:bg-white transition-all shadow-xs"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-extrabold text-[var(--text-primary)] mb-1.5">
+                  API Endpoint URL (Optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="https://rest.messagebird.com"
+                  value={formData.baseUrl}
+                  onChange={(e) => setFormData({ ...formData, baseUrl: e.target.value })}
                   className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-500)] focus:bg-white transition-all shadow-xs"
                 />
               </div>
