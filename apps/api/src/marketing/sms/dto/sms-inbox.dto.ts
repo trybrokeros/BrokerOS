@@ -74,6 +74,10 @@ export class SendSmsReplyDto {
   @IsString()
   @IsOptional()
   templateId?: string;
+
+  @IsString()
+  @IsOptional()
+  mediaUrl?: string;
 }
 
 export class ListSmsMessagesQueryDto {
@@ -88,4 +92,13 @@ export class DraftSmsAiReplyDto {
   @IsString()
   @IsOptional()
   leadName?: string;
+
+  @IsString()
+  @IsOptional()
+  agentName?: string;
+
+  @IsString()
+  @IsOptional()
+  instruction?: string;
 }
+
