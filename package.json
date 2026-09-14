@@ -12,6 +12,7 @@
     "db:migrate": "pnpm --filter @brokeros/prisma db:migrate",
     "db:seed": "pnpm --filter @brokeros/prisma db:seed",
     "script": "tsx",
+    "run:script": "tsx scripts/runner.ts",
     "build": "turbo run build",
     "build:packages": "pnpm --filter @brokeros/types build && pnpm --filter @brokeros/constants build && pnpm --filter \"@brokeros/int-*\" run build",
     "postinstall": "pnpm db:generate && pnpm build:packages",
