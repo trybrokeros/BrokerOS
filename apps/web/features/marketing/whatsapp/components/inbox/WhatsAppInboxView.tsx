@@ -5,6 +5,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { MessageSquare, AlertCircle } from 'lucide-react';
+import { authClient } from '@/lib/auth-client';
 import { ConversationList } from './ConversationList';
 import { ConversationHeader } from './ConversationHeader';
 import { ConversationThread } from './ConversationThread';
@@ -27,6 +28,7 @@ export const WhatsAppInboxView: React.FC<WhatsAppInboxViewProps> = ({
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
 
+  const { data: session } = authClient.useSession();
   const searchParams = useSearchParams();
   const deepLinkConvId = searchParams.get('conversationId') || searchParams.get('c');
   const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
@@ -184,7 +186,10 @@ export const WhatsAppInboxView: React.FC<WhatsAppInboxViewProps> = ({
                   <MessageComposer
                     onSendMessage={sendMessage}
                     onDraftWithAi={() =>
-                      draftReplyWithAi(activeConversation.accountId)
+                      draftReplyWithAi(
+                        activeConversation.accountId,
+                        session?.user?.name || undefined,
+                      )
                     }
                     accountId={activeConversation.accountId}
                     is24HourWindowActive={is24HourWindowActive}
