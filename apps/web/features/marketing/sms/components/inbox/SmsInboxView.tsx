@@ -7,6 +7,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { MessageSquare } from 'lucide-react';
+import { authClient } from '@/lib/auth-client';
 import { useSmsConversations } from '../../hooks/use-sms-conversations';
 import { useSmsMessages } from '../../hooks/use-sms-messages';
 import { SmsConversationList } from './SmsConversationList';
@@ -18,6 +19,7 @@ import type { SmsConversation } from '../../types/inbox';
 export const SmsInboxView: React.FC = () => {
   const [activeConversation, setActiveConversation] = useState<SmsConversation | null>(null);
 
+  const { data: session } = authClient.useSession();
   const searchParams = useSearchParams();
   const deepLinkConvId = searchParams.get('conversationId') || searchParams.get('c');
   const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
@@ -140,7 +142,7 @@ export const SmsInboxView: React.FC = () => {
 
             <SmsMessageComposer
               onSendMessage={sendMessage}
-              onDraftAi={draftReplyWithAi}
+              onDraftAi={() => draftReplyWithAi(session?.user?.name || undefined)}
               assignedProvider={activeConversation.assignedProvider}
               assignedSenderPhone={activeConversation.assignedSenderPhone}
               sending={sending}

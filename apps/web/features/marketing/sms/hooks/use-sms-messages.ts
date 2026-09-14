@@ -39,7 +39,7 @@ export function useSmsMessages(conversationId: string | null) {
     loadMessages();
   }, [loadMessages]);
 
-  const sendMessage = async (payload: { text: string }) => {
+  const sendMessage = async (payload: { text: string; mediaUrl?: string }) => {
     if (!conversationId) return null;
 
     try {
@@ -70,7 +70,10 @@ export function useSmsMessages(conversationId: string | null) {
     }
   };
 
-  const draftReplyWithAi = async (): Promise<{ text: string }> => {
+  const draftReplyWithAi = async (
+    agentName?: string,
+    instruction?: string,
+  ): Promise<{ text: string }> => {
     if (!conversationId) return { text: '' };
 
     try {
@@ -81,6 +84,7 @@ export function useSmsMessages(conversationId: string | null) {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
+          body: JSON.stringify({ agentName, instruction }),
         },
       );
 
