@@ -16,7 +16,7 @@ export async function fetchBolnaDynamicAgents(apiKey: string): Promise<VoiceMode
   if (!apiKey) return [];
   const dynamicAgents: VoiceModelItem[] = [];
   try {
-    const res = await fetch('https://api.bolna.ai/agent/all', {
+    const res = await fetch('https://api.bolna.ai/v2/agent/all', {
       headers: { Authorization: `Bearer ${apiKey}` },
     });
     if (res.ok) {
