@@ -17,6 +17,7 @@ import type {
   StartSmsConversationDto,
   SendSmsReplyDto,
   ListSmsMessagesQueryDto,
+  DraftSmsAiReplyDto,
 } from '../dto/sms-inbox.dto.js';
 import type { SmsProviderCredentials } from '@brokeros/types';
 
@@ -250,9 +251,12 @@ export class SmsInboxService {
       throw new NotFoundException(`SMS Conversation #${conversationId} not found`);
     }
 
-    const textContent = dto.text?.trim() || '';
+    let textContent = dto.text?.trim() || '';
+    if (dto.mediaUrl && !textContent.includes(dto.mediaUrl)) {
+      textContent = textContent ? `${textContent}\n${dto.mediaUrl}` : dto.mediaUrl;
+    }
     if (!textContent) {
-      throw new BadRequestException('Message text cannot be empty');
+      throw new BadRequestException('Message text or media cannot be empty');
     }
 
     const provider = conv.assignedProvider;
@@ -385,12 +389,18 @@ export class SmsInboxService {
     });
   }
 
-  async draftAiReply(conversationId: string) {
+  async draftAiReply(conversationId: string, dto?: DraftSmsAiReplyDto) {
     const conv = await this.prisma.smsConversation.findUnique({
       where: { id: conversationId },
       include: {
-        lead: true,
+        agent: true,
         campaign: true,
+        lead: {
+          include: {
+            interestedProject: true,
+            assignedUser: true,
+          },
+        },
       },
     });
 
@@ -398,19 +408,45 @@ export class SmsInboxService {
       throw new NotFoundException(`SMS Conversation #${conversationId} not found`);
     }
 
-    const latestInbound = await this.prisma.smsMessage.findFirst({
-      where: { conversationId, direction: 'INBOUND' },
+    const recentMessages = await this.prisma.smsMessage.findMany({
+      where: { conversationId },
       orderBy: { createdAt: 'desc' },
+      take: 15,
     });
 
-    const leadName = conv.contactName || conv.lead?.firstName || 'Prospect';
-    const inboundBody = latestInbound?.bodyText || conv.lastMessageText || 'Could you send more details?';
-    const campaignTitle = conv.campaign?.title || 'Luxury Residences';
+    const chronological = [...recentMessages].reverse();
+
+    const leadName =
+      dto?.leadName ||
+      conv.contactName ||
+      (conv.lead ? `${conv.lead.firstName || ''} ${conv.lead.lastName || ''}`.trim() : '') ||
+      'Prospect';
+
+    const advisorName =
+      dto?.agentName ||
+      conv.agent?.name ||
+      conv.lead?.assignedUser?.name ||
+      'Property Advisory Consultant';
+
+    const campaignTitle = conv.campaign?.title || conv.lead?.interestedProject?.name || 'Luxury Residences';
 
     const aiRes = await this.aiService.generateAutoreply({
       leadName,
-      inboundBody,
+      advisorName,
       originalCampaignTitle: campaignTitle,
+      project: conv.lead?.interestedProject
+        ? {
+            name: conv.lead.interestedProject.name,
+            city: conv.lead.interestedProject.city || undefined,
+            description: conv.lead.interestedProject.description || undefined,
+          }
+        : null,
+      messages: chronological.map((m) => ({
+        direction: m.direction,
+        text: m.bodyText,
+        senderName: m.senderName || undefined,
+      })),
+      customInstructions: dto?.instruction,
     });
 
     return {
@@ -419,3 +455,4 @@ export class SmsInboxService {
     };
   }
 }
+
