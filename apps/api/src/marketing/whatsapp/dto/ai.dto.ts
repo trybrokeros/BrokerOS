@@ -41,4 +41,13 @@ export class DraftReplyDto {
   @IsString()
   @IsNotEmpty()
   conversationId!: string;
+
+  @IsString()
+  @IsOptional()
+  agentName?: string;
+
+  @IsString()
+  @IsOptional()
+  instruction?: string;
 }
+
