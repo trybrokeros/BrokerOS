@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { MessageSquare } from 'lucide-react';
+import { MessageSquare, ArrowRight } from 'lucide-react';
 
 interface RecentChat {
   id: string;
@@ -18,6 +18,13 @@ interface WhatsAppRecentChatsTableProps {
   recentConversations: RecentChat[];
 }
 
+const formatMessagePreview = (text?: string | null, maxChars = 40): string => {
+  if (!text) return 'No messages yet';
+  const clean = text.replace(/\s+/g, ' ').trim();
+  if (!clean) return 'No messages yet';
+  return clean.length > maxChars ? `${clean.slice(0, maxChars)}...` : clean;
+};
+
 export const WhatsAppRecentChatsTable: React.FC<WhatsAppRecentChatsTableProps> = ({
   recentConversations = [],
 }) => {
@@ -30,9 +37,10 @@ export const WhatsAppRecentChatsTable: React.FC<WhatsAppRecentChatsTableProps> =
         </div>
         <Link
           href="/dashboard/marketing/whatsapp/inbox"
-          className="text-xs text-brand-600 hover:text-brand-700 font-medium"
+          className="inline-flex items-center gap-1 text-xs text-brand-600 hover:text-brand-700 font-medium group"
         >
-          View all &rarr;
+          <span>View all</span>
+          <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
         </Link>
       </div>
 
@@ -55,8 +63,8 @@ export const WhatsAppRecentChatsTable: React.FC<WhatsAppRecentChatsTableProps> =
                   </span>
                   <span className="text-[10px] text-text-muted font-mono">{c.contactPhone}</span>
                 </div>
-                <p className="text-xs text-text-secondary truncate mt-0.5">
-                  {c.lastMessageText || 'No messages yet'}
+                <p className="text-xs text-text-secondary truncate mt-0.5" title={c.lastMessageText || ''}>
+                  {formatMessagePreview(c.lastMessageText, 40)}
                 </p>
               </div>
               <div className="text-right shrink-0">
