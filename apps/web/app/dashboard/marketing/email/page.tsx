@@ -14,6 +14,7 @@ import {
   Zap,
   Workflow,
   ArrowLeft,
+  ArrowRight,
   Inbox,
 } from "lucide-react";
 import { DashboardPageWrapper } from "@/components/dashboard/DashboardPageWrapper";
@@ -181,7 +182,8 @@ export default function EmailMarketingDashboard() {
         </div>
         <Link href="/dashboard/marketing/email/flows">
           <Button variant="outline" size="sm" className="text-xs font-bold gap-1.5">
-            <span>Configure Reply Flows &rarr;</span>
+            <span>Configure Reply Flows</span>
+            <ArrowRight className="w-3.5 h-3.5" />
           </Button>
         </Link>
       </div>
