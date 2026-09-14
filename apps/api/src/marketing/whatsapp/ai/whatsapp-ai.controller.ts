@@ -45,6 +45,7 @@ export class WhatsAppAiController {
     @Query('accountId') accountId: string,
     @Body() dto: DraftReplyDto,
   ) {
-    return this.aiService.draftReply(accountId, dto.conversationId);
+    return this.aiService.draftReply(accountId, dto.conversationId, dto.agentName, dto.instruction);
   }
 }
+
