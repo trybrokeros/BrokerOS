@@ -11,17 +11,17 @@ import {
   Loader2,
   Server,
   Lock,
-  Tag,
-  ChevronDown,
+  Paperclip,
+  X,
 } from 'lucide-react';
-import { calculateSmsSegments, DEFAULT_SMS_QUICK_REPLIES, DEFAULT_SMS_MERGE_TAGS } from '@brokeros/constants';
+import { calculateSmsSegments, DEFAULT_SMS_QUICK_REPLIES } from '@brokeros/constants';
 import { SmsQuickReplyModal } from './SmsQuickReplyModal';
 import { SmsTemplatePickerModal } from './SmsTemplatePickerModal';
 import type { SmsQuickReplyItem } from '../../types/inbox';
 import { toast } from 'sonner';
 
 interface SmsMessageComposerProps {
-  onSendMessage: (payload: { text: string }) => Promise<any>;
+  onSendMessage: (payload: { text: string; mediaUrl?: string }) => Promise<any>;
   onDraftAi: () => Promise<{ text: string }>;
   assignedProvider?: string;
   assignedSenderPhone?: string | null;
@@ -42,7 +42,13 @@ export const SmsMessageComposer: React.FC<SmsMessageComposerProps> = ({
   const [text, setText] = useState('');
   const [isQuickReplyModalOpen, setIsQuickReplyModalOpen] = useState(false);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
-  const [showMergeTags, setShowMergeTags] = useState(false);
+  const [attachedMedia, setAttachedMedia] = useState<{
+    name: string;
+    url: string;
+    size?: number;
+  } | null>(null);
+
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Slash command autocomplete state
   const [allQuickReplies, setAllQuickReplies] = useState<SmsQuickReplyItem[]>(
@@ -124,21 +130,33 @@ export const SmsMessageComposer: React.FC<SmsMessageComposerProps> = ({
     }
   };
 
-  const insertMergeTag = (tag: string) => {
-    setText((prev) => (prev ? `${prev} ${tag}` : tag));
-    setShowMergeTags(false);
-    textareaRef.current?.focus();
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const fileUrl = URL.createObjectURL(file);
+    setAttachedMedia({
+      name: file.name,
+      url: fileUrl,
+      size: file.size,
+    });
+    toast.success(`Attached ${file.name}`);
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const { segments, isUnicode, charCount, remainingInSegment } = calculateSmsSegments(text);
 
   const handleSend = async () => {
     const trimmed = text.trim();
-    if (!trimmed || sending || disabled) return;
+    if ((!trimmed && !attachedMedia) || sending || disabled) return;
 
     try {
-      await onSendMessage({ text: trimmed });
+      await onSendMessage({
+        text: trimmed || (attachedMedia ? `[Media: ${attachedMedia.name}]` : ''),
+        mediaUrl: attachedMedia?.url,
+      });
       setText('');
+      setAttachedMedia(null);
       setSlashQuery(null);
       if (textareaRef.current) {
         textareaRef.current.style.height = 'auto';
@@ -254,42 +272,23 @@ export const SmsMessageComposer: React.FC<SmsMessageComposerProps> = ({
             <span>Templates</span>
           </button>
 
-          {/* Merge Tags Dropdown Trigger */}
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setShowMergeTags(!showMergeTags)}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium text-text-secondary hover:text-text-primary hover:bg-bg-subtle transition-colors"
-              title="Insert Personalization Merge Tag"
-            >
-              <Tag className="w-3.5 h-3.5 text-blue-500" />
-              <span>Tags</span>
-              <ChevronDown className="w-3 h-3 text-text-tertiary" />
-            </button>
-
-            {showMergeTags && (
-              <div className="absolute bottom-full left-0 mb-1 w-48 bg-bg-surface border border-border-default rounded-xl shadow-xl p-1 z-30 animate-in fade-in">
-                <div className="px-2 py-1 text-[10px] font-bold text-text-tertiary uppercase tracking-wider border-b border-border-subtle mb-1">
-                  Insert Merge Tag
-                </div>
-                <div className="max-h-48 overflow-y-auto space-y-0.5">
-                  {DEFAULT_SMS_MERGE_TAGS.map((t) => (
-                    <button
-                      key={t.tag}
-                      type="button"
-                      onClick={() => insertMergeTag(t.tag)}
-                      className="w-full text-left px-2 py-1 rounded-lg hover:bg-bg-subtle text-xs flex items-center justify-between group"
-                    >
-                      <span className="font-mono text-amber-600 dark:text-amber-400 font-medium text-[11px]">
-                        {t.tag}
-                      </span>
-                      <span className="text-[10px] text-text-tertiary">{t.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+          {/* Media Attachment Button */}
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold text-text-secondary hover:text-text-primary hover:bg-bg-subtle transition-colors"
+            title="Attach image, brochure, or document (MMS)"
+          >
+            <Paperclip className="w-3.5 h-3.5 text-blue-500" />
+            <span>Attach</span>
+          </button>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            className="hidden"
+            accept="image/*,video/*,.pdf"
+          />
         </div>
 
         {/* AI Draft Assistant Button */}
@@ -335,6 +334,27 @@ export const SmsMessageComposer: React.FC<SmsMessageComposerProps> = ({
               </div>
             </button>
           ))}
+        </div>
+      )}
+
+      {/* Attached Media Chip */}
+      {attachedMedia && (
+        <div className="flex items-center gap-2 px-3 py-1.5 bg-bg-base border border-border-default rounded-xl w-fit text-xs text-text-primary shadow-2xs animate-in fade-in">
+          <Paperclip className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+          <span className="font-medium truncate max-w-[220px]">{attachedMedia.name}</span>
+          {attachedMedia.size && (
+            <span className="text-[10px] text-text-tertiary">
+              ({(attachedMedia.size / 1024).toFixed(0)} KB)
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={() => setAttachedMedia(null)}
+            className="p-0.5 ml-1 rounded hover:bg-bg-subtle text-text-tertiary hover:text-text-primary transition-colors"
+            title="Remove attachment"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
         </div>
       )}
 
