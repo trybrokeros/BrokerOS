@@ -7,17 +7,12 @@
     "skipLibCheck": true,
     "noEmit": true,
     "strict": false,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "baseUrl": "..",
+    "baseUrl": ".",
     "paths": {
       "@brokeros/prisma": ["packages/prisma/src/index.ts"],
       "@brokeros/constants": ["packages/constants/src/index.ts"],
       "@brokeros/types": ["packages/types/src/index.ts"],
       "@brokeros/int-*": ["integrations/*/src/index.ts"]
     }
-  },
-  "include": [
-    "**/*.ts"
-  ]
+  }
 }
