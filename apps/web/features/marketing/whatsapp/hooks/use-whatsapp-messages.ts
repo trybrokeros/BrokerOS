@@ -113,7 +113,11 @@ export function useWhatsAppMessages(conversationId: string | null) {
     }
   };
 
-  const draftReplyWithAi = async (accountId: string): Promise<string> => {
+  const draftReplyWithAi = async (
+    accountId: string,
+    agentName?: string,
+    instruction?: string,
+  ): Promise<string> => {
     if (!conversationId) return '';
 
     try {
@@ -121,7 +125,11 @@ export function useWhatsAppMessages(conversationId: string | null) {
       const res = await fetch(`${baseUrl}/api/marketing/whatsapp/ai/draft?accountId=${accountId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ conversationId }),
+        body: JSON.stringify({
+          conversationId,
+          agentName,
+          instruction,
+        }),
       });
 
       if (!res.ok) {
