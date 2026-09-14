@@ -157,10 +157,21 @@ export class WhatsAppAiService {
   async draftReply(
     accountId: string | undefined,
     conversationId: string,
+    agentName?: string,
+    instruction?: string,
   ): Promise<{ draft: string }> {
     const conversation = await this.prisma.whatsAppConversation.findUnique({
       where: { id: conversationId },
-      include: { contact: true },
+      include: {
+        contact: true,
+        agent: true,
+        lead: {
+          include: {
+            interestedProject: true,
+            assignedUser: true,
+          },
+        },
+      },
     });
 
     if (!conversation) {
@@ -227,35 +238,75 @@ export class WhatsAppAiService {
       );
     }
 
-    // 2. Fetch recent conversation messages (last 20)
+    // 2. Resolve contextual entities
+    const leadName =
+      conversation.contact?.name ||
+      conversation.contactName ||
+      (conversation.lead
+        ? `${conversation.lead.firstName || ''} ${conversation.lead.lastName || ''}`.trim()
+        : '') ||
+      'Valued Client';
+
+    const advisorName =
+      agentName ||
+      conversation.agent?.name ||
+      conversation.lead?.assignedUser?.name ||
+      'Property Advisory Consultant';
+
+    const projectName =
+      conversation.lead?.interestedProject?.name ||
+      'Prime Luxury Residences';
+
+    const projectCity =
+      conversation.lead?.interestedProject?.city ||
+      'Prime Downtown';
+
+    // 3. Fetch recent conversation messages (last 20)
     const recentMessages = await this.prisma.whatsAppMessage.findMany({
       where: { conversationId },
       orderBy: { sentAt: 'desc' },
       take: 20,
     });
 
-    if (recentMessages.length === 0) {
-      throw new BadRequestException('No messages to draft reply from yet.');
-    }
-
     // Re-order chronologically (oldest first)
     const chronological = [...recentMessages].reverse();
 
-    const formattedMessages = chronological.map((m) => ({
-      role:
-        m.direction === 'INBOUND' ? ('user' as const) : ('assistant' as const),
-      content: m.body || `[${m.contentType || 'Media'}]`,
-    }));
+    const formattedMessages =
+      chronological.length === 0
+        ? [
+            {
+              role: 'user' as const,
+              content: `Please draft an initial, friendly WhatsApp outreach message to prospective buyer ${leadName} introducing myself as ${advisorName} from BrokerOS regarding ${projectName}. Make it warm, professional, engaging, and end with a quick, low-friction question or call to action.`,
+            },
+          ]
+        : chronological.map((m) => ({
+            role:
+              m.direction === 'INBOUND' ? ('user' as const) : ('assistant' as const),
+            content: m.body || `[${m.contentType || 'Media'}]`,
+          }));
 
-    // 3. Build system prompt
-    const defaultSystemPrompt = `You are an elite real estate sales advisor and concierge for an enterprise brokerage.
-Your role is to assist the client courteously, provide crisp property insights, answer pricing and schedule visit queries, and encourage booking a site visit.
-Client Name: ${conversation.contact?.name || conversation.contactName || 'Valued Client'}
-Keep your response concise, helpful, and formatted for WhatsApp (use emojis sparingly, avoid markdown headings).`;
+    // 4. Build comprehensive, zero-placeholder system prompt
+    const defaultSystemPrompt = `You are ${advisorName}, a senior real estate advisor with BrokerOS Realty representing ${projectName} (${projectCity}).
+Client / Lead Name: ${leadName}
 
-    const systemPrompt = config?.systemPrompt || defaultSystemPrompt;
+GUIDELINES FOR WHATSAPP DRAFTS:
+1. Tone & Format: Warm, executive, courteous, and natural. Formatted cleanly for WhatsApp (emojis used sparingly, NO markdown headings, NO bullet spam).
+2. Context Sensitivity & Length:
+   - If replying to a specific customer inquiry, answer it directly and concisely (1 to 3 sentences maximum).
+   - If the customer asked a short question, give a crisp, helpful answer without unnecessary filler.
+   - Do NOT write long walls of text unless the user specifically asked for comprehensive specifications or brochure details.
+3. ABSOLUTELY ZERO PLACEHOLDERS:
+   - CRITICAL: NEVER output bracketed or bold placeholders like [Your Name], **Your Name**, [Agent Name], [Company Name], [Phone Number], [Insert Link], etc.
+   - If you include a signature sign-off, sign off directly as "${advisorName}". For quick in-thread replies, omit the signature completely.
+4. VARIETY:
+   - Generate a fresh, distinct, and highly engaging phrasing every time.
+${instruction ? `\nUser Custom Instruction: ${instruction}` : ''}`;
 
-    // 4. Dispatch to LLM provider
+    const systemPrompt = config?.systemPrompt
+      ? `${config.systemPrompt}\n\nAdvisor Name: ${advisorName}\nProject: ${projectName}\nClient Name: ${leadName}\nCRITICAL: NEVER output placeholders like [Your Name] or **Your Name**. Sign as ${advisorName} or omit signature.`
+      : defaultSystemPrompt;
+
+    // 5. Dispatch to LLM provider with slight temperature for variety
     const draft = await callLlmChatCompletion({
       provider,
       model,
@@ -263,6 +314,7 @@ Keep your response concise, helpful, and formatted for WhatsApp (use emojis spar
       systemPrompt,
       messages: formattedMessages,
       logger: this.logger,
+      temperature: 0.82,
     });
 
     return { draft };
