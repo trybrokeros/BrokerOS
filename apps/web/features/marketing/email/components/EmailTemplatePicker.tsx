@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Check } from "lucide-react";
+import { Check, ArrowRight } from "lucide-react";
 import {
   type TemplateOption,
   REAL_ESTATE_TEMPLATES,
@@ -79,8 +79,9 @@ export function EmailTemplatePicker({
                   <span>Selected</span>
                 </div>
               ) : (
-                <span className="text-[11px] font-bold text-[var(--text-tertiary)] hover:text-[var(--text-primary)]">
-                  Select &rarr;
+                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[var(--text-tertiary)] group-hover:text-[var(--text-primary)]">
+                  <span>Select</span>
+                  <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
                 </span>
               )}
             </div>
