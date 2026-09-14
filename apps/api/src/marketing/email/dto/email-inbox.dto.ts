@@ -105,4 +105,13 @@ export class DraftEmailAiReplyDto {
   @IsString()
   @IsOptional()
   leadName?: string;
+
+  @IsString()
+  @IsOptional()
+  agentName?: string;
+
+  @IsString()
+  @IsOptional()
+  instruction?: string;
 }
+

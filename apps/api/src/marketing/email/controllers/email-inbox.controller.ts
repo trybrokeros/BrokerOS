@@ -20,6 +20,7 @@ import {
   UpdateEmailConversationStatusDto,
   AssignEmailConversationAgentDto,
   ListEmailMessagesQueryDto,
+  DraftEmailAiReplyDto,
 } from '../dto/email-inbox.dto.js';
 
 @Controller('api/marketing/email/inbox')
@@ -92,7 +93,10 @@ export class EmailInboxController {
   }
 
   @Post('conversations/:id/ai-draft')
-  async draftAiReply(@Param('id') id: string) {
-    return this.inboxService.draftAiReply(id);
+  async draftAiReply(
+    @Param('id') id: string,
+    @Body() dto?: DraftEmailAiReplyDto,
+  ) {
+    return this.inboxService.draftAiReply(id, dto);
   }
 }
