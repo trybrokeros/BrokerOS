@@ -5,13 +5,16 @@
 export const USD_TO_INR_EXCHANGE_RATE = 95;
 
 export const CAMPAIGN_STATUS_CONFIG = {
-  DRAFT: { label: 'Draft', color: 'gray', bg: 'bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300' },
-  SCHEDULED: { label: 'Scheduled', color: 'amber', bg: 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400' },
-  PROCESSING: { label: 'Sending...', color: 'blue', bg: 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400' },
-  COMPLETED: { label: 'Completed', color: 'emerald', bg: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400' },
-  PAUSED: { label: 'Paused', color: 'yellow', bg: 'bg-yellow-50 text-yellow-700 dark:bg-yellow-950/40 dark:text-yellow-400' },
-  FAILED: { label: 'Failed', color: 'rose', bg: 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400' },
-  CANCELLED: { label: 'Cancelled', color: 'zinc', bg: 'bg-zinc-200 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400' },
+  DRAFT: { label: 'Draft', color: 'slate', bg: 'bg-slate-50 text-slate-700 border border-slate-200/70 dark:bg-slate-900/40 dark:text-slate-300 dark:border-slate-800' },
+  PENDING: { label: 'Pending', color: 'slate', bg: 'bg-slate-50 text-slate-700 border border-slate-200/70 dark:bg-slate-900/40 dark:text-slate-300 dark:border-slate-800' },
+  SCHEDULED: { label: 'Scheduled', color: 'slate', bg: 'bg-slate-50 text-slate-700 border border-slate-200/70 dark:bg-slate-900/40 dark:text-slate-300 dark:border-slate-800' },
+  PROCESSING: { label: 'Sending...', color: 'slate', bg: 'bg-slate-50/80 text-blue-700 border border-blue-200/60 dark:bg-slate-950/40 dark:text-blue-400 dark:border-blue-800/40' },
+  RUNNING: { label: 'Active', color: 'slate', bg: 'bg-slate-50/80 text-emerald-700 border border-emerald-200/60 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/40' },
+  ACTIVE: { label: 'Active', color: 'slate', bg: 'bg-slate-50/80 text-emerald-700 border border-emerald-200/60 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/40' },
+  COMPLETED: { label: 'Completed', color: 'slate', bg: 'bg-slate-50/80 text-green-700 border border-green-200/60 dark:bg-slate-900/40 dark:text-slate-300 dark:border-slate-800' }, // green
+  PAUSED: { label: 'Paused', color: 'slate', bg: 'bg-slate-50/80 text-yellow-700 border border-slate-200/70 dark:bg-slate-900/40 dark:text-slate-300 dark:border-slate-800' }, // yellow
+  FAILED: { label: 'Failed', color: 'slate', bg: 'bg-slate-50/80 text-red-700 border border-slate-200/70 dark:bg-slate-900/40 dark:text-slate-300 dark:border-slate-800' }, // red
+  CANCELLED: { label: 'Cancelled', color: 'slate', bg: 'bg-slate-50/80 text-gray-700 border border-slate-200/70 dark:bg-slate-900/40 dark:text-slate-300 dark:border-slate-800' }, // gray
 } as const;
 
 export const DEFAULT_MERGE_TAGS = [
