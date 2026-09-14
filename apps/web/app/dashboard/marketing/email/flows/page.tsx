@@ -15,8 +15,8 @@ export default function EmailFlowsPage() {
   return (
     <DashboardPageWrapper
       loading={false}
-      title="2-Way Email Automation Flows"
-      subtitle="Configure keyword auto-responders, Groq AI concierge, lead status updates, and Pre-Sales handoff sequences."
+      title="Email Automations & Flow Workflows"
+      subtitle="Automated reply sequences, Groq AI concierge, CRM taggers, and Pre-Sales handoff trees."
       headerRight={
         <div className="flex items-center gap-2">
           <Link href="/dashboard/marketing/email/inbox">
