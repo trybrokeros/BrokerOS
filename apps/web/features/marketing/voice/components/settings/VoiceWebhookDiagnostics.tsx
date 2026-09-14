@@ -220,40 +220,6 @@ export const VoiceWebhookDiagnostics: React.FC = () => {
 
   return (
     <div className="space-y-8 animate-enter">
-      {/* Overview Banner */}
-      <div className="p-6 bg-linear-to-r from-blue-900/90 via-indigo-950 to-slate-950 border border-blue-500/20 rounded-3xl text-white shadow-xl relative overflow-hidden">
-        <div className="absolute right-0 top-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div className="space-y-2 max-w-2xl">
-            <div className="flex items-center gap-2">
-              <Badge className="bg-blue-500/20 text-blue-300 border-blue-400/30 text-[10px] font-bold uppercase tracking-wider">
-                <ShieldCheck className="w-3 h-3 mr-1" />
-                Dual-Channel Audio & STT Ingestion
-              </Badge>
-              <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-400/30 text-[10px] font-bold uppercase tracking-wider">
-                Active & Listening
-              </Badge>
-            </div>
-            <h2 className="text-xl font-bold tracking-tight text-white">
-              Inbound & Post-Call Telephony Webhooks
-            </h2>
-            <p className="text-xs text-slate-300 leading-relaxed">
-              When an AI Voice broadcast completes, telephony carriers and voice engines push the stereo call recording link, turn-by-turn dialogue transcript, executive summary, and prospect sentiment directly into BrokerOS. Our pipeline maps the sentiment to lead temperatures (<span className="text-amber-300 font-bold">HOT 🔥</span> / <span className="text-blue-300 font-bold">WARM 🌤️</span> / <span className="text-cyan-300 font-bold">COLD ❄️</span>) and attaches full call context into CRM notes for pre-sales follow-up.
-            </p>
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full md:w-auto">
-            <div className="px-4 py-3 bg-white/10 backdrop-blur-md rounded-2xl border border-white/15 text-center">
-              <div className="text-2xl font-black text-white">{endpoints.length}</div>
-              <div className="text-[10px] font-semibold text-slate-300 uppercase">Configured Endpoints</div>
-            </div>
-            <div className="px-4 py-3 bg-white/10 backdrop-blur-md rounded-2xl border border-white/15 text-center">
-              <div className="text-2xl font-black text-emerald-400">100%</div>
-              <div className="text-[10px] font-semibold text-slate-300 uppercase">Public Ingest Readiness</div>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Webhook Endpoints List */}
       <div className="space-y-4">
@@ -433,11 +399,10 @@ export const VoiceWebhookDiagnostics: React.FC = () => {
               </div>
               {simResult && (
                 <Badge
-                  className={`text-[9px] font-bold uppercase ${
-                    simResult.ok
-                      ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
-                      : "bg-red-500/20 text-red-400 border-red-500/30"
-                  }`}
+                  className={`text-[9px] font-bold uppercase ${simResult.ok
+                    ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+                    : "bg-red-500/20 text-red-400 border-red-500/30"
+                    }`}
                 >
                   HTTP {simResult.status || (simResult.ok ? 200 : 500)}
                 </Badge>

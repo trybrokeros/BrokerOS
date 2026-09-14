@@ -13,7 +13,6 @@ import {
   StudioVapiSettings,
   StudioRetellSettings,
   StudioSarvamSettings,
-  LivePromptVariablePreview,
   VoiceScriptEditor,
 } from "../components/composer";
 import type { VoiceAgentIntegrationRecord, CsvLeadRow } from "@/features/marketing/types";
@@ -78,9 +77,9 @@ export function VoiceStep4AgentComposer({
     firstLead,
     selectedProject
       ? {
-          name: selectedProject.name,
-          city: selectedProject.city || undefined,
-        }
+        name: selectedProject.name,
+        city: selectedProject.city || undefined,
+      }
       : undefined,
   );
 
@@ -414,8 +413,8 @@ export function VoiceStep4AgentComposer({
             <InBrowserAudioPlayer
               text={interpolateVariables(
                 formData.firstMessage ||
-                  formData.scriptPrompt ||
-                  "Hello! I am calling regarding your recent luxury real estate inquiry.",
+                formData.scriptPrompt ||
+                "Hello! I am calling regarding your recent luxury real estate inquiry.",
               )}
               voiceId={formData.voiceId}
               voiceName={formData.voiceName}
@@ -426,7 +425,6 @@ export function VoiceStep4AgentComposer({
               agentPlatformId={formData.agentPlatformId}
               apiBaseUrl={apiBaseUrl}
             />
-            <LivePromptVariablePreview sampleLead={sampleLead} sampleProject={sampleProject} />
           </div>
         </div>
       </div>

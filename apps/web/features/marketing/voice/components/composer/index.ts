@@ -6,5 +6,4 @@ export * from "./AgentPlatformSelector";
 export * from "./StudioVapiSettings";
 export * from "./StudioRetellSettings";
 export * from "./StudioSarvamSettings";
-export * from "./LivePromptVariablePreview";
 export * from "./VoiceScriptEditor";
