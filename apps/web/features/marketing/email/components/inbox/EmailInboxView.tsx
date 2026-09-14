@@ -7,6 +7,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Mail, AlertCircle } from 'lucide-react';
+import { authClient } from '@/lib/auth-client';
 import { EmailConversationList } from './EmailConversationList';
 import { EmailConversationHeader } from './EmailConversationHeader';
 import { EmailConversationThread } from './EmailConversationThread';
@@ -20,6 +21,7 @@ export const EmailInboxView: React.FC = () => {
   const [activeConversation, setActiveConversation] = useState<EmailConversation | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
+  const { data: session } = authClient.useSession();
   const searchParams = useSearchParams();
   const deepLinkConvId = searchParams.get('conversationId') || searchParams.get('c');
   const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
@@ -128,7 +130,7 @@ export const EmailInboxView: React.FC = () => {
 
             <EmailMessageComposer
               onSendMessage={sendMessage}
-              onDraftWithAi={draftReplyWithAi}
+              onDraftWithAi={() => draftReplyWithAi(session?.user?.name || undefined)}
               assignedProvider={activeConversation.assignedProvider}
               assignedSenderEmail={activeConversation.assignedSenderEmail}
             />

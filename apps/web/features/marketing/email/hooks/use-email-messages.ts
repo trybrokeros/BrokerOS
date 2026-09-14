@@ -81,7 +81,10 @@ export function useEmailMessages(conversationId: string | null) {
     }
   };
 
-  const draftReplyWithAi = async (): Promise<{ subject: string; textBody: string; htmlBody: string }> => {
+  const draftReplyWithAi = async (
+    agentName?: string,
+    instruction?: string,
+  ): Promise<{ subject: string; textBody: string; htmlBody: string }> => {
     if (!conversationId) return { subject: '', textBody: '', htmlBody: '' };
 
     try {
@@ -92,6 +95,7 @@ export function useEmailMessages(conversationId: string | null) {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
+          body: JSON.stringify({ agentName, instruction }),
         },
       );
 
