@@ -48,6 +48,13 @@ export const SmsConversationList: React.FC<SmsConversationListProps> = ({
     }
   };
 
+  const formatMessagePreview = (text?: string | null, maxChars = 40) => {
+    if (!text) return 'No messages yet';
+    const clean = text.replace(/\s+/g, ' ').trim();
+    if (!clean) return 'No messages yet';
+    return clean.length > maxChars ? `${clean.slice(0, maxChars)}...` : clean;
+  };
+
   return (
     <div className="flex flex-col h-full bg-bg-surface border-r border-border-default w-full md:w-80 lg:w-96 shrink-0">
       {/* Search & New SMS Header */}
@@ -157,7 +164,7 @@ export const SmsConversationList: React.FC<SmsConversationListProps> = ({
 
                   {/* Message body preview snippet */}
                   <p className="text-xs text-text-secondary truncate leading-normal">
-                    {conv.lastMessageText || 'No messages yet'}
+                    {formatMessagePreview(conv.lastMessageText, 40)}
                   </p>
 
                   <div className="flex items-center justify-between mt-1.5">
