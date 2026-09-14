@@ -13,6 +13,7 @@ import {
   Sparkles,
   Zap,
   ArrowLeft,
+  ArrowRight,
   Inbox,
   Workflow,
 } from "lucide-react";
@@ -198,7 +199,8 @@ export default function SmsMarketingDashboard() {
           <div className="flex items-center gap-2">
             <Link href="/dashboard/marketing/sms/flows">
               <Button variant="outline" size="sm" className="text-xs font-bold gap-1.5">
-                <span>Configure Reply Flows &rarr;</span>
+                <span>Configure Reply Flows</span>
+                <ArrowRight className="w-3.5 h-3.5" />
               </Button>
             </Link>
             <Link href="/dashboard/marketing/sms/settings">
@@ -224,8 +226,9 @@ export default function SmsMarketingDashboard() {
             </div>
           </div>
           <Link href="/dashboard/marketing/sms/settings">
-            <Button variant="default" size="sm" className="text-xs font-bold bg-amber-500 hover:bg-amber-600 text-slate-950">
-              Connect Gateway &rarr;
+            <Button variant="default" size="sm" className="text-xs font-bold bg-amber-500 hover:bg-amber-600 text-slate-950 gap-1.5">
+              <span>Connect Gateway</span>
+              <ArrowRight className="w-3.5 h-3.5" />
             </Button>
           </Link>
         </div>

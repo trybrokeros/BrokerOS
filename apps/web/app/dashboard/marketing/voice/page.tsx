@@ -14,6 +14,7 @@ import {
   TrendingUp,
   ShieldCheck,
   Building,
+  ArrowRight,
 } from "lucide-react";
 import { DashboardPageWrapper } from "@/components/dashboard/DashboardPageWrapper";
 import { StatCards } from "@/components/dashboard/StatCards";
@@ -169,8 +170,9 @@ export default function VoiceMarketingHubPage() {
               </div>
             </div>
             <Link href="/dashboard/marketing/voice/settings">
-              <Button variant="outline" size="sm" className="text-xs font-bold">
-                Manage Gateways &rarr;
+              <Button variant="outline" size="sm" className="text-xs font-bold gap-1.5">
+                <span>Manage Gateways</span>
+                <ArrowRight className="w-3.5 h-3.5" />
               </Button>
             </Link>
           </div>
@@ -190,8 +192,9 @@ export default function VoiceMarketingHubPage() {
               </div>
             </div>
             <Link href="/dashboard/marketing/voice/settings">
-              <Button variant="default" size="sm" className="text-xs font-bold">
-                Connect Gateways &rarr;
+              <Button variant="default" size="sm" className="text-xs font-bold gap-1.5">
+                <span>Connect Gateways</span>
+                <ArrowRight className="w-3.5 h-3.5" />
               </Button>
             </Link>
           </div>
