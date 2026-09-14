@@ -7,6 +7,7 @@ import {
   Send,
   Zap,
   ArrowLeft,
+  ArrowRight,
   CheckCircle2,
   AlertCircle,
   Layers,
@@ -440,9 +441,10 @@ export function SmsStep4ReviewLaunch({
             </div>
             <a
               href="/dashboard/marketing/sms/settings"
-              className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-xs shrink-0 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-extrabold text-xs shrink-0 transition-colors"
             >
-              Configure Gateway &rarr;
+              <span>Configure Gateway</span>
+              <ArrowRight className="w-3.5 h-3.5" />
             </a>
           </div>
         ) : (
@@ -650,7 +652,8 @@ export function SmsStep4ReviewLaunch({
           className="gap-2 text-xs font-bold shadow-md bg-amber-500 hover:bg-amber-600 text-slate-950 px-5"
         >
           <Zap className="w-4 h-4" />
-          <span>Launch SMS Campaign Now &rarr;</span>
+          <span>Launch SMS Campaign Now</span>
+          <ArrowRight className="w-4 h-4" />
         </Button>
       </div>
 
