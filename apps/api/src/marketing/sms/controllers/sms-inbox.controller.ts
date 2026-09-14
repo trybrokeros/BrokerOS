@@ -20,11 +20,12 @@ import {
   UpdateSmsConversationStatusDto,
   AssignSmsConversationAgentDto,
   ListSmsMessagesQueryDto,
+  DraftSmsAiReplyDto,
 } from '../dto/sms-inbox.dto.js';
 
 @Controller('api/marketing/sms/inbox')
 export class SmsInboxController {
-  constructor(private readonly inboxService: SmsInboxService) {}
+  constructor(private readonly inboxService: SmsInboxService) { }
 
   @Get('conversations')
   async listConversations(@Query() query: ListSmsConversationsQueryDto) {
@@ -100,7 +101,11 @@ export class SmsInboxController {
   }
 
   @Post('conversations/:id/ai-draft')
-  async draftAiReply(@Param('id') id: string) {
-    return this.inboxService.draftAiReply(id);
+  async draftAiReply(
+    @Param('id') id: string,
+    @Body() dto?: DraftSmsAiReplyDto,
+  ) {
+    return this.inboxService.draftAiReply(id, dto);
   }
 }
+

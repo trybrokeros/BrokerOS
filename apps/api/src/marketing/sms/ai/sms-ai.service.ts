@@ -9,7 +9,8 @@ import type { SaveSmsAiConfigDto } from '../dto/sms-flows.dto.js';
 
 export interface SmsAiGenerateReplyArgs {
   leadName?: string;
-  inboundBody: string;
+  advisorName?: string;
+  inboundBody?: string;
   originalCampaignTitle?: string;
   project?: {
     name?: string;
@@ -19,6 +20,7 @@ export interface SmsAiGenerateReplyArgs {
     amenities?: string[];
     brochureUrl?: string;
   } | null;
+  messages?: Array<{ direction: string; text: string; senderName?: string }>;
   customInstructions?: string;
 }
 
@@ -139,29 +141,59 @@ export class SmsAiService {
     }
 
     const provider = config?.provider || 'groq';
-    const model = config?.model || 'openai/gpt-oss-120b';
+    let model = config?.model || 'openai/gpt-oss-120b';
+    if (!model || model.includes('llama') || model.includes('mixtral')) {
+      model = provider === 'groq' ? 'openai/gpt-oss-120b' : 'gpt-4o-mini';
+    }
     const maxChars = config?.maxCharacters || 160;
 
     const leadName = args.leadName || 'Valued Client';
+    const advisorName = args.advisorName || 'Advisory Team';
     const campaignTitle = args.originalCampaignTitle || 'Luxury Real Estate';
     const projectInfo = args.project
-      ? `Project: ${args.project.name || 'Skyline Luxuria'}, ${args.project.city || 'Mumbai'}. ${args.project.description || ''}`
-      : 'Brokerage Luxury Residences';
+      ? `Project: ${args.project.name || 'Skyline Luxuria'}, ${args.project.city || 'Downtown'}.`
+      : 'BrokerOS Luxury Residences';
 
-    const systemPrompt =
-      config?.systemPrompt ||
-      this.getDefaultSystemPrompt();
+    const systemPrompt = `You are ${advisorName}, a senior real estate consultant with BrokerOS Realty.
+RULES FOR SMS DRAFTS:
+1. BREVITY: The entire output MUST be strictly under ${maxChars} characters (single SMS segment standard).
+2. TONE: Polite, natural, professional, direct.
+3. CONTEXT-ADAPTIVE:
+   - If replying to an ongoing thread, answer the customer's last inquiry directly without fluff.
+   - If the thread is empty, write a friendly introductory outreach.
+4. NO PLACEHOLDERS: NEVER output [Your Name], **Your Name**, [Phone], [Brokerage], etc. Sign as "${advisorName}" or omit signature.
+5. NO UNSOLICITED LINKS: Do NOT insert any random website URLs or links. Focus purely on clear, direct conversation and CTAs.
+6. VARIETY: Provide a fresh and distinct phrasing every time.`;
 
-    const userPrompt = `
-Inbound SMS from lead "${leadName}":
+    // Construct conversation flow for LLM
+    let userPrompt = '';
+    if (args.messages && args.messages.length > 0) {
+      const threadHistory = args.messages
+        .slice(-8)
+        .map((m) => `${m.direction === 'INBOUND' ? `[Client ${leadName}]` : `[Advisor]`}: ${m.text}`)
+        .join('\n');
+
+      userPrompt = `Ongoing SMS thread with lead "${leadName}":
+${threadHistory}
+
+Project: ${projectInfo}
+Campaign: "${campaignTitle}"
+${args.customInstructions ? `Instructions: ${args.customInstructions}` : ''}
+
+Draft the next direct SMS reply from advisor to the client (STRICTLY UNDER ${maxChars} CHARACTERS). Answer their latest message directly. No links.`;
+    } else if (args.inboundBody) {
+      userPrompt = `Inbound SMS from lead "${leadName}":
 "${args.inboundBody}"
 
-Campaign Context: "${campaignTitle}"
-${projectInfo}
-${args.customInstructions ? `Special Instructions: ${args.customInstructions}` : ''}
+Project: ${projectInfo}
+Campaign: "${campaignTitle}"
+${args.customInstructions ? `Instructions: ${args.customInstructions}` : ''}
 
-Generate a friendly, professional, and ultra-concise SMS reply (STRICTLY UNDER ${maxChars} CHARACTERS). Include a clear call-to-action.
-`.trim();
+Generate a concise SMS reply (STRICTLY UNDER ${maxChars} CHARACTERS). No links.`;
+    } else {
+      userPrompt = `Draft an initial outreach SMS to prospective homebuyer "${leadName}" regarding ${projectInfo}.
+Keep it warm, engaging, and STRICTLY UNDER ${maxChars} CHARACTERS with a clear question CTA. No links.`;
+    }
 
     if (apiKey) {
       try {
@@ -182,8 +214,8 @@ Generate a friendly, professional, and ultra-concise SMS reply (STRICTLY UNDER $
               { role: 'system', content: systemPrompt },
               { role: 'user', content: userPrompt },
             ],
-            temperature: 0.3,
-            max_tokens: 80,
+            temperature: 0.8,
+            max_tokens: 90,
           }),
         });
 
@@ -193,24 +225,34 @@ Generate a friendly, professional, and ultra-concise SMS reply (STRICTLY UNDER $
           if (replyText.startsWith('"') && replyText.endsWith('"')) {
             replyText = replyText.slice(1, -1);
           }
+          // Remove any accidental markdown or bracketed placeholders
+          replyText = replyText.replace(/\[.*?\]/g, '').replace(/\*\*.*?\*\*/g, '').trim();
           if (replyText.length > maxChars) {
             replyText = replyText.slice(0, maxChars - 3) + '...';
           }
-          return {
-            text: replyText,
-            modelUsed: model,
-          };
+          if (replyText) {
+            return {
+              text: replyText,
+              modelUsed: model,
+            };
+          }
         }
       } catch (err: any) {
         this.logger.error(`AI API call failed: ${err.message}`);
       }
     }
 
-    // Fallback template
-    const fallback = `Hi ${leadName}, thanks for your reply! Our Senior Relationship Manager will call you shortly with details. Visit: brokeros.io`;
+    // Dynamic contextual fallback without links
+    const fallbackTemplates = [
+      `Hi ${leadName}, thanks for reaching out! Would you like me to share pricing details or schedule a private tour this week?`,
+      `Hello ${leadName}, this is ${advisorName} regarding ${projectInfo.slice(0, 30)}. Would you have 2 minutes for a quick chat today?`,
+      `Hi ${leadName}, we have exclusive floor plans available. When would be a good time for a quick call?`,
+    ];
+    const pickedFallback = fallbackTemplates[Math.floor(Math.random() * fallbackTemplates.length)];
+
     return {
-      text: fallback.slice(0, maxChars),
-      modelUsed: 'rule-based-fallback',
+      text: pickedFallback.slice(0, maxChars),
+      modelUsed: 'context-fallback',
     };
   }
 
@@ -220,7 +262,8 @@ Your task is to craft high-conversion, polite, and ultra-concise SMS responses t
 Rules:
 1. Always keep responses under 160 characters (GSM-7 single segment standard).
 2. Answer inquiries directly (pricing, visit scheduling, brochure requests).
-3. Always include a short CTA (e.g. "Can we call you at 4 PM?" or "Would Saturday 11 AM work for a tour?").
-4. Never mention you are an AI. Speak as the senior property consultant.`;
+3. Always include a short CTA without unsolicited website links.
+4. Never mention you are an AI. Never use bracketed placeholders.`;
   }
 }
+
