@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Send } from 'lucide-react';
+import { Send, ArrowRight } from 'lucide-react';
 
 interface RecentBroadcast {
   id: string;
@@ -32,9 +32,10 @@ export const WhatsAppRecentBroadcastsTable: React.FC<WhatsAppRecentBroadcastsTab
         </div>
         <Link
           href="/dashboard/marketing/whatsapp/broadcasts"
-          className="text-xs text-brand-600 hover:text-brand-700 font-medium"
+          className="inline-flex items-center gap-1 text-xs text-brand-600 hover:text-brand-700 font-medium group"
         >
-          View all &rarr;
+          <span>View all</span>
+          <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
         </Link>
       </div>
 
@@ -55,7 +56,13 @@ export const WhatsAppRecentBroadcastsTable: React.FC<WhatsAppRecentBroadcastsTab
                   <span className="font-semibold text-xs text-text-primary truncate">
                     {b.name}
                   </span>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-bg-subtle text-text-secondary border border-border-default">
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium border ${
+                    b.status === 'COMPLETED' 
+                      ? 'bg-emerald-50/80 text-emerald-700 border-emerald-200/80' 
+                      : b.status === 'PROCESSING' || b.status === 'SENDING'
+                      ? 'bg-blue-50/80 text-blue-700 border-blue-200/80'
+                      : 'bg-slate-50 text-slate-700 border-slate-200/80'
+                  }`}>
                     {b.status}
                   </span>
                 </div>
