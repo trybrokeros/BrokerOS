@@ -269,6 +269,7 @@ export class SmsService {
             data: {
               campaignId: savedCampaign.id,
               senderNumberId: poolCfg.senderNumberId || null,
+              integrationId: poolCfg.integrationId || null,
               phoneNumber: poolCfg.phoneNumber || null,
               senderId: poolCfg.senderId || null,
               provider: poolCfg.provider || null,
@@ -529,6 +530,7 @@ export class SmsService {
               data: {
                 campaignId: campaign.id,
                 senderNumberId: poolCfg.senderNumberId || null,
+                integrationId: poolCfg.integrationId || null,
                 phoneNumber: poolCfg.phoneNumber || null,
                 senderId: poolCfg.senderId || null,
                 provider: poolCfg.provider || null,
