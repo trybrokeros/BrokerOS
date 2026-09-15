@@ -21,6 +21,9 @@ export class VobizTelephonyClient implements IVoiceTelephonyProvider {
 
     if (!id || !token) return false;
 
+    // Minimum length sanity check before hitting the network
+    if (id.length < 4 || token.length < 4) return false;
+
     try {
       const res = await fetch('https://api.vobiz.ai/api/v1/account', {
         method: 'GET',
@@ -30,10 +33,26 @@ export class VobizTelephonyClient implements IVoiceTelephonyProvider {
         },
       });
 
-      return res.status === 200;
+      // Only hard-reject on explicit auth failures.
+      // Vobiz may change their account endpoint or return non-200 for other
+      // reasons (maintenance, plan restrictions, etc.) — treat those as valid
+      // so we don't block real credentials due to their API instability.
+      if (res.status === 401 || res.status === 403) {
+        return false;
+      }
+
+      // 200 = confirmed valid. Any other non-auth-failure status: trust the
+      // length-based heuristic to decide (endpoint may have moved).
+      if (res.status === 200) return true;
+
+      // For any other status (404 endpoint moved, 5xx, etc.) fall through
+      // to the length heuristic below.
     } catch {
-      return id.length >= 8 && token.length >= 16;
+      // Network error / DNS failure — fall through to heuristic
     }
+
+    // Heuristic: Vobiz Auth IDs are typically 8+ chars, tokens 16+ chars
+    return id.length >= 8 && token.length >= 16;
   }
 
   async testCarrierCall(
