@@ -223,6 +223,8 @@ export class MarketingVoiceProcessor implements OnModuleInit, OnModuleDestroy {
           const resolvedFirstMessage = interpolateVoiceTemplate(campaign.firstMessage || undefined, normalizedVariables);
           const resolvedScriptPrompt = interpolateVoiceTemplate(campaign.scriptPrompt || undefined, normalizedVariables);
 
+          const studioSettings = (campaign.studioSettings as Record<string, any>) || {};
+
           const sendOptions: SendVoiceOptions = {
             toPhone: normalizedPhone,
             fromNumber,
@@ -237,6 +239,7 @@ export class MarketingVoiceProcessor implements OnModuleInit, OnModuleDestroy {
             telephonyCredentials: telephonyCreds,
             agentCredentials: agentCreds,
             variables: normalizedVariables,
+            ...studioSettings,
           };
 
           try {

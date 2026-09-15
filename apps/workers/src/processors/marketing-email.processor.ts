@@ -149,6 +149,7 @@ export class MarketingEmailProcessor implements OnModuleInit, OnModuleDestroy {
         createdBy: true,
         senderPools: {
           include: {
+            integration: true,
             senderDomain: {
               include: {
                 integration: true,
@@ -321,11 +322,18 @@ export class MarketingEmailProcessor implements OnModuleInit, OnModuleDestroy {
     appBaseUrl: string,
   ): Promise<void> {
     const domainRecord = pool.senderDomain;
-    let integration = domainRecord?.integration;
+
+    // Priority 1: pool has a direct integrationId (user explicitly selected this account)
+    let integration: any = pool.integration ?? null;
+
+    // Priority 2: integration linked through the verified sender domain
+    if (!integration) {
+      integration = domainRecord?.integration ?? null;
+    }
 
     const poolProvider = pool.provider || pool.assignedProvider;
 
-    // 1. If not linked through senderDomain, find active integration matching pool's provider and fromEmail
+    // Priority 3: find by provider + fromEmail (best-effort match when no direct link)
     if (!integration && poolProvider) {
       if (pool.fromEmail) {
         integration = await this.prisma.marketingIntegration.findFirst({
@@ -341,7 +349,7 @@ export class MarketingEmailProcessor implements OnModuleInit, OnModuleDestroy {
         });
       }
 
-      // 2. Fallback to any active integration for this provider
+      // Priority 4: any active integration for this provider
       if (!integration) {
         integration = await this.prisma.marketingIntegration.findFirst({
           where: { provider: poolProvider as any, isActive: true },
@@ -350,7 +358,7 @@ export class MarketingEmailProcessor implements OnModuleInit, OnModuleDestroy {
       }
     }
 
-    // 3. Fallback to campaign-level integration
+    // Priority 5: campaign-level integration
     if (!integration) {
       integration = campaign.integration;
     }
