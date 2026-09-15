@@ -87,6 +87,7 @@ export interface SmsSenderNumberRecord {
 export interface CampaignSmsSenderPoolConfig {
   senderNumberId?: string;
   integrationId?: string;
+  accountName?: string;
   allocationPercentage: number;
   allocatedLeads?: number;
   weight?: number;
@@ -99,6 +100,7 @@ export interface CampaignSmsSenderPoolItem {
   id: string;
   campaignId: string;
   senderNumberId?: string | null;
+  integrationId?: string | null;
   phoneNumber?: string | null;
   senderId?: string | null;
   provider?: string | null;
@@ -109,6 +111,11 @@ export interface CampaignSmsSenderPoolItem {
   failedCount: number;
   status: string;
   senderNumber?: SmsSenderNumberRecord | null;
+  integration?: {
+    id: string;
+    name: string;
+    provider: SmsProviderType;
+  } | null;
 }
 
 export interface SmsPreFlightCostLineItem {
