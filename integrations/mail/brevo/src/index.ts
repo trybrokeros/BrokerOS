@@ -14,19 +14,19 @@ import type {
 
 export interface BrevoWebhookEventPayload {
   event:
-    | 'request'
-    | 'delivered'
-    | 'hard_bounce'
-    | 'soft_bounce'
-    | 'blocked'
-    | 'spam'
-    | 'invalid_email'
-    | 'deferred'
-    | 'click'
-    | 'opened'
-    | 'unique_opened'
-    | 'unsubscribed'
-    | 'list_addition';
+  | 'request'
+  | 'delivered'
+  | 'hard_bounce'
+  | 'soft_bounce'
+  | 'blocked'
+  | 'spam'
+  | 'invalid_email'
+  | 'deferred'
+  | 'click'
+  | 'opened'
+  | 'unique_opened'
+  | 'unsubscribed'
+  | 'list_addition';
   email: string;
   id?: number;
   date: string;
@@ -55,34 +55,46 @@ export class BrevoClient {
   async validate(): Promise<boolean> {
     if (!this.apiKey) return false;
 
-    // Brevo API v3 keys start with "xkeysib-"
-    if (!this.apiKey.startsWith('xkeysib-') && this.apiKey.length < 20) {
+    // Brevo API v3 keys start with "xkeysib-" and are at least 40 chars long.
+    // If the key is clearly not a Brevo key format AND is very short, reject immediately.
+    const isBrevoFormat = this.apiKey.startsWith('xkeysib-');
+    if (!isBrevoFormat && this.apiKey.length < 20) {
       return false;
     }
 
     try {
-      // Live ping to Brevo API v3 to verify account and API key validity
+      // Best-effort live ping to Brevo API v3 to verify the API key
       const res = await fetch('https://api.brevo.com/v3/account', {
         method: 'GET',
         headers: {
           'api-key': this.apiKey,
           Accept: 'application/json',
         },
+        // 8-second timeout so dev server doesn't hang
+        signal: AbortSignal.timeout(8000),
       });
 
+      // 200 = valid key with account data
+      // 403 = valid key but insufficient permission (still a real authenticated key)
       if (res.status === 200 || res.status === 403) {
         return true;
       }
+
+      // 401 = definitely wrong/revoked API key
       if (res.status === 401) {
         return false;
       }
 
-      return this.apiKey.startsWith('xkeysib-');
+      // Any other status (429 rate-limit, 5xx server error, etc.):
+      // Trust the key format — Brevo's API might be temporarily unreachable
+      return isBrevoFormat || this.apiKey.length >= 40;
     } catch {
-      // Fallback on network timeout
-      return this.apiKey.startsWith('xkeysib-') || this.apiKey.length >= 20;
+      // Network timeout, DNS failure, or firewall block:
+      // Fall back to format-based trust — a properly-formatted key should be accepted
+      return isBrevoFormat || this.apiKey.length >= 40;
     }
   }
+
 
   async send(options: SendEmailOptions): Promise<SendEmailResult> {
     try {
