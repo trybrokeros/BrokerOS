@@ -181,6 +181,7 @@ export class MarketingSmsProcessor implements OnModuleInit, OnModuleDestroy {
         createdBy: true,
         senderPools: {
           include: {
+            integration: true,
             senderNumber: {
               include: {
                 integration: {
@@ -408,11 +409,18 @@ export class MarketingSmsProcessor implements OnModuleInit, OnModuleDestroy {
     appBaseUrl: string,
   ): Promise<void> {
     const senderNumberRecord = pool.senderNumber;
-    let integration = senderNumberRecord?.integration;
+
+    // Priority 1: pool has a direct integrationId (user explicitly selected this account)
+    let integration: any = pool.integration ?? null;
+
+    // Priority 2: integration linked through the registered sender number
+    if (!integration) {
+      integration = senderNumberRecord?.integration ?? null;
+    }
 
     const poolProvider = pool.provider || senderNumberRecord?.provider;
 
-    // 1. If not linked through senderNumber, find active integration matching pool's provider
+    // Priority 3: find by provider + phone number (best-effort match)
     if (!integration && poolProvider) {
       if (pool.phoneNumber) {
         integration = await this.prisma.smsIntegration.findFirst({
@@ -428,6 +436,7 @@ export class MarketingSmsProcessor implements OnModuleInit, OnModuleDestroy {
         });
       }
 
+      // Priority 4: any active integration for this provider
       if (!integration) {
         integration = await this.prisma.smsIntegration.findFirst({
           where: { provider: poolProvider as any, isActive: true },
@@ -436,7 +445,7 @@ export class MarketingSmsProcessor implements OnModuleInit, OnModuleDestroy {
       }
     }
 
-    // 2. Fallback to campaign-level integration
+    // Priority 5: campaign-level integration
     if (!integration) {
       integration = campaign.integration;
     }
