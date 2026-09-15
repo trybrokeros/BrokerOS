@@ -219,6 +219,24 @@ export default function NewVoiceCampaignPage() {
     try {
       setIsSavingDraft(true);
 
+      const studioSettings = {
+        transcriberModel,
+        transcriberLanguage,
+        maxTurnSilenceMs,
+        voiceSpeed,
+        firstMessageMode,
+        voicemailDetection,
+        backgroundSound,
+        maxDurationSeconds,
+        retellVoiceModel,
+        retellEmotion,
+        enableExpressiveMode,
+        retellAmbientSound,
+        retellLanguage,
+        retellBackchannel,
+        retellReminderMs,
+      };
+
       const draftState = {
         campaignId: draftCampaignId || undefined,
         title,
@@ -238,6 +256,7 @@ export default function NewVoiceCampaignPage() {
         voiceName,
         scriptPrompt,
         firstMessage,
+        studioSettings,
         transcriberModel,
         transcriberLanguage,
         maxTurnSilenceMs,
@@ -473,6 +492,24 @@ export default function NewVoiceCampaignPage() {
 
     setIsSubmitting(true);
     try {
+      const studioSettings = {
+        transcriberModel,
+        transcriberLanguage,
+        maxTurnSilenceMs,
+        voiceSpeed,
+        firstMessageMode,
+        voicemailDetection,
+        backgroundSound,
+        maxDurationSeconds,
+        retellVoiceModel,
+        retellEmotion,
+        enableExpressiveMode,
+        retellAmbientSound,
+        retellLanguage,
+        retellBackchannel,
+        retellReminderMs,
+      };
+
       const payload = {
         campaignId: draftCampaignId || undefined,
         title,
@@ -492,6 +529,7 @@ export default function NewVoiceCampaignPage() {
         voiceName,
         scriptPrompt,
         firstMessage: firstMessage || undefined,
+        studioSettings,
         audienceSource,
         audienceFilters: audienceSource === "CRM_DATABASE" || audienceSource === "HYBRID" ? audienceFilters : undefined,
         csvRecipients: audienceSource !== "CRM_DATABASE" ? csvRecipients : undefined,
