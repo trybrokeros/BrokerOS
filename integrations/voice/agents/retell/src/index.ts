@@ -13,7 +13,7 @@ import type {
   VoicePersonaItem,
 } from '@brokeros/types';
 import { STANDARD_RETELL_MODELS, fetchRetellAccountAgents } from './retell-models.js';
-import { RETELL_VOICES } from './retell-voices.js';
+import { RETELL_VOICES, fetchRetellAccountVoices } from './retell-voices.js';
 import { parseRetellWebhookEvent } from './retell-webhook-parser.js';
 import { dispatchRetellOutboundCall } from './retell-dispatcher.js';
 
@@ -75,6 +75,6 @@ export class RetellAgentClient implements IVoiceAgentProvider {
   }
 
   async getAvailableVoices(credentials?: VoiceAgentCredentials): Promise<VoicePersonaItem[]> {
-    return RETELL_VOICES;
+    return fetchRetellAccountVoices(credentials?.apiKey || this.apiKey);
   }
 }

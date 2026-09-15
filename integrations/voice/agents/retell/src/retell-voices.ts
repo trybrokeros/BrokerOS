@@ -51,3 +51,28 @@ export const RETELL_VOICES: VoicePersonaItem[] = [
     previewText: 'Good day! Let me guide you through the latest payment plans and inventory.',
   },
 ];
+
+export async function fetchRetellAccountVoices(apiKey?: string): Promise<VoicePersonaItem[]> {
+  if (!apiKey) return RETELL_VOICES;
+  try {
+    const res = await fetch('https://api.retellai.com/list-voices', {
+      headers: { Authorization: `Bearer ${apiKey}` },
+    });
+    if (!res.ok) return RETELL_VOICES;
+    const rawVoices = (await res.json()) as any[];
+    if (!Array.isArray(rawVoices) || rawVoices.length === 0) return RETELL_VOICES;
+
+    return rawVoices.map((v: any) => ({
+      id: v.voice_id || v.id,
+      name: `${v.voice_name || v.name} (${v.provider || 'Retell'})`,
+      provider: 'retell',
+      accent: v.accent ? `${v.accent.charAt(0).toUpperCase()}${v.accent.slice(1)}` : 'Global',
+      gender: (v.gender ? `${v.gender.charAt(0).toUpperCase()}${v.gender.slice(1)}` : 'Unspecified') as 'Male' | 'Female' | 'Unspecified',
+      tags: [v.provider || 'Retell', v.gender || 'voice'],
+      previewText: 'Hello! I am calling from Retell AI to assist with your property inquiry.',
+      previewUrl: v.preview_audio_url || v.audio_url || undefined,
+    }));
+  } catch {
+    return RETELL_VOICES;
+  }
+}

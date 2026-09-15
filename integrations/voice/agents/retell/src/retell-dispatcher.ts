@@ -34,6 +34,45 @@ export async function dispatchRetellOutboundCall(
     };
   }
 
+  const agentOverrideProps: Record<string, any> = {};
+
+  const voiceModel = options.retellVoiceModel || options.voiceModel;
+  if (voiceModel) agentOverrideProps.voice_model = voiceModel;
+
+  if (options.voiceSpeed !== undefined && options.voiceSpeed !== 1.0) {
+    agentOverrideProps.voice_speed = options.voiceSpeed;
+  }
+
+  const emotion = options.retellEmotion || options.voiceEmotion;
+  if (emotion && emotion !== 'normal' && emotion !== 'none') {
+    agentOverrideProps.voice_emotion = emotion;
+  }
+
+  const ambSound = options.retellAmbientSound || options.ambientSound;
+  if (ambSound && ambSound !== 'none' && ambSound !== 'off') {
+    agentOverrideProps.ambient_sound = ambSound;
+    agentOverrideProps.ambient_sound_volume = options.ambientSoundVolume ?? 0.8;
+  }
+
+  const backchannel = options.retellBackchannel ?? options.enableBackchannel;
+  if (backchannel !== undefined) {
+    agentOverrideProps.enable_backchannel = backchannel;
+  }
+
+  const reminderMs = options.retellReminderMs ?? options.reminderTriggerMs;
+  if (reminderMs !== undefined && reminderMs > 0) {
+    agentOverrideProps.reminder_trigger_ms = reminderMs;
+  }
+
+  const lang = options.retellLanguage || options.language;
+  if (lang) {
+    agentOverrideProps.language = lang;
+  }
+
+  if (options.maxDurationSeconds && options.maxDurationSeconds > 0) {
+    agentOverrideProps.max_call_duration_ms = options.maxDurationSeconds * 1000;
+  }
+
   const payload: any = {
     agent_id: targetAgentId,
     to_number: options.toPhone,
@@ -44,17 +83,10 @@ export async function dispatchRetellOutboundCall(
     },
   };
 
-  if (options.ambientSound && options.ambientSound !== 'none') {
-    payload.ambient_sound = options.ambientSound;
-  }
-  if (options.ambientSoundVolume !== undefined) {
-    payload.ambient_sound_volume = options.ambientSoundVolume;
-  }
-  if (options.enableBackchannel !== undefined) {
-    payload.enable_backchannel = options.enableBackchannel;
-  }
-  if (options.reminderTriggerMs !== undefined) {
-    payload.reminder_trigger_ms = options.reminderTriggerMs;
+  if (Object.keys(agentOverrideProps).length > 0) {
+    payload.agent_override = {
+      agent: agentOverrideProps,
+    };
   }
 
   try {
