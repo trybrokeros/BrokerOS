@@ -110,7 +110,9 @@ export function EmailStep4ReviewLaunch({
   // Available domain candidates from active integrations
   const availableDomains = useMemo(() => {
     const list: Array<{
-      integrationId?: string;
+      candidateId: string;
+      integrationId: string;
+      integrationName: string;
       domainId?: string;
       domain: string;
       fromEmail: string;
@@ -125,13 +127,18 @@ export function EmailStep4ReviewLaunch({
     integrations
       .filter((int) => int.isActive)
       .forEach((int) => {
+        const intName = int.name || `${int.provider} Account`;
         if (int.senderDomains && int.senderDomains.length > 0) {
           int.senderDomains.forEach((dom) => {
+            const email = dom.fromEmail || int.fromEmail || "";
+            const domain = dom.domain || (email.includes("@") ? email.split("@")[1] : email);
             list.push({
+              candidateId: `${int.id}::${dom.id}::${email}`,
               integrationId: int.id,
+              integrationName: intName,
               domainId: dom.id,
-              domain: dom.domain,
-              fromEmail: dom.fromEmail,
+              domain,
+              fromEmail: email,
               fromName: dom.fromName || int.fromName || "Sales Team",
               provider: int.provider,
               dailyQuota: dom.dailyQuota,
@@ -141,11 +148,15 @@ export function EmailStep4ReviewLaunch({
           });
         } else if (int.fromEmail) {
           // If no specific domains configured yet, use integration's primary mailbox
+          const email = int.fromEmail;
+          const domain = email.includes("@") ? email.split("@")[1] : email;
           list.push({
+            candidateId: `${int.id}::primary::${email}`,
             integrationId: int.id,
+            integrationName: intName,
             domainId: `primary-${int.id}`,
-            domain: int.fromEmail.includes("@") ? int.fromEmail.split("@")[1] : int.fromEmail,
-            fromEmail: int.fromEmail,
+            domain,
+            fromEmail: email,
             fromName: int.fromName || "Sales Team",
             provider: int.provider,
             dailyQuota: 25000,
@@ -157,6 +168,28 @@ export function EmailStep4ReviewLaunch({
 
     return list;
   }, [integrations]);
+
+  // Helper: check if a specific candidate account is in the current pools
+  const isCandidateInPool = (
+    cand: (typeof availableDomains)[0],
+    pools: CampaignSenderPoolConfig[]
+  ) => {
+    return pools.some((p) => {
+      if (p.integrationId && cand.integrationId) {
+        return (
+          p.integrationId === cand.integrationId &&
+          (p.fromEmail || "").toLowerCase() === (cand.fromEmail || "").toLowerCase()
+        );
+      }
+      if (p.senderDomainId && cand.domainId && !cand.domainId.startsWith("primary-")) {
+        return p.senderDomainId === cand.domainId;
+      }
+      return (
+        (p.fromEmail || "").toLowerCase() === (cand.fromEmail || "").toLowerCase() &&
+        p.provider === cand.provider
+      );
+    });
+  };
 
   // Helper: auto-even balance pools
   const autoEvenBalance = (pools: CampaignSenderPoolConfig[]): CampaignSenderPoolConfig[] => {
@@ -193,6 +226,7 @@ export function EmailStep4ReviewLaunch({
       const initialPool: CampaignSenderPoolConfig = {
         senderDomainId: defaultDomain.domainId?.startsWith("primary-") ? undefined : defaultDomain.domainId,
         integrationId: defaultDomain.integrationId,
+        accountName: defaultDomain.integrationName,
         fromEmail: defaultDomain.fromEmail,
         fromName: defaultDomain.fromName,
         domain: defaultDomain.domain,
@@ -203,13 +237,9 @@ export function EmailStep4ReviewLaunch({
     }
   }, [availableDomains, senderPools.length, onSenderPoolsChange]);
 
-  // Toggle a domain on/off
+  // Toggle a specific account on/off
   const handleToggleDomain = (item: (typeof availableDomains)[0]) => {
-    const isAlreadySelected = senderPools.some(
-      (p) =>
-        (p.senderDomainId && p.senderDomainId === item.domainId) ||
-        (p.domain === item.domain && p.fromEmail === item.fromEmail)
-    );
+    const isAlreadySelected = isCandidateInPool(item, senderPools);
 
     let nextPools: CampaignSenderPoolConfig[];
 
@@ -218,17 +248,26 @@ export function EmailStep4ReviewLaunch({
         // Don't allow unchecking the last domain
         return;
       }
-      nextPools = senderPools.filter(
-        (p) =>
-          !(
-            (p.senderDomainId && p.senderDomainId === item.domainId) ||
-            (p.domain === item.domain && p.fromEmail === item.fromEmail)
-          )
-      );
+      nextPools = senderPools.filter((p) => {
+        if (p.integrationId && item.integrationId) {
+          return !(
+            p.integrationId === item.integrationId &&
+            (p.fromEmail || "").toLowerCase() === (item.fromEmail || "").toLowerCase()
+          );
+        }
+        if (p.senderDomainId && item.domainId && !item.domainId.startsWith("primary-")) {
+          return p.senderDomainId !== item.domainId;
+        }
+        return !(
+          (p.fromEmail || "").toLowerCase() === (item.fromEmail || "").toLowerCase() &&
+          p.provider === item.provider
+        );
+      });
     } else {
       const newPool: CampaignSenderPoolConfig = {
         senderDomainId: item.domainId?.startsWith("primary-") ? undefined : item.domainId,
         integrationId: item.integrationId,
+        accountName: item.integrationName,
         fromEmail: item.fromEmail,
         fromName: item.fromName,
         domain: item.domain,
@@ -407,23 +446,29 @@ export function EmailStep4ReviewLaunch({
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
             {availableDomains.map((item) => {
-              const isSelected = senderPools.some(
-                (p) =>
-                  (p.senderDomainId && p.senderDomainId === item.domainId) ||
-                  (p.domain === item.domain && p.fromEmail === item.fromEmail)
-              );
-              const poolItem = senderPools.find(
-                (p) =>
-                  (p.senderDomainId && p.senderDomainId === item.domainId) ||
-                  (p.domain === item.domain && p.fromEmail === item.fromEmail)
-              );
+              const isSelected = isCandidateInPool(item, senderPools);
+              const poolItem = senderPools.find((p) => {
+                if (p.integrationId && item.integrationId) {
+                  return (
+                    p.integrationId === item.integrationId &&
+                    (p.fromEmail || "").toLowerCase() === (item.fromEmail || "").toLowerCase()
+                  );
+                }
+                if (p.senderDomainId && item.domainId && !item.domainId.startsWith("primary-")) {
+                  return p.senderDomainId === item.domainId;
+                }
+                return (
+                  (p.fromEmail || "").toLowerCase() === (item.fromEmail || "").toLowerCase() &&
+                  p.provider === item.provider
+                );
+              });
               const pricing =
                 (EMAIL_PROVIDER_PRICING_ESTIMATES as Record<string, any>)[item.provider] ||
                 EMAIL_PROVIDER_PRICING_ESTIMATES.SYSTEM_DEFAULT;
 
               return (
                 <div
-                  key={item.domainId}
+                  key={item.candidateId}
                   onClick={() => handleToggleDomain(item)}
                   className={`relative p-4 rounded-2xl border-2 cursor-pointer transition-all ${isSelected
                     ? "border-[var(--brand-500)] bg-purple-50/40 shadow-xs ring-2 ring-purple-500/15"
@@ -443,15 +488,18 @@ export function EmailStep4ReviewLaunch({
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-extrabold text-[var(--text-primary)]">
-                            {item.domain}
+                            {item.integrationName}
                           </span>
                           {item.isVerified && (
                             <Badge variant="success" className="text-[9px] py-0 px-1.5">
                               Verified
                             </Badge>
                           )}
+                          <span className="text-[10px] font-mono text-[var(--text-muted)] bg-slate-100 px-1.5 py-0.5 rounded">
+                            @{item.domain}
+                          </span>
                         </div>
-                        <div className="text-[11px] text-[var(--text-tertiary)] font-medium truncate max-w-[220px]">
+                        <div className="text-[11px] text-[var(--text-secondary)] font-semibold truncate max-w-[220px] mt-0.5">
                           {item.fromEmail}
                         </div>
                       </div>
@@ -541,7 +589,7 @@ export function EmailStep4ReviewLaunch({
                     <div className={`w-3 h-3 rounded-full ${color.bg}`} />
                     <div>
                       <div className="text-xs font-extrabold text-[var(--text-primary)]">
-                        {pool.domain || pool.fromEmail}
+                        {pool.accountName || pool.fromEmail}
                       </div>
                       <div className="text-[10px] font-medium text-[var(--text-muted)] truncate max-w-[220px]">
                         {pool.fromEmail} ({(EMAIL_PROVIDERS as Record<string, any>)[pool.provider || "SYSTEM_DEFAULT"]?.name || "System"})
