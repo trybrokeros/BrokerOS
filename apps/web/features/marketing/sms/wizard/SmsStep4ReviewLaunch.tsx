@@ -118,7 +118,9 @@ export function SmsStep4ReviewLaunch({
   // Extract available numbers across active integrations
   const availableNumbers = useMemo(() => {
     const list: Array<{
-      integrationId?: string;
+      candidateId: string;
+      integrationId: string;
+      integrationName: string;
       numberId?: string;
       phoneNumber: string;
       senderId?: string;
@@ -129,10 +131,13 @@ export function SmsStep4ReviewLaunch({
     integrations
       .filter((int) => int.isActive)
       .forEach((int) => {
+        const intName = int.name || `${int.provider} Gateway`;
         if (int.senderNumbers && int.senderNumbers.length > 0) {
           int.senderNumbers.forEach((num: any) => {
             list.push({
+              candidateId: `${int.id}::${num.id}::${num.phoneNumber}`,
               integrationId: int.id,
+              integrationName: intName,
               numberId: num.id,
               phoneNumber: num.phoneNumber,
               senderId: num.senderId || int.fromSender,
@@ -142,7 +147,9 @@ export function SmsStep4ReviewLaunch({
           });
         } else if (int.fromSender) {
           list.push({
+            candidateId: `${int.id}::primary::${int.fromSender}`,
             integrationId: int.id,
+            integrationName: intName,
             numberId: `primary-${int.id}`,
             phoneNumber: int.fromSender,
             senderId: int.fromSender,
@@ -154,6 +161,25 @@ export function SmsStep4ReviewLaunch({
 
     return list;
   }, [integrations]);
+
+  // Helper: check if a specific candidate is in the current SMS pools
+  const isCandidateInSmsPool = (
+    cand: (typeof availableNumbers)[0],
+    pools: CampaignSmsSenderPoolConfig[]
+  ) => {
+    return pools.some((p) => {
+      if (p.integrationId && cand.integrationId) {
+        return (
+          p.integrationId === cand.integrationId &&
+          p.phoneNumber === cand.phoneNumber
+        );
+      }
+      if (p.senderNumberId && cand.numberId && !cand.numberId.startsWith("primary-")) {
+        return p.senderNumberId === cand.numberId;
+      }
+      return p.phoneNumber === cand.phoneNumber && p.provider === cand.provider;
+    });
+  };
 
   // Initialize pools if empty and candidates exist
   React.useEffect(() => {
@@ -170,6 +196,8 @@ export function SmsStep4ReviewLaunch({
         const pct = Math.round(100 / arr.length);
         return {
           senderNumberId: item.numberId?.startsWith("primary-") ? undefined : item.numberId,
+          integrationId: item.integrationId,
+          accountName: item.integrationName,
           phoneNumber: item.phoneNumber,
           senderId: item.senderId,
           provider: item.provider,
@@ -182,24 +210,33 @@ export function SmsStep4ReviewLaunch({
   }, [availableNumbers, senderPools.length, onSenderPoolsChange, totalAudience, providerType]);
 
   // Toggle phone number in sender pool
-  const handleToggleNumberInPool = (cand: typeof availableNumbers[0]) => {
+  const handleToggleNumberInPool = (cand: (typeof availableNumbers)[0]) => {
     if (!onSenderPoolsChange) return;
 
-    const exists = senderPools.some(
-      (p) => p.phoneNumber === cand.phoneNumber && p.provider === cand.provider
-    );
+    const exists = isCandidateInSmsPool(cand, senderPools);
 
     let updated: CampaignSmsSenderPoolConfig[];
     if (exists) {
       if (senderPools.length <= 1) return; // Keep at least one
-      updated = senderPools.filter(
-        (p) => !(p.phoneNumber === cand.phoneNumber && p.provider === cand.provider)
-      );
+      updated = senderPools.filter((p) => {
+        if (p.integrationId && cand.integrationId) {
+          return !(
+            p.integrationId === cand.integrationId &&
+            p.phoneNumber === cand.phoneNumber
+          );
+        }
+        if (p.senderNumberId && cand.numberId && !cand.numberId.startsWith("primary-")) {
+          return p.senderNumberId !== cand.numberId;
+        }
+        return !(p.phoneNumber === cand.phoneNumber && p.provider === cand.provider);
+      });
     } else {
       updated = [
         ...senderPools,
         {
           senderNumberId: cand.numberId?.startsWith("primary-") ? undefined : cand.numberId,
+          integrationId: cand.integrationId,
+          accountName: cand.integrationName,
           phoneNumber: cand.phoneNumber,
           senderId: cand.senderId,
           provider: cand.provider,
@@ -412,8 +449,8 @@ export function SmsStep4ReviewLaunch({
                 type="button"
                 onClick={() => onAllocationModeChange("AUTO_EVEN")}
                 className={`px-3 py-1.5 text-xs font-extrabold rounded-lg transition-all ${allocationMode === "AUTO_EVEN"
-                    ? "bg-white text-[var(--text-primary)] shadow-xs"
-                    : "text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
+                  ? "bg-white text-[var(--text-primary)] shadow-xs"
+                  : "text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
                   }`}
               >
                 Auto-Even Split
@@ -422,8 +459,8 @@ export function SmsStep4ReviewLaunch({
                 type="button"
                 onClick={() => onAllocationModeChange("CUSTOM_PERCENTAGE")}
                 className={`px-3 py-1.5 text-xs font-extrabold rounded-lg transition-all ${allocationMode === "CUSTOM_PERCENTAGE"
-                    ? "bg-white text-[var(--text-primary)] shadow-xs"
-                    : "text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
+                  ? "bg-white text-[var(--text-primary)] shadow-xs"
+                  : "text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
                   }`}
               >
                 Custom Weighted
@@ -454,25 +491,26 @@ export function SmsStep4ReviewLaunch({
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
               {availableNumbers.map((num) => {
-                const isSelected = currentPools.some(
-                  (p) => p.phoneNumber === num.phoneNumber && p.provider === num.provider
-                );
+                const isSelected = isCandidateInSmsPool(num, currentPools);
                 const prov =
                   (SMS_PROVIDERS as Record<string, any>)[num.provider] ||
                   SMS_PROVIDERS.TWILIO;
 
                 return (
                   <button
-                    key={`${num.provider}-${num.phoneNumber}`}
+                    key={num.candidateId}
                     type="button"
                     onClick={() => handleToggleNumberInPool(num)}
                     className={`p-3 rounded-2xl border text-left flex items-center justify-between transition-all ${isSelected
-                        ? "bg-amber-50/70 border-amber-300 shadow-2xs"
-                        : "bg-slate-50/50 border-slate-200 hover:border-slate-300"
+                      ? "bg-amber-50/70 border-amber-300 shadow-2xs"
+                      : "bg-slate-50/50 border-slate-200 hover:border-slate-300"
                       }`}
                   >
                     <div className="min-w-0 flex-1 mr-2">
-                      <div className="font-extrabold text-xs text-[var(--text-primary)] font-mono truncate">
+                      <div className="font-extrabold text-xs text-[var(--text-primary)] truncate">
+                        {num.integrationName}
+                      </div>
+                      <div className="flex items-center gap-1.5 text-[11px] font-mono text-[var(--text-secondary)] font-semibold mt-0.5">
                         {num.phoneNumber}
                       </div>
                       <div className="flex items-center gap-1.5 text-[10px] text-[var(--text-tertiary)] font-bold mt-0.5">
@@ -488,8 +526,8 @@ export function SmsStep4ReviewLaunch({
                     </div>
                     <div
                       className={`w-5 h-5 rounded-lg flex items-center justify-center transition-colors ${isSelected
-                          ? "bg-amber-500 text-slate-950 shadow-xs"
-                          : "border border-slate-300 bg-white"
+                        ? "bg-amber-500 text-slate-950 shadow-xs"
+                        : "border border-slate-300 bg-white"
                         }`}
                     >
                       {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
@@ -520,8 +558,8 @@ export function SmsStep4ReviewLaunch({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className={`w-2.5 h-2.5 rounded-full ${color.bg}`} />
-                    <span className="font-extrabold text-xs text-[var(--text-primary)] font-mono">
-                      {pool.phoneNumber || pool.senderId || "Sender Route"}
+                    <span className="font-extrabold text-xs text-[var(--text-primary)]">
+                      {pool.accountName || pool.phoneNumber || pool.senderId || "Sender Route"}
                     </span>
                     <span className="text-[10px] font-bold text-[var(--text-muted)]">
                       ({pool.provider || "TWILIO"})
@@ -597,8 +635,8 @@ export function SmsStep4ReviewLaunch({
         {testSendStatus && (
           <div
             className={`p-3 rounded-xl border text-xs font-bold flex items-center gap-2 shadow-xs ${testSendStatus.ok
-                ? "bg-emerald-50 border-emerald-200 text-emerald-800"
-                : "bg-rose-50 border-rose-200 text-rose-800"
+              ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+              : "bg-rose-50 border-rose-200 text-rose-800"
               }`}
           >
             {testSendStatus.ok ? (
