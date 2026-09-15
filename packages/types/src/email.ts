@@ -101,6 +101,7 @@ export interface SenderDomainRecord {
 export interface CampaignSenderPoolConfig {
   senderDomainId?: string;
   integrationId?: string;
+  accountName?: string;
   allocationPercentage: number;
   allocatedLeads?: number;
   weight?: number;
@@ -113,7 +114,12 @@ export interface CampaignSenderPoolConfig {
 export interface CampaignSenderPoolItem {
   id: string;
   campaignId: string;
-  senderDomainId: string;
+  senderDomainId?: string | null;
+  integrationId?: string | null;
+  domain?: string | null;
+  fromEmail?: string | null;
+  fromName?: string | null;
+  provider?: string | null;
   weight: number;
   allocatedRecipients: number;
   sentCount: number;
@@ -121,6 +127,11 @@ export interface CampaignSenderPoolItem {
   failedCount: number;
   status: string;
   senderDomain?: SenderDomainRecord;
+  integration?: {
+    id: string;
+    name: string;
+    provider: EmailProviderType;
+  };
 }
 
 export interface PreFlightCostLineItem {
