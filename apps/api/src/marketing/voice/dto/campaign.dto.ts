@@ -109,6 +109,9 @@ export class CreateVoiceCampaignDto {
 
   @IsOptional()
   scheduledAt?: Date | string;
+
+  @IsOptional()
+  studioSettings?: Record<string, any>;
 }
 
 export class SaveDraftVoiceCampaignDto {
@@ -186,4 +189,7 @@ export class SaveDraftVoiceCampaignDto {
 
   @IsOptional()
   audienceFilters?: Record<string, any>;
+
+  @IsOptional()
+  studioSettings?: Record<string, any>;
 }

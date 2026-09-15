@@ -58,8 +58,8 @@ export class VoiceDispatcherService {
   async testVoiceAiCall(dto: TestVoiceAiCallDto) {
     let telephony = dto.telephonyId
       ? await this.prisma.voiceTelephonyIntegration.findUnique({
-          where: { id: dto.telephonyId },
-        })
+        where: { id: dto.telephonyId },
+      })
       : null;
 
     if (!telephony) {
@@ -71,8 +71,8 @@ export class VoiceDispatcherService {
 
     let agent = dto.agentPlatformId
       ? await this.prisma.voiceAgentIntegration.findUnique({
-          where: { id: dto.agentPlatformId },
-        })
+        where: { id: dto.agentPlatformId },
+      })
       : null;
 
     if (!agent) {
@@ -189,9 +189,9 @@ export class VoiceDispatcherService {
       carrierBridge.handled && carrierBridge.result
         ? carrierBridge.result
         : await voiceAgentProvider.dispatchOutboundCall(
-            sendOptions,
-            agentCreds,
-          );
+          sendOptions,
+          agentCreds,
+        );
     if (primaryResult.success) return primaryResult;
 
     // Carrier Failover: If primary dispatch failed, attempt secondary active telephony line
