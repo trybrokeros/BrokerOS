@@ -59,13 +59,33 @@ export async function dispatchVapiOutboundCall(
     vapiModel = 'gemini-1.5-flash';
   }
 
+  const voicemailConfig =
+    options.voicemailDetection && options.voicemailDetection !== 'off' && options.voicemailDetection !== 'none'
+      ? { provider: 'vapi' }
+      : 'off';
+
+  const waitSeconds = ((options.maxTurnSilenceMs ?? 400) / 1000);
+  const startSpeakingPlan = { waitSeconds };
+
   if (isAssistantId) {
     payload.assistantId = options.llmModel;
     payload.assistantOverrides = {
       variableValues: options.variables || {},
       firstMessage: options.firstMessage,
-      voicemailDetection: 'off',
+      voicemailDetection: voicemailConfig,
       maxDurationSeconds: options.maxDurationSeconds || 600,
+      backgroundSound: options.backgroundSound || 'off',
+      startSpeakingPlan,
+      voice: {
+        provider: vapiVoiceProvider,
+        voiceId: cleanVoiceId,
+        speed: options.voiceSpeed || 1.0,
+      },
+      transcriber: {
+        provider: 'deepgram',
+        model: options.transcriberModel || 'nova-3',
+        language: options.transcriberLanguage || 'en',
+      },
     };
     if (options.scriptPrompt) {
       payload.assistantOverrides.model = {
@@ -78,7 +98,7 @@ export async function dispatchVapiOutboundCall(
     payload.assistant = {
       transcriber: {
         provider: 'deepgram',
-        model: 'nova-2',
+        model: options.transcriberModel || 'nova-3',
         language: options.transcriberLanguage || 'en',
       },
       model: {
@@ -94,12 +114,14 @@ export async function dispatchVapiOutboundCall(
       voice: {
         provider: vapiVoiceProvider,
         voiceId: cleanVoiceId,
+        speed: options.voiceSpeed || 1.0,
       },
       firstMessage: options.firstMessage,
       firstMessageMode: options.firstMessageMode || 'assistant-speaks-first',
-      voicemailDetection: 'off',
+      voicemailDetection: voicemailConfig,
       backgroundSound: options.backgroundSound || 'off',
       maxDurationSeconds: options.maxDurationSeconds || 600,
+      startSpeakingPlan,
     };
   }
 
