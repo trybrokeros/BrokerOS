@@ -3038,17 +3038,17 @@ model MarketingIntegration {
   isDefault Boolean           @default(false)
 
   // Encrypted Provider Credentials
-  apiKey          String?
-  awsAccessKeyId  String?
-  awsSecretKey    String?
-  awsRegion       String?
-  mailchimpServer String?
-  mailgunDomain   String?
-  mailgunRegion   String?
-  oauthClientId   String?
+  apiKey            String?
+  awsAccessKeyId    String?
+  awsSecretKey      String?
+  awsRegion         String?
+  mailchimpServer   String?
+  mailgunDomain     String?
+  mailgunRegion     String?
+  oauthClientId     String?
   oauthClientSecret String?
   oauthRefreshToken String?
-  oauthTenantId   String?
+  oauthTenantId     String?
   googleAppPassword String?
 
   fromEmail String
@@ -3061,6 +3061,7 @@ model MarketingIntegration {
 
   campaigns     MarketingCampaign[]
   senderDomains MarketingSenderDomain[]
+  senderPools   CampaignSenderPool[]
 
   @@index([provider])
   @@index([isActive])
@@ -3163,9 +3164,9 @@ model MarketingCampaign {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  recipients     CampaignRecipient[]
-  senderPools    CampaignSenderPool[]
-  trackingEvents EmailTrackingEvent[]
+  recipients         CampaignRecipient[]
+  senderPools        CampaignSenderPool[]
+  trackingEvents     EmailTrackingEvent[]
   emailConversations EmailConversation[]
 
   @@index([status])
@@ -3183,6 +3184,9 @@ model CampaignSenderPool {
 
   senderDomainId String?
   senderDomain   MarketingSenderDomain? @relation(fields: [senderDomainId], references: [id], onDelete: SetNull)
+
+  integrationId String?
+  integration   MarketingIntegration? @relation(fields: [integrationId], references: [id], onDelete: SetNull)
 
   domain    String?
   fromEmail String?
@@ -3202,6 +3206,7 @@ model CampaignSenderPool {
   recipients CampaignRecipient[]
 
   @@index([campaignId, senderDomainId])
+  @@index([campaignId, integrationId])
   @@index([campaignId, status])
   @@map("campaign_sender_pool")
 }
@@ -3282,22 +3287,22 @@ model MarketingUnsubscribe {
 // ─────────────────────────────────────────────
 
 model EmailFlow {
-  id            String          @id @default(uuid())
+  id            String   @id @default(uuid())
   name          String
   description   String?
-  status        String          @default("draft") // "draft" | "active" | "archived"
-  triggerType   String          @default("keyword_match") // "keyword_match" | "any_reply" | "campaign_reply"
-  triggerConfig Json?           // { keywords: ["visit", "price"], matchMode: "contains" | "exact" }
-  isGlobal      Boolean         @default(true)
-  campaignIds   String[]        // Array of specific campaign IDs if not global
+  status        String   @default("draft") // "draft" | "active" | "archived"
+  triggerType   String   @default("keyword_match") // "keyword_match" | "any_reply" | "campaign_reply"
+  triggerConfig Json? // { keywords: ["visit", "price"], matchMode: "contains" | "exact" }
+  isGlobal      Boolean  @default(true)
+  campaignIds   String[] // Array of specific campaign IDs if not global
   projectId     String?
-  project       Project?        @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  project       Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
 
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  nodes         EmailFlowNode[]
-  runs          EmailFlowRun[]
+  nodes EmailFlowNode[]
+  runs  EmailFlowRun[]
 
   @@index([status])
   @@index([projectId])
@@ -3309,7 +3314,7 @@ model EmailFlowNode {
   flowId    String
   flow      EmailFlow @relation(fields: [flowId], references: [id], onDelete: Cascade)
   nodeKey   String
-  nodeType  String    // "start" | "send_email_reply" | "ai_agent" | "update_lead_status" | "add_tag" | "remove_tag" | "handoff_presales" | "condition" | "wait_delay" | "end"
+  nodeType  String // "start" | "send_email_reply" | "ai_agent" | "update_lead_status" | "add_tag" | "remove_tag" | "handoff_presales" | "condition" | "wait_delay" | "end"
   config    Json
   positionX Float?
   positionY Float?
@@ -3360,7 +3365,7 @@ model EmailInboundMessage {
   textBody           String?  @db.Text
   htmlBody           String?  @db.Text
   headers            Json?
-  provider           String   // "SENDGRID" | "AWS_SES" | "BREVO" | "MAILCHIMP" | "UNIVERSAL"
+  provider           String // "SENDGRID" | "AWS_SES" | "BREVO" | "MAILCHIMP" | "UNIVERSAL"
   providerMsgId      String?
   inReplyTo          String?
   matchedRecipientId String?
@@ -3377,20 +3382,20 @@ model EmailInboundMessage {
 }
 
 model EmailConversation {
-  id                  String    @id @default(uuid())
-  contactEmail        String
-  contactName         String?
-  subject             String?
+  id           String  @id @default(uuid())
+  contactEmail String
+  contactName  String?
+  subject      String?
 
-  leadId              String?
-  lead                Lead?     @relation(fields: [leadId], references: [id])
-  customerId          String?
-  customer            Customer? @relation(fields: [customerId], references: [id])
-  brokerId            String?
-  broker              Broker?   @relation(fields: [brokerId], references: [id])
+  leadId     String?
+  lead       Lead?     @relation(fields: [leadId], references: [id])
+  customerId String?
+  customer   Customer? @relation(fields: [customerId], references: [id])
+  brokerId   String?
+  broker     Broker?   @relation(fields: [brokerId], references: [id])
 
-  agentUserId         String?
-  agent               User?     @relation("EmailConversationAgent", fields: [agentUserId], references: [id])
+  agentUserId String?
+  agent       User?   @relation("EmailConversationAgent", fields: [agentUserId], references: [id])
 
   status              String    @default("open") // "open" | "pending" | "closed"
   lastMessageText     String?   @db.Text
@@ -3400,18 +3405,18 @@ model EmailConversation {
   aiReplyCount        Int       @default(0)
 
   // Dedicated Provider & Domain thread continuity
-  assignedProvider    String    @default("SYSTEM_DEFAULT") // "SENDGRID" | "AWS_SES" | "BREVO" | "MAILCHIMP" | "SYSTEM_DEFAULT"
-  assignedSenderEmail String?   // e.g. "deals@skyline-towers.ae"
-  assignedSenderName  String?   // e.g. "Skyline Sales Team"
+  assignedProvider    String             @default("SYSTEM_DEFAULT") // "SENDGRID" | "AWS_SES" | "BREVO" | "MAILCHIMP" | "SYSTEM_DEFAULT"
+  assignedSenderEmail String? // e.g. "deals@skyline-towers.ae"
+  assignedSenderName  String? // e.g. "Skyline Sales Team"
   campaignId          String?
   campaign            MarketingCampaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
   recipientId         String?
 
-  isActive            Boolean   @default(true)
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  messages            EmailMessage[]
+  messages EmailMessage[]
 
   @@index([contactEmail])
   @@index([status])
@@ -3428,30 +3433,30 @@ model EmailMessage {
   conversationId String
   conversation   EmailConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
-  direction      String            // "INBOUND" | "OUTBOUND"
-  senderType     String            @default("agent") // "agent" | "bot" | "contact"
-  senderName     String?
-  fromEmail      String
-  toEmail        String
-  subject        String?
-  bodyText       String?           @db.Text
-  bodyHtml       String?           @db.Text
+  direction  String // "INBOUND" | "OUTBOUND"
+  senderType String  @default("agent") // "agent" | "bot" | "contact"
+  senderName String?
+  fromEmail  String
+  toEmail    String
+  subject    String?
+  bodyText   String? @db.Text
+  bodyHtml   String? @db.Text
 
-  status         String            @default("SENT") // "PENDING" | "SENT" | "DELIVERED" | "OPENED" | "CLICKED" | "FAILED"
-  provider       String?           // "SENDGRID" | "AWS_SES" | "BREVO" | "MAILCHIMP" | "SIMULATOR"
-  providerMsgId  String?           @unique
-  inReplyTo      String?
+  status        String  @default("SENT") // "PENDING" | "SENT" | "DELIVERED" | "OPENED" | "CLICKED" | "FAILED"
+  provider      String? // "SENDGRID" | "AWS_SES" | "BREVO" | "MAILCHIMP" | "SIMULATOR"
+  providerMsgId String? @unique
+  inReplyTo     String?
 
-  attachments    Json?             // Array of { name: string, url: string, size?: number, contentType?: string }
-  isAiGenerated  Boolean           @default(false)
+  attachments   Json? // Array of { name: string, url: string, size?: number, contentType?: string }
+  isAiGenerated Boolean @default(false)
 
-  sentAt         DateTime?
-  deliveredAt    DateTime?
-  openedAt       DateTime?
-  failedAt       DateTime?
-  failureReason  String?
+  sentAt        DateTime?
+  deliveredAt   DateTime?
+  openedAt      DateTime?
+  failedAt      DateTime?
+  failureReason String?
 
-  createdAt      DateTime          @default(now())
+  createdAt DateTime @default(now())
 
   @@index([conversationId])
   @@index([direction])
@@ -3465,7 +3470,7 @@ model EmailAiConfig {
   id                  String   @id @default(uuid())
   provider            String   @default("groq") // "groq" | "openai"
   model               String   @default("openai/gpt-oss-120b")
-  apiKey              String?  // AES-256 encrypted
+  apiKey              String? // AES-256 encrypted
   systemPrompt        String?  @db.Text
   isActive            Boolean  @default(true)
   autoReplyEnabled    Boolean  @default(false)
@@ -3521,6 +3526,7 @@ model SmsIntegration {
 
   campaigns     SmsCampaign[]
   senderNumbers SmsSenderNumber[]
+  campaignPools CampaignSmsSenderPool[]
 
   @@index([provider])
   @@index([isActive])
@@ -3631,6 +3637,9 @@ model CampaignSmsSenderPool {
   senderNumberId String?
   senderNumber   SmsSenderNumber? @relation(fields: [senderNumberId], references: [id], onDelete: SetNull)
 
+  integrationId String?
+  integration   SmsIntegration? @relation(fields: [integrationId], references: [id], onDelete: SetNull)
+
   phoneNumber String?
   senderId    String?
   provider    String?
@@ -3648,6 +3657,7 @@ model CampaignSmsSenderPool {
   recipients SmsRecipient[]
 
   @@index([campaignId, senderNumberId])
+  @@index([campaignId, integrationId])
   @@index([campaignId, status])
   @@map("campaign_sms_sender_pool")
 }
@@ -3731,22 +3741,22 @@ model SmsTrackingEvent {
 // ─────────────────────────────────────────────
 
 model SmsFlow {
-  id            String        @id @default(uuid())
+  id            String   @id @default(uuid())
   name          String
   description   String?
-  status        String        @default("draft") // "draft" | "active" | "archived"
-  triggerType   String        @default("keyword_match") // "keyword_match" | "any_reply" | "campaign_reply"
-  triggerConfig Json?         // { keywords: ["visit", "price"], matchMode: "contains" | "exact" }
-  isGlobal      Boolean       @default(true)
-  campaignIds   String[]      // Array of specific campaign IDs if not global
+  status        String   @default("draft") // "draft" | "active" | "archived"
+  triggerType   String   @default("keyword_match") // "keyword_match" | "any_reply" | "campaign_reply"
+  triggerConfig Json? // { keywords: ["visit", "price"], matchMode: "contains" | "exact" }
+  isGlobal      Boolean  @default(true)
+  campaignIds   String[] // Array of specific campaign IDs if not global
   projectId     String?
-  project       Project?      @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  project       Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
 
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  nodes         SmsFlowNode[]
-  runs          SmsFlowRun[]
+  nodes SmsFlowNode[]
+  runs  SmsFlowRun[]
 
   @@index([status])
   @@index([projectId])
@@ -3758,7 +3768,7 @@ model SmsFlowNode {
   flowId    String
   flow      SmsFlow  @relation(fields: [flowId], references: [id], onDelete: Cascade)
   nodeKey   String
-  nodeType  String   // "start" | "send_sms_reply" | "ai_agent" | "update_lead_status" | "add_tag" | "remove_tag" | "handoff_presales" | "condition" | "wait_delay" | "end"
+  nodeType  String // "start" | "send_sms_reply" | "ai_agent" | "update_lead_status" | "add_tag" | "remove_tag" | "handoff_presales" | "condition" | "wait_delay" | "end"
   config    Json
   positionX Float?
   positionY Float?
@@ -3807,7 +3817,7 @@ model SmsInboundMessage {
   toPhone            String
   textBody           String?  @db.Text
   headers            Json?
-  provider           String   // "TWILIO" | "AWS_SNS" | "SINCH" | "GUPSHUP" | "SIMULATOR"
+  provider           String // "TWILIO" | "AWS_SNS" | "SINCH" | "GUPSHUP" | "SIMULATOR"
   providerMsgId      String?
   matchedRecipientId String?
   matchedCampaignId  String?
@@ -3823,19 +3833,19 @@ model SmsInboundMessage {
 }
 
 model SmsConversation {
-  id                  String    @id @default(uuid())
-  contactPhone        String
-  contactName         String?
+  id           String  @id @default(uuid())
+  contactPhone String
+  contactName  String?
 
-  leadId              String?
-  lead                Lead?     @relation(fields: [leadId], references: [id])
-  customerId          String?
-  customer            Customer? @relation(fields: [customerId], references: [id])
-  brokerId            String?
-  broker              Broker?   @relation(fields: [brokerId], references: [id])
+  leadId     String?
+  lead       Lead?     @relation(fields: [leadId], references: [id])
+  customerId String?
+  customer   Customer? @relation(fields: [customerId], references: [id])
+  brokerId   String?
+  broker     Broker?   @relation(fields: [brokerId], references: [id])
 
-  agentUserId         String?
-  agent               User?     @relation("SmsConversationAgent", fields: [agentUserId], references: [id])
+  agentUserId String?
+  agent       User?   @relation("SmsConversationAgent", fields: [agentUserId], references: [id])
 
   status              String    @default("open") // "open" | "pending" | "closed"
   lastMessageText     String?   @db.Text
@@ -3845,18 +3855,18 @@ model SmsConversation {
   aiReplyCount        Int       @default(0)
 
   // Dedicated Provider & Phone thread continuity invariant
-  assignedProvider    String    @default("TWILIO") // "TWILIO" | "AWS_SNS" | "SINCH" | "GUPSHUP"
-  assignedSenderPhone String?   // e.g. "+14155550199" or "SKYLIN"
+  assignedProvider    String       @default("TWILIO") // "TWILIO" | "AWS_SNS" | "SINCH" | "GUPSHUP"
+  assignedSenderPhone String? // e.g. "+14155550199" or "SKYLIN"
   assignedSenderId    String?
   campaignId          String?
   campaign            SmsCampaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
   recipientId         String?
 
-  isActive            Boolean   @default(true)
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  messages            SmsMessage[]
+  messages SmsMessage[]
 
   @@index([contactPhone])
   @@index([status])
@@ -3873,26 +3883,26 @@ model SmsMessage {
   conversationId String
   conversation   SmsConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
-  direction      String          // "INBOUND" | "OUTBOUND"
-  senderType     String          @default("agent") // "agent" | "bot" | "contact"
-  senderName     String?
-  fromPhone      String
-  toPhone        String
-  bodyText       String          @db.Text
-  segmentsCount  Int             @default(1)
+  direction     String // "INBOUND" | "OUTBOUND"
+  senderType    String  @default("agent") // "agent" | "bot" | "contact"
+  senderName    String?
+  fromPhone     String
+  toPhone       String
+  bodyText      String  @db.Text
+  segmentsCount Int     @default(1)
 
-  status         String          @default("SENT") // "PENDING" | "SENT" | "DELIVERED" | "FAILED"
-  provider       String?         // "TWILIO" | "AWS_SNS" | "SINCH" | "GUPSHUP" | "SIMULATOR"
-  providerMsgId  String?         @unique
+  status        String  @default("SENT") // "PENDING" | "SENT" | "DELIVERED" | "FAILED"
+  provider      String? // "TWILIO" | "AWS_SNS" | "SINCH" | "GUPSHUP" | "SIMULATOR"
+  providerMsgId String? @unique
 
-  isAiGenerated  Boolean         @default(false)
+  isAiGenerated Boolean @default(false)
 
-  sentAt         DateTime?
-  deliveredAt    DateTime?
-  failedAt       DateTime?
-  failureReason  String?
+  sentAt        DateTime?
+  deliveredAt   DateTime?
+  failedAt      DateTime?
+  failureReason String?
 
-  createdAt      DateTime        @default(now())
+  createdAt DateTime @default(now())
 
   @@index([conversationId])
   @@index([direction])
@@ -3906,7 +3916,7 @@ model SmsAiConfig {
   id                  String   @id @default(uuid())
   provider            String   @default("groq") // "groq" | "openai"
   model               String   @default("openai/gpt-oss-120b")
-  apiKey              String?  // AES-256 encrypted
+  apiKey              String? // AES-256 encrypted
   systemPrompt        String?  @db.Text
   isActive            Boolean  @default(true)
   autoReplyEnabled    Boolean  @default(false)
@@ -4031,6 +4041,9 @@ model VoiceCampaign {
   noAnswerCalls    Int @default(0)
   failedCalls      Int @default(0)
   totalDurationSec Int @default(0)
+
+  // Studio Settings & Fine-tuned Parameters (Vapi, Retell, Sarvam, Bolna)
+  studioSettings Json?
 
   scheduledAt DateTime?
   startedAt   DateTime?
