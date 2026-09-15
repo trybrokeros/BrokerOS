@@ -413,6 +413,7 @@ export class EmailService {
               data: {
                 campaignId: savedCampaign.id,
                 senderDomainId: resolvedSenderDomainId || null,
+                integrationId: p.integrationId || null,
                 domain: p.domain || (p.fromEmail ? p.fromEmail.split('@')[1] : null),
                 fromEmail: p.fromEmail || null,
                 fromName: p.fromName || null,
@@ -672,6 +673,7 @@ export class EmailService {
               data: {
                 campaignId: campaign.id,
                 senderDomainId: resolvedSenderDomainId || null,
+                integrationId: poolCfg.integrationId || null,
                 domain: poolCfg.domain || (poolCfg.fromEmail ? poolCfg.fromEmail.split('@')[1] : null),
                 fromEmail: poolCfg.fromEmail || null,
                 fromName: poolCfg.fromName || null,
