@@ -45,22 +45,24 @@ export interface SendVoiceOptions {
   voicemailDetection?: string;
   backgroundSound?: string;
   maxDurationSeconds?: number;
-  // Retell Specific Dynamic Parameters
+  // Fine-tuned Studio & Provider Parameters
+  studioSettings?: Record<string, any>;
+  retellVoiceModel?: string;
+  retellEmotion?: string;
+  retellAmbientSound?: string;
+  retellLanguage?: string;
+  retellBackchannel?: boolean;
+  retellReminderMs?: number;
+
+  // Legacy / Direct Option Aliases
   voiceModel?: string;
   voiceEmotion?: string;
   enableExpressiveMode?: boolean;
-  expressiveEmotionTags?: string[];
-  enableBackchannel?: boolean;
-  backchannelFrequency?: number;
   ambientSound?: string;
   ambientSoundVolume?: number;
+  enableBackchannel?: boolean;
   reminderTriggerMs?: number;
-  reminderMaxCount?: number;
-  language?: string | string[];
-  responsiveness?: number;
-  interruptionSensitivity?: number;
-  enableDynamicVoiceSpeed?: boolean;
-  beginMessageDelayMs?: number;
+  language?: string;
 }
 
 export interface SendVoiceResult {
