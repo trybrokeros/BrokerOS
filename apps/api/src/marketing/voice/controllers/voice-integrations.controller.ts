@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Delete, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param } from '@nestjs/common';
 import { VoiceIntegrationsService } from '../services/voice-integrations.service.js';
 import {
   ConnectVoiceTelephonyDto,
@@ -7,7 +7,7 @@ import {
 
 @Controller('api/marketing/voice/integrations')
 export class VoiceIntegrationsController {
-  constructor(private readonly integrationsService: VoiceIntegrationsService) {}
+  constructor(private readonly integrationsService: VoiceIntegrationsService) { }
 
   @Get()
   async getAllIntegrations() {
@@ -62,6 +62,43 @@ export class VoiceIntegrationsController {
     return this.integrationsService.verifyAgent(id);
   }
 
+  // ── Remote Assistant Management (Vapi & Retell CRUD) ──
+
+  @Get('agents/:id/phone-numbers')
+  getVapiPhoneNumbers(@Param('id') id: string) {
+    return this.integrationsService.getVapiPhoneNumbers(id);
+  }
+
+  @Get('agents/:id/assistants')
+  getRemoteAssistants(@Param('id') id: string) {
+    return this.integrationsService.getRemoteAssistants(id);
+  }
+
+  @Post('agents/:id/assistants')
+  createRemoteAssistant(
+    @Param('id') id: string,
+    @Body() payload: { name: string; config?: any },
+  ) {
+    return this.integrationsService.createRemoteAssistant(id, payload);
+  }
+
+  @Patch('agents/:id/assistants/:assistantId')
+  updateRemoteAssistant(
+    @Param('id') id: string,
+    @Param('assistantId') assistantId: string,
+    @Body() config: any,
+  ) {
+    return this.integrationsService.updateRemoteAssistant(id, assistantId, config);
+  }
+
+  @Delete('agents/:id/assistants/:assistantId')
+  deleteRemoteAssistant(
+    @Param('id') id: string,
+    @Param('assistantId') assistantId: string,
+  ) {
+    return this.integrationsService.deleteRemoteAssistant(id, assistantId);
+  }
+
   // ── Dynamic Platform Catalog (Models & Voices) ──
 
   @Get('catalog/:platform')
@@ -76,7 +113,7 @@ export class VoiceIntegrationsController {
         where: { id },
       });
     if (!integration) {
-      return { platform: 'VAPI', models: [], voices: [] };
+      return { platform: 'VAPI', models: [], voices: [], assistants: [] };
     }
     return this.integrationsService.getPlatformCatalog(
       integration.platform,
