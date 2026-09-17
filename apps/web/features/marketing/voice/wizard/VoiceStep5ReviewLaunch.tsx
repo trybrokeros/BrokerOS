@@ -46,9 +46,9 @@ export interface VoiceStep5ReviewLaunchProps {
     transcriberLanguage?: string;
     maxTurnSilenceMs?: number;
     voiceSpeed?: number;
-    firstMessageMode?: "assistant-speaks-first" | "assistant-waits-for-user";
-    voicemailDetection?: "off" | "machine_detection";
-    backgroundSound?: "off" | "office";
+    firstMessageMode?: string;
+    voicemailDetection?: string;
+    backgroundSound?: string;
     maxDurationSeconds?: number;
     // Retell Specific Parameters
     retellVoiceModel?: string;
