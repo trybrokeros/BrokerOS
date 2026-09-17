@@ -32,9 +32,17 @@ export class TestVoiceAiCallDto {
   @IsOptional()
   variables?: Record<string, any>;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  telephonyId!: string;
+  assistantId?: string;
+
+  @IsOptional()
+  @IsString()
+  testMode?: string;
+
+  @IsOptional()
+  @IsString()
+  telephonyId?: string;
 
   @IsString()
   @IsNotEmpty()
