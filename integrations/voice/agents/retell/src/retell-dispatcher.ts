@@ -8,8 +8,11 @@ export async function dispatchRetellOutboundCall(
   apiKey: string,
   options: SendVoiceOptions,
 ): Promise<SendVoiceResult> {
-  const isAgentId = options.llmModel?.startsWith('agent_') || options.voiceId?.startsWith('agent_');
-  let targetAgentId = isAgentId ? (options.llmModel?.startsWith('agent_') ? options.llmModel : options.voiceId) : null;
+  let targetAgentId = options.assistantId || null;
+  if (!targetAgentId) {
+    const isAgentId = options.llmModel?.startsWith('agent_') || options.voiceId?.startsWith('agent_');
+    targetAgentId = isAgentId ? (options.llmModel?.startsWith('agent_') ? options.llmModel : options.voiceId) : null;
+  }
 
   if (!targetAgentId) {
     try {
@@ -17,9 +20,9 @@ export async function dispatchRetellOutboundCall(
         headers: { Authorization: `Bearer ${apiKey}` },
       });
       if (aRes.ok) {
-        const agents = await aRes.json();
+        const agents = (await aRes.json()) as any[];
         if (Array.isArray(agents) && agents.length > 0) {
-          targetAgentId = agents[0].agent_id;
+          targetAgentId = agents[0].agent_id || agents[0].id;
         }
       }
     } catch {
@@ -30,7 +33,40 @@ export async function dispatchRetellOutboundCall(
   if (!targetAgentId) {
     return {
       success: false,
-      error: 'No active Retell Agent found. Please create an agent in your Retell AI dashboard first.',
+      error: 'No active Retell Agent found. Please create an agent in Retell AI Studio first.',
+    };
+  }
+
+  // Resolve from_number against registered numbers in Retell account
+  let fromNumber = options.fromNumber || '';
+  try {
+    const numRes = await fetch('https://api.retellai.com/list-phone-numbers', {
+      headers: { Authorization: `Bearer ${apiKey}` },
+    });
+    if (numRes.ok) {
+      const numbers = (await numRes.json()) as any[];
+      if (Array.isArray(numbers) && numbers.length > 0) {
+        const cleanFrom = (fromNumber || '').replace(/[^\d+]/g, '');
+        const match = cleanFrom
+          ? numbers.find(
+            (n) =>
+              (n.phone_number && n.phone_number.replace(/[^\d+]/g, '') === cleanFrom) ||
+              n.phone_number === fromNumber,
+          )
+          : null;
+        fromNumber = match ? match.phone_number : numbers[0].phone_number;
+      } else {
+        fromNumber = '';
+      }
+    }
+  } catch {
+    // continue
+  }
+
+  if (!fromNumber) {
+    return {
+      success: false,
+      error: 'Retell Direct call requires a registered outbound phone number in Retell AI. Please purchase or import a number in your Retell dashboard (Phone Numbers tab).',
     };
   }
 
@@ -75,8 +111,9 @@ export async function dispatchRetellOutboundCall(
 
   const payload: any = {
     agent_id: targetAgentId,
+    override_agent_id: targetAgentId,
     to_number: options.toPhone,
-    from_number: options.fromNumber || '',
+    from_number: fromNumber,
     retell_llm_dynamic_variables: {
       ...options.variables,
       system_prompt: options.scriptPrompt,
