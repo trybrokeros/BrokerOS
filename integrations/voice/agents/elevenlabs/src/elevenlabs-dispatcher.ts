@@ -8,6 +8,14 @@ export async function dispatchElevenLabsCall(
   apiKey: string,
   options: SendVoiceOptions,
 ): Promise<SendVoiceResult> {
+  const targetAgentId = options.assistantId || (options.voiceId && options.voiceId.length >= 10 ? options.voiceId : null);
+  if (!targetAgentId) {
+    return {
+      success: false,
+      error: 'No ElevenLabs Agent ID specified for outbound call.',
+    };
+  }
+
   try {
     const res = await fetch('https://api.elevenlabs.io/v1/convai/conversations', {
       method: 'POST',
@@ -16,12 +24,12 @@ export async function dispatchElevenLabsCall(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        agent_id: options.voiceId && options.voiceId.length >= 20 ? options.voiceId : 'default',
+        agent_id: targetAgentId,
         dynamic_variables: options.variables || {},
       }),
     });
 
-    const data = (await res.json()) as any;
+    const data = (await res.json().catch(() => ({}))) as any;
 
     if (res.status >= 200 && res.status < 300) {
       return {
@@ -31,13 +39,13 @@ export async function dispatchElevenLabsCall(
     }
 
     return {
-      success: true,
-      providerCallId: `11labs_${Date.now()}`,
+      success: false,
+      error: data.detail?.message || data.message || `ElevenLabs dispatch failed with HTTP ${res.status}`,
     };
-  } catch {
+  } catch (err: any) {
     return {
-      success: true,
-      providerCallId: `11labs_${Date.now()}`,
+      success: false,
+      error: err?.message || 'Failed to dispatch call via ElevenLabs',
     };
   }
 }
