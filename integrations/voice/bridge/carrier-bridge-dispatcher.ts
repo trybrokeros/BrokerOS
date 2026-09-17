@@ -24,13 +24,38 @@ export async function tryCarrierBridgeDispatch(
 
   const message = options.firstMessage || 'Hello! Thank you for connecting with us.';
   const publicUrl = (process.env.API_PUBLIC_URL || '').replace(/\/$/, '');
+  const prov = (telCreds.provider || '').toUpperCase();
 
   // ── 1. VOBIZ PSTN Carrier Bridge ──
-  if (telCreds.apiKey && telCreds.apiToken && !telCreds.subdomain && !telCreds.accountSid) {
-    const id = telCreds.apiKey;
-    const token = telCreds.apiToken;
+  const isVobiz =
+    prov === 'VOBIZ' ||
+    (!prov && telCreds.apiKey && telCreds.apiToken && !telCreds.subdomain && !telCreds.accountSid);
+
+  if (isVobiz) {
+    const id = telCreds.apiKey || telCreds.accountSid;
+    const token = telCreds.apiToken || telCreds.authToken;
     const cleanTo = options.toPhone.replace(/[^\d+]/g, '');
     const cleanFrom = (options.fromNumber || telCreds.fromNumbers?.[0] || '').replace(/[^\d+]/g, '');
+
+    if (!id || !token) {
+      return {
+        handled: true,
+        result: {
+          success: false,
+          error: 'Vobiz Auth ID and Auth Token are required in Telephony Settings.',
+        },
+      };
+    }
+    if (!cleanFrom) {
+      return {
+        handled: true,
+        result: {
+          success: false,
+          error: 'Vobiz requires a registered Caller ID / From number in Telephony Settings.',
+        },
+      };
+    }
+
     const answerUrl = `${publicUrl}/api/marketing/voice/webhooks/vobiz-answer?campaignId=${options.campaignId || 'direct_test'}&firstMessage=${encodeURIComponent(message)}&scriptPrompt=${encodeURIComponent(options.scriptPrompt || '')}&agent=${platform}&voice=${encodeURIComponent(options.voiceId || '')}`;
 
     try {
@@ -59,22 +84,60 @@ export async function tryCarrierBridgeDispatch(
             providerCallId: data.callId || data.call_uuid || `vobiz_${platform.toLowerCase()}_${Date.now()}`,
           },
         };
+      } else {
+        const errText = await res.text().catch(() => '');
+        return {
+          handled: true,
+          result: {
+            success: false,
+            error: `Vobiz call failed (HTTP ${res.status}): ${errText || res.statusText}`,
+          },
+        };
       }
-    } catch {
-      // fallback to native agent API
+    } catch (err: any) {
+      return {
+        handled: true,
+        result: {
+          success: false,
+          error: `Vobiz network error: ${err?.message || String(err)}`,
+        },
+      };
     }
   }
 
   // ── 2. EXOTEL PSTN Carrier Bridge ──
-  if (telCreds.apiKey && telCreds.apiToken && telCreds.accountSid && telCreds.subdomain) {
-    const k = telCreds.apiKey;
-    const tok = telCreds.apiToken;
-    const sid = telCreds.accountSid;
-    const domain = telCreds.subdomain;
+  const isExotel =
+    prov === 'EXOTEL' ||
+    (!prov && telCreds.subdomain && (telCreds.accountSid || telCreds.apiKey));
+
+  if (isExotel) {
+    const k = telCreds.apiKey || telCreds.accountSid;
+    const tok = telCreds.apiToken || telCreds.authToken;
+    const sid = telCreds.accountSid || telCreds.apiKey;
+    const domain = telCreds.subdomain || 'api.in.exotel.com';
     const cleanFrom = (options.fromNumber || telCreds.fromNumbers?.[0] || '').replace(/[^\d]/g, '');
     let cleanTo = options.toPhone.replace(/[^\d]/g, '');
     if (cleanTo.startsWith('91') && cleanTo.length === 12) cleanTo = '0' + cleanTo.slice(2);
     else if (cleanTo.length === 10) cleanTo = '0' + cleanTo;
+
+    if (!k || !tok || !sid) {
+      return {
+        handled: true,
+        result: {
+          success: false,
+          error: 'Exotel API Key, Token, and Account SID are required in Telephony Settings.',
+        },
+      };
+    }
+    if (!cleanFrom) {
+      return {
+        handled: true,
+        result: {
+          success: false,
+          error: 'Exotel requires a registered Caller ID / Virtual Number in Telephony Settings.',
+        },
+      };
+    }
 
     try {
       const authHeader = Buffer.from(`${k}:${tok}`).toString('base64');
@@ -105,27 +168,63 @@ export async function tryCarrierBridgeDispatch(
             providerCallId: data?.Call?.Sid || data?.sid || `exotel_${platform.toLowerCase()}_${Date.now()}`,
           },
         };
+      } else {
+        const errText = await res.text().catch(() => '');
+        return {
+          handled: true,
+          result: {
+            success: false,
+            error: `Exotel call failed (HTTP ${res.status}): ${errText || res.statusText}`,
+          },
+        };
       }
-    } catch {
-      // fallback to native agent API
+    } catch (err: any) {
+      return {
+        handled: true,
+        result: {
+          success: false,
+          error: `Exotel network error: ${err?.message || String(err)}`,
+        },
+      };
     }
   }
 
-  // ── 3. TWILIO PSTN Carrier Bridge (Webhook Streaming Agents) ──
-  if (
-    telCreds.accountSid &&
-    telCreds.authToken &&
-    (platform === 'SARVAM' || platform === 'OPENAI_REALTIME' || platform === 'ELEVENLABS')
-  ) {
+  // ── 3. TWILIO PSTN Carrier Bridge ──
+  const isTwilio =
+    prov === 'TWILIO' ||
+    (!prov && (telCreds.accountSid || (telCreds.apiKey && telCreds.apiToken)));
+
+  if (isTwilio) {
+    const sid = telCreds.accountSid || telCreds.apiKey;
+    const token = telCreds.authToken || telCreds.apiToken;
+    const fromNum = options.fromNumber || telCreds.fromNumbers?.[0] || '';
+
+    if (!sid || !token) {
+      return {
+        handled: true,
+        result: {
+          success: false,
+          error: 'Twilio Account SID and Auth Token are required in Telephony Settings.',
+        },
+      };
+    }
+    if (!fromNum) {
+      return {
+        handled: true,
+        result: {
+          success: false,
+          error: 'Twilio requires at least one registered Caller ID / From number in Telephony Settings.',
+        },
+      };
+    }
+
     try {
-      const sid = telCreds.accountSid;
-      const token = telCreds.authToken;
       const authHeader = Buffer.from(`${sid}:${token}`).toString('base64');
       const twilioUrl = `${publicUrl}/api/marketing/voice/webhooks/twilio-answer?campaignId=${options.campaignId || 'direct_test'}&firstMessage=${encodeURIComponent(message)}&scriptPrompt=${encodeURIComponent(options.scriptPrompt || '')}&agent=${platform}&voice=${encodeURIComponent(options.voiceId || '')}`;
 
       const body = new URLSearchParams({
         To: options.toPhone,
-        From: options.fromNumber || telCreds.fromNumbers?.[0] || '',
+        From: fromNum,
         Url: twilioUrl,
         Method: 'POST',
       });
@@ -139,8 +238,8 @@ export async function tryCarrierBridgeDispatch(
         body: body.toString(),
       });
 
-      const data = (await res.json().catch(() => ({}))) as any;
       if (res.status >= 200 && res.status < 300) {
+        const data = (await res.json().catch(() => ({}))) as any;
         return {
           handled: true,
           result: {
@@ -148,19 +247,57 @@ export async function tryCarrierBridgeDispatch(
             providerCallId: data.sid || `twilio_${platform.toLowerCase()}_${Date.now()}`,
           },
         };
+      } else {
+        const data = (await res.json().catch(() => ({}))) as any;
+        return {
+          handled: true,
+          result: {
+            success: false,
+            error: `Twilio call failed (HTTP ${res.status}): ${data.message || data.detail || res.statusText}`,
+          },
+        };
       }
-    } catch {
-      // fallback
+    } catch (err: any) {
+      return {
+        handled: true,
+        result: {
+          success: false,
+          error: `Twilio network error: ${err?.message || String(err)}`,
+        },
+      };
     }
   }
 
   // ── 4. TELNYX PSTN Carrier Bridge ──
-  if (telCreds.apiKey && (telCreds.apiKey.startsWith('KEY') || (!telCreds.apiToken && !telCreds.authToken && !telCreds.accountSid))) {
-    const key = telCreds.apiKey;
+  const isTelnyx =
+    prov === 'TELNYX' ||
+    (!prov && telCreds.apiKey && (telCreds.apiKey.startsWith('KEY') || (!telCreds.apiToken && !telCreds.authToken && !telCreds.accountSid)));
+
+  if (isTelnyx) {
+    const key = telCreds.apiKey || telCreds.apiToken || telCreds.authToken;
     const cleanTo = options.toPhone.startsWith('+') ? options.toPhone : `+${options.toPhone.replace(/[^\d]/g, '')}`;
     const cleanFrom = (options.fromNumber || telCreds.fromNumbers?.[0] || '').startsWith('+')
       ? options.fromNumber || telCreds.fromNumbers?.[0]
       : `+${(options.fromNumber || telCreds.fromNumbers?.[0] || '').replace(/[^\d]/g, '')}`;
+
+    if (!key) {
+      return {
+        handled: true,
+        result: {
+          success: false,
+          error: 'Telnyx API Key is required in Telephony Settings.',
+        },
+      };
+    }
+    if (!cleanFrom || cleanFrom === '+') {
+      return {
+        handled: true,
+        result: {
+          success: false,
+          error: 'Telnyx requires a registered Caller ID / Phone Number in Telephony Settings.',
+        },
+      };
+    }
 
     const answerUrl = `${publicUrl}/api/marketing/voice/webhooks/telnyx-answer?campaignId=${options.campaignId || 'direct_test'}&firstMessage=${encodeURIComponent(message)}&scriptPrompt=${encodeURIComponent(options.scriptPrompt || '')}&agent=${platform}&voice=${encodeURIComponent(options.voiceId || '')}`;
 
@@ -188,9 +325,25 @@ export async function tryCarrierBridgeDispatch(
             providerCallId: data.call_sid || data.data?.call_control_id || `telnyx_${platform.toLowerCase()}_${Date.now()}`,
           },
         };
+      } else {
+        const data = (await res.json().catch(() => ({}))) as any;
+        const detail = data?.errors?.[0]?.detail || data?.errors?.[0]?.title || data?.message;
+        return {
+          handled: true,
+          result: {
+            success: false,
+            error: `Telnyx call failed (HTTP ${res.status}): ${detail || res.statusText}`,
+          },
+        };
       }
-    } catch {
-      // fallback to native agent API
+    } catch (err: any) {
+      return {
+        handled: true,
+        result: {
+          success: false,
+          error: `Telnyx network error: ${err?.message || String(err)}`,
+        },
+      };
     }
   }
 
