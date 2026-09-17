@@ -28,6 +28,7 @@ export interface SendVoiceOptions {
   fromNumber: string;
   campaignId: string;
   recipientId?: string;
+  assistantId?: string;
   llmModel: string;
   voiceProvider: string;
   voiceId: string;
