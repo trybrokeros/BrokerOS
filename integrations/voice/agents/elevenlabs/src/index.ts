@@ -12,7 +12,14 @@ import type {
   VoiceModelItem,
   VoicePersonaItem,
 } from '@brokeros/types';
-import { STANDARD_ELEVENLABS_MODELS, fetchElevenLabsModels, fetchElevenLabsAssistants } from './elevenlabs-models.js';
+import {
+  STANDARD_ELEVENLABS_MODELS,
+  fetchElevenLabsModels,
+  fetchElevenLabsAssistants,
+  createElevenLabsRemoteAgent,
+  updateElevenLabsRemoteAgent,
+  deleteElevenLabsRemoteAgent,
+} from './elevenlabs-models.js';
 import { fetchElevenLabsVoices } from './elevenlabs-voices.js';
 import { parseElevenLabsWebhookEvent } from './elevenlabs-webhook-parser.js';
 import { dispatchElevenLabsCall } from './elevenlabs-dispatcher.js';
@@ -54,7 +61,7 @@ export class ElevenLabsAgentClient implements IVoiceAgentProvider {
 
     try {
       const res = await fetch(
-        `https://api.elevenlabs.io/v1/text-to-speech/${voiceId || '21m00Tcm4TlvDq8ikWAM'}`,
+        `https://api.elevenlabs.io/v1/text-to-speech/${voiceId || 'cjVigY5qzO86Huf0OWal'}`,
         {
           method: 'POST',
           headers: {
@@ -63,8 +70,8 @@ export class ElevenLabsAgentClient implements IVoiceAgentProvider {
           },
           body: JSON.stringify({
             text,
-            model_id: 'eleven_turbo_v2_5',
-            voice_settings: { stability: 0.5, similarity_boost: 0.75 },
+            model_id: 'eleven_flash_v2_5',
+            voice_settings: { stability: 0.5, similarity_boost: 0.8 },
           }),
         },
       );
@@ -113,5 +120,17 @@ export class ElevenLabsAgentClient implements IVoiceAgentProvider {
 
   async getAvailableVoices(credentials?: VoiceAgentCredentials): Promise<VoicePersonaItem[]> {
     return fetchElevenLabsVoices(credentials?.apiKey || this.apiKey);
+  }
+
+  async createRemoteAssistant(name: string, config: any, credentials?: VoiceAgentCredentials): Promise<any> {
+    return createElevenLabsRemoteAgent(credentials?.apiKey || this.apiKey, name, config);
+  }
+
+  async updateRemoteAssistant(assistantId: string, config: any, credentials?: VoiceAgentCredentials): Promise<any> {
+    return updateElevenLabsRemoteAgent(credentials?.apiKey || this.apiKey, assistantId, config);
+  }
+
+  async deleteRemoteAssistant(assistantId: string, credentials?: VoiceAgentCredentials): Promise<boolean> {
+    return deleteElevenLabsRemoteAgent(credentials?.apiKey || this.apiKey, assistantId);
   }
 }
