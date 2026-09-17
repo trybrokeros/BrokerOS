@@ -12,7 +12,14 @@ import type {
   VoiceModelItem,
   VoicePersonaItem,
 } from '@brokeros/types';
-import { STANDARD_VAPI_MODELS, fetchVapiAccountModels, fetchVapiAccountAssistants } from './vapi-models.js';
+import {
+  STANDARD_VAPI_MODELS,
+  fetchVapiAccountModels,
+  fetchVapiAccountAssistants,
+  createVapiRemoteAssistant,
+  updateVapiRemoteAssistant,
+  deleteVapiRemoteAssistant,
+} from './vapi-models.js';
 import { NATIVE_VAPI_VOICES } from './vapi-voices.js';
 import { parseVapiWebhookEvent } from './vapi-webhook-parser.js';
 import { dispatchVapiOutboundCall } from './vapi-dispatcher.js';
@@ -77,5 +84,17 @@ export class VapiAgentClient implements IVoiceAgentProvider {
 
   async getAvailableVoices(credentials?: VoiceAgentCredentials): Promise<VoicePersonaItem[]> {
     return NATIVE_VAPI_VOICES;
+  }
+
+  async createRemoteAssistant(name: string, config: any, credentials?: VoiceAgentCredentials): Promise<any> {
+    return createVapiRemoteAssistant(credentials?.apiKey || this.apiKey, name, config);
+  }
+
+  async updateRemoteAssistant(assistantId: string, config: any, credentials?: VoiceAgentCredentials): Promise<any> {
+    return updateVapiRemoteAssistant(credentials?.apiKey || this.apiKey, assistantId, config);
+  }
+
+  async deleteRemoteAssistant(assistantId: string, credentials?: VoiceAgentCredentials): Promise<boolean> {
+    return deleteVapiRemoteAssistant(credentials?.apiKey || this.apiKey, assistantId);
   }
 }
