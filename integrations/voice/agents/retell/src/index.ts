@@ -12,7 +12,13 @@ import type {
   VoiceModelItem,
   VoicePersonaItem,
 } from '@brokeros/types';
-import { STANDARD_RETELL_MODELS, fetchRetellAccountAgents } from './retell-models.js';
+import {
+  STANDARD_RETELL_MODELS,
+  fetchRetellAccountAgents,
+  createRetellRemoteAgent,
+  updateRetellRemoteAgent,
+  deleteRetellRemoteAgent,
+} from './retell-models.js';
 import { RETELL_VOICES, fetchRetellAccountVoices } from './retell-voices.js';
 import { parseRetellWebhookEvent } from './retell-webhook-parser.js';
 import { dispatchRetellOutboundCall } from './retell-dispatcher.js';
@@ -76,5 +82,17 @@ export class RetellAgentClient implements IVoiceAgentProvider {
 
   async getAvailableVoices(credentials?: VoiceAgentCredentials): Promise<VoicePersonaItem[]> {
     return fetchRetellAccountVoices(credentials?.apiKey || this.apiKey);
+  }
+
+  async createRemoteAssistant(name: string, config: any, credentials?: VoiceAgentCredentials): Promise<any> {
+    return createRetellRemoteAgent(credentials?.apiKey || this.apiKey, name, config);
+  }
+
+  async updateRemoteAssistant(assistantId: string, config: any, credentials?: VoiceAgentCredentials): Promise<any> {
+    return updateRetellRemoteAgent(credentials?.apiKey || this.apiKey, assistantId, config);
+  }
+
+  async deleteRemoteAssistant(assistantId: string, credentials?: VoiceAgentCredentials): Promise<boolean> {
+    return deleteRetellRemoteAgent(credentials?.apiKey || this.apiKey, assistantId);
   }
 }

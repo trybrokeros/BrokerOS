@@ -62,17 +62,24 @@ export async function fetchRetellAccountVoices(apiKey?: string): Promise<VoicePe
     const rawVoices = (await res.json()) as any[];
     if (!Array.isArray(rawVoices) || rawVoices.length === 0) return RETELL_VOICES;
 
-    return rawVoices.map((v: any) => ({
-      id: v.voice_id || v.id,
-      name: `${v.voice_name || v.name} (${v.provider || 'Retell'})`,
-      provider: 'retell',
-      accent: v.accent ? `${v.accent.charAt(0).toUpperCase()}${v.accent.slice(1)}` : 'Global',
-      gender: (v.gender ? `${v.gender.charAt(0).toUpperCase()}${v.gender.slice(1)}` : 'Unspecified') as 'Male' | 'Female' | 'Unspecified',
-      tags: [v.provider || 'Retell', v.gender || 'voice'],
-      previewText: 'Hello! I am calling from Retell AI to assist with your property inquiry.',
-      previewUrl: v.preview_audio_url || v.audio_url || undefined,
-    }));
+    return rawVoices.map((v: any) => {
+      const prov = v.provider || 'Retell';
+      const cleanName = v.voice_name || v.name || v.voice_id || v.id;
+      const displayName = cleanName.includes('(') ? cleanName : `${cleanName} (${prov})`;
+      return {
+        id: v.voice_id || v.id,
+        name: displayName,
+        provider: 'retell',
+        accent: v.accent ? `${v.accent.charAt(0).toUpperCase()}${v.accent.slice(1)}` : 'Global',
+        gender: (v.gender ? `${v.gender.charAt(0).toUpperCase()}${v.gender.slice(1)}` : 'Unspecified') as 'Male' | 'Female' | 'Unspecified',
+        tags: [prov, v.gender || 'Voice', v.accent || 'Natural'].filter(Boolean),
+        previewText: 'Hello! I am calling from Retell AI to assist with your property inquiry.',
+        previewUrl: v.preview_audio_url || v.audio_url || undefined,
+        description: v.description || `${prov} voice with ${v.accent || 'natural'} articulation.`,
+      };
+    });
   } catch {
     return RETELL_VOICES;
   }
 }
+
