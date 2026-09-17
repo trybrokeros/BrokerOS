@@ -7,6 +7,7 @@ import type {
   VoiceTelephonyCredentials,
   VoiceAgentCredentials,
   SendVoiceOptions,
+  SendVoiceResult,
 } from '@brokeros/types';
 
 export interface VoiceCampaignDispatchJobData {
@@ -172,6 +173,7 @@ export class MarketingVoiceProcessor implements OnModuleInit, OnModuleDestroy {
 
     // Resolve credentials
     const telephonyCreds: VoiceTelephonyCredentials = {
+      provider: campaign.telephony?.provider,
       accountSid: campaign.telephony?.accountSid || undefined,
       authToken: campaign.telephony?.authToken || undefined,
       apiKey: campaign.telephony?.apiKey || undefined,
@@ -212,10 +214,10 @@ export class MarketingVoiceProcessor implements OnModuleInit, OnModuleDestroy {
             recipient,
             campaign.project
               ? {
-                  name: campaign.project.name,
-                  city: campaign.project.city || undefined,
-                  address: campaign.project.address || undefined,
-                }
+                name: campaign.project.name,
+                city: campaign.project.city || undefined,
+                address: campaign.project.address || undefined,
+              }
               : undefined,
             campaign.createdBy?.name || 'Senior Property Advisor',
           );
@@ -243,32 +245,22 @@ export class MarketingVoiceProcessor implements OnModuleInit, OnModuleDestroy {
           };
 
           try {
-            // 1. Centralized carrier bridge dispatch (Vobiz, Exotel, Twilio, Telnyx)
-            const carrierBridge = await tryCarrierBridgeDispatch(platform, sendOptions);
-            let result = (carrierBridge.handled && carrierBridge.result)
-              ? carrierBridge.result
-              : await voiceAgentProvider.dispatchOutboundCall(sendOptions, agentCreds);
+            let result: SendVoiceResult;
 
-            // Carrier Failover: If primary carrier failed, attempt secondary carrier line
-            if (!result.success && campaign.telephonyId) {
-              const fallbackTelephony = await this.prisma.voiceTelephonyIntegration.findFirst({
-                where: { isActive: true, id: { not: campaign.telephonyId } },
-                orderBy: { isDefault: 'desc' },
-              });
-
-              if (fallbackTelephony) {
-                this.logger.warn(`Primary carrier failed for ${recipient.phone}: ${result.error}. Retrying with fallback carrier ${fallbackTelephony.provider}...`);
-                const fallbackCreds: VoiceTelephonyCredentials = {
-                  accountSid: fallbackTelephony.accountSid || undefined,
-                  authToken: fallbackTelephony.authToken || undefined,
-                  apiKey: fallbackTelephony.apiKey || undefined,
-                  apiToken: fallbackTelephony.apiToken || undefined,
-                  fromNumbers: fallbackTelephony.fromNumbers,
+            if (campaign.telephonyId) {
+              // Option B: CRM Telephony Carrier Bridge
+              const carrierBridge = await tryCarrierBridgeDispatch(platform, sendOptions);
+              if (carrierBridge.handled && carrierBridge.result) {
+                result = carrierBridge.result;
+              } else {
+                result = {
+                  success: false,
+                  error: `Carrier line for ${campaign.telephony?.provider || 'selected carrier'} could not be dispatched.`,
                 };
-                sendOptions.telephonyCredentials = fallbackCreds;
-                sendOptions.fromNumber = fallbackTelephony.fromNumbers?.[0] || fromNumber;
-                result = await voiceAgentProvider.dispatchOutboundCall(sendOptions, agentCreds);
               }
+            } else {
+              // Option A: Direct PSTN via AI Agent Platform
+              result = await voiceAgentProvider.dispatchOutboundCall(sendOptions, agentCreds);
             }
 
             if (result.success) {

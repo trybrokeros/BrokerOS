@@ -295,6 +295,17 @@ export class MarketingEmailProcessor implements OnModuleInit, OnModuleDestroy {
                   deliveredCount: { increment: 1 },
                 },
               });
+
+              await this.recordSentEmailToInbox({
+                campaign,
+                recipient: rec,
+                fromEmail: campaign.fromEmail,
+                fromName: campaign.fromName || 'Sales Team',
+                personalizedSubject,
+                personalizedHtml,
+                provider: campaign.providerType,
+                providerMsgId: sendResult.providerMessageId,
+              });
             } else {
               await this.prisma.campaignRecipient.update({
                 where: { id: rec.id },
@@ -512,6 +523,17 @@ export class MarketingEmailProcessor implements OnModuleInit, OnModuleDestroy {
               },
             }),
           ]);
+
+          await this.recordSentEmailToInbox({
+            campaign,
+            recipient: rec,
+            fromEmail,
+            fromName,
+            personalizedSubject,
+            personalizedHtml,
+            provider,
+            providerMsgId: sendResult.providerMessageId,
+          });
         } else {
           this.logger.error(
             `[DomainStream ${fromEmail}] Failed sending to ${rec.email} via ${provider}: ${sendResult.error}`,
@@ -537,5 +559,92 @@ export class MarketingEmailProcessor implements OnModuleInit, OnModuleDestroy {
     }
 
     this.logger.log(`[DomainStream ${fromEmail}] Stream completed.`);
+  }
+
+  private async recordSentEmailToInbox(params: {
+    campaign: any;
+    recipient: any;
+    fromEmail: string;
+    fromName: string;
+    personalizedSubject: string;
+    personalizedHtml: string;
+    provider: string;
+    providerMsgId?: string;
+  }): Promise<void> {
+    try {
+      const {
+        campaign,
+        recipient,
+        fromEmail,
+        fromName,
+        personalizedSubject,
+        personalizedHtml,
+        provider,
+        providerMsgId,
+      } = params;
+
+      const recipientEmail = recipient.email.toLowerCase().trim();
+
+      let conversation = await this.prisma.emailConversation.findFirst({
+        where: { contactEmail: recipientEmail, isActive: true },
+      });
+
+      if (!conversation) {
+        conversation = await this.prisma.emailConversation.create({
+          data: {
+            contactEmail: recipientEmail,
+            contactName: recipient.name || recipientEmail.split('@')[0],
+            subject: personalizedSubject,
+            leadId: recipient.leadId || null,
+            agentUserId: campaign.createdById || null,
+            status: 'open',
+            lastMessageText: personalizedSubject || 'Broadcast Email Sent',
+            lastMessageAt: new Date(),
+            assignedProvider: provider,
+            assignedSenderEmail: fromEmail,
+            assignedSenderName: fromName,
+            campaignId: campaign.id,
+            recipientId: recipient.id,
+            unreadCount: 0,
+          },
+        });
+      } else {
+        await this.prisma.emailConversation.update({
+          where: { id: conversation.id },
+          data: {
+            subject: personalizedSubject || conversation.subject,
+            lastMessageText: personalizedSubject || conversation.lastMessageText,
+            lastMessageAt: new Date(),
+            assignedProvider: provider,
+            assignedSenderEmail: fromEmail,
+            assignedSenderName: fromName,
+            leadId: recipient.leadId || conversation.leadId,
+            campaignId: campaign.id,
+            recipientId: recipient.id,
+          },
+        });
+      }
+
+      await this.prisma.emailMessage.create({
+        data: {
+          conversationId: conversation.id,
+          direction: 'OUTBOUND',
+          senderType: 'agent',
+          senderName: fromName,
+          fromEmail,
+          toEmail: recipientEmail,
+          subject: personalizedSubject,
+          bodyHtml: personalizedHtml,
+          bodyText: personalizedSubject,
+          status: 'SENT',
+          provider,
+          providerMsgId: providerMsgId || null,
+          sentAt: new Date(),
+          deliveredAt: new Date(),
+        },
+      });
+    } catch (inboxErr: any) {
+      this.logger.warn(`Failed to link sent email to inbox thread: ${inboxErr?.message}`);
+    }
   }
 }

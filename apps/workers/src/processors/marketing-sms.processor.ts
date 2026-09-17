@@ -372,6 +372,16 @@ export class MarketingSmsProcessor implements OnModuleInit, OnModuleDestroy {
                   totalSegmentsSent: { increment: segments },
                 },
               });
+
+              await this.recordSentSmsToInbox({
+                campaign,
+                recipient: rec,
+                fromPhone: effectiveFromPhone,
+                personalizedMsg,
+                segments,
+                provider: campaign.providerType,
+                providerMsgId: sendResult.providerMessageId,
+              });
             } else {
               await this.prisma.smsRecipient.update({
                 where: { id: rec.id },
@@ -626,6 +636,16 @@ export class MarketingSmsProcessor implements OnModuleInit, OnModuleDestroy {
               data: { sentToday: { increment: 1 } },
             }).catch(() => { });
           }
+
+          await this.recordSentSmsToInbox({
+            campaign,
+            recipient: rec,
+            fromPhone,
+            personalizedMsg,
+            segments,
+            provider,
+            providerMsgId: sendResult.providerMessageId,
+          });
         } else {
           await this.prisma.smsRecipient.update({
             where: { id: rec.id },
@@ -663,5 +683,85 @@ export class MarketingSmsProcessor implements OnModuleInit, OnModuleDestroy {
     });
 
     this.logger.log(`[PhoneStream ${fromPhone}] Stream finished`);
+  }
+
+  private async recordSentSmsToInbox(params: {
+    campaign: any;
+    recipient: any;
+    fromPhone: string;
+    personalizedMsg: string;
+    segments: number;
+    provider: string;
+    providerMsgId?: string;
+  }): Promise<void> {
+    try {
+      const {
+        campaign,
+        recipient,
+        fromPhone,
+        personalizedMsg,
+        segments,
+        provider,
+        providerMsgId,
+      } = params;
+
+      const recipientPhone = (recipient.phone || '').trim();
+      if (!recipientPhone) return;
+
+      let conversation = await this.prisma.smsConversation.findFirst({
+        where: { contactPhone: recipientPhone, isActive: true },
+      });
+
+      if (!conversation) {
+        conversation = await this.prisma.smsConversation.create({
+          data: {
+            contactPhone: recipientPhone,
+            contactName: recipient.name || recipientPhone,
+            leadId: recipient.leadId || null,
+            agentUserId: campaign.createdById || null,
+            status: 'open',
+            lastMessageText: personalizedMsg,
+            lastMessageAt: new Date(),
+            assignedProvider: provider,
+            assignedSenderPhone: fromPhone,
+            campaignId: campaign.id,
+            recipientId: recipient.id,
+            unreadCount: 0,
+          },
+        });
+      } else {
+        await this.prisma.smsConversation.update({
+          where: { id: conversation.id },
+          data: {
+            lastMessageText: personalizedMsg,
+            lastMessageAt: new Date(),
+            assignedProvider: provider,
+            assignedSenderPhone: fromPhone,
+            leadId: recipient.leadId || conversation.leadId,
+            campaignId: campaign.id,
+            recipientId: recipient.id,
+          },
+        });
+      }
+
+      await this.prisma.smsMessage.create({
+        data: {
+          conversationId: conversation.id,
+          direction: 'OUTBOUND',
+          senderType: 'agent',
+          senderName: campaign.fromSender || fromPhone,
+          fromPhone,
+          toPhone: recipientPhone,
+          bodyText: personalizedMsg,
+          segmentsCount: segments || 1,
+          status: 'SENT',
+          provider,
+          providerMsgId: providerMsgId || null,
+          sentAt: new Date(),
+        },
+      });
+    } catch (inboxErr: any) {
+      this.logger.warn(`Failed to link sent SMS to inbox thread: ${inboxErr?.message}`);
+    }
   }
 }
