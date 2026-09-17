@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { Radio, Plus, Sparkles } from "lucide-react";
+import { Radio, Plus, Sparkles, RefreshCw, CheckCircle2 } from "lucide-react";
 import { VOICE_AGENT_PLATFORMS } from "@brokeros/constants";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -13,7 +13,12 @@ export interface AgentPlatformSelectorProps {
   onSelectPlatform: (platformId: string) => void;
   agentIntegrations: VoiceAgentIntegrationRecord[];
   dynamicAssistants?: any[];
+  selectedAssistantId?: string;
   onApplyAssistant?: (asst: any) => void;
+  onOpenCreateModal?: () => void;
+  onSyncAssistant?: () => void;
+  isSyncing?: boolean;
+  lastSyncedTime?: string | null;
   currentPlatform?: string;
 }
 
@@ -22,9 +27,16 @@ export function AgentPlatformSelector({
   onSelectPlatform,
   agentIntegrations = [],
   dynamicAssistants = [],
+  selectedAssistantId,
   onApplyAssistant,
+  onOpenCreateModal,
+  onSyncAssistant,
+  isSyncing = false,
+  lastSyncedTime = null,
   currentPlatform = "VAPI",
 }: AgentPlatformSelectorProps) {
+  const activeAssistant = dynamicAssistants.find((a) => a.id === selectedAssistantId);
+
   return (
     <div className="space-y-4">
       {/* Platform Cards Header */}
@@ -94,67 +106,89 @@ export function AgentPlatformSelector({
         )}
       </div>
 
-      {/* Live Workspace Assistants/Agents Picker */}
-      {dynamicAssistants.length > 0 && onApplyAssistant && (
-        <div className="bg-gradient-to-br from-purple-500/10 via-indigo-500/5 to-white p-5 rounded-2xl border border-purple-200/80 shadow-xs space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-xl bg-purple-600 text-white flex items-center justify-center text-xs font-black">
-                <Sparkles className="w-3.5 h-3.5" />
+      {/* Remote Agent Management Bar */}
+      {(currentPlatform === "VAPI" || currentPlatform === "RETELL" || currentPlatform === "BOLNA") && (
+        <div className="bg-gradient-to-br from-purple-500/10 via-indigo-500/5 to-white p-5 rounded-2xl border border-purple-200/80 shadow-xs space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-purple-600 text-white flex items-center justify-center text-xs font-black shadow-xs">
+                <Sparkles className="w-4 h-4" />
               </div>
               <div>
-                <h4 className="text-xs font-black text-[var(--text-primary)]">
-                  Live {currentPlatform === "RETELL" ? "Retell" : "Vapi"} Workspace Agents
+                <h4 className="text-xs font-black text-[var(--text-primary)] flex items-center gap-2">
+                  <span>Remote {currentPlatform === "RETELL" ? "Retell" : "Vapi"} Assistant Management</span>
+                  <Badge variant="default" className="text-[9px] bg-purple-100 text-purple-700 border-purple-200">
+                    {dynamicAssistants.length} Found in Account
+                  </Badge>
                 </h4>
-                <p className="text-[11px] font-medium text-slate-500">
-                  Select an agent from your {currentPlatform === "RETELL" ? "Retell" : "Vapi"} account to auto-populate prompt, voice, language, and model.
+                <p className="text-[11px] font-medium text-slate-500 mt-0.5">
+                  Choose an existing assistant or create a new one directly on your {currentPlatform} dashboard.
                 </p>
               </div>
             </div>
-            <Badge variant="default" className="text-[10px] bg-purple-100 text-purple-700 border-purple-200">
-              {dynamicAssistants.length} Connected
-            </Badge>
+
+            <div className="flex items-center gap-2">
+              {onOpenCreateModal && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={onOpenCreateModal}
+                  className="text-xs font-bold border-purple-300 text-purple-700 hover:bg-purple-100/60 gap-1.5 shadow-2xs"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Create New {currentPlatform === "RETELL" ? "Retell" : "Vapi"} Agent</span>
+                </Button>
+              )}
+
+              {onSyncAssistant && (
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={onSyncAssistant}
+                  disabled={isSyncing}
+                  className="text-xs font-bold bg-purple-600 hover:bg-purple-700 text-white gap-1.5 shadow-2xs"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? "animate-spin" : ""}`} />
+                  <span>{isSyncing ? "Syncing to Provider..." : `Save & Sync to ${currentPlatform}`}</span>
+                </Button>
+              )}
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-1">
-            {dynamicAssistants.map((asst) => (
-              <div
-                key={asst.id}
-                className="p-3.5 bg-white rounded-xl border border-purple-100 hover:border-purple-300 hover:shadow-xs transition-all space-y-2"
+          {/* Assistant Selector Dropdown & Active Details */}
+          <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center pt-1">
+            <div className="sm:col-span-8 space-y-1">
+              <label className="text-[11px] font-bold text-slate-700">
+                Selected Remote Assistant
+              </label>
+              <select
+                value={selectedAssistantId || ""}
+                onChange={(e) => {
+                  const target = dynamicAssistants.find((a) => a.id === e.target.value);
+                  if (target && onApplyAssistant) {
+                    onApplyAssistant(target);
+                  }
+                }}
+                className="w-full px-3 py-2 text-xs font-semibold bg-white border border-purple-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500"
               >
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-black text-[var(--text-primary)] truncate max-w-[180px]">
-                    {asst.name}
-                  </span>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    onClick={() => onApplyAssistant(asst)}
-                    className="text-[10px] h-6 px-2 font-bold border-purple-200 text-purple-700 hover:bg-purple-50 shrink-0"
-                  >
-                    Apply Config
-                  </Button>
-                </div>
-                <div className="flex items-center gap-1.5 flex-wrap text-[10px] text-slate-500 font-medium">
-                  <span className="px-1.5 py-0.5 rounded bg-slate-100 font-mono text-slate-700">
-                    {asst.model?.model || asst.model?.type || "LLM"}
-                  </span>
-                  <span>•</span>
-                  <span className="px-1.5 py-0.5 rounded bg-slate-100 font-mono text-slate-700">
-                    Voice: {asst.voice?.voiceId || "Default"}
-                  </span>
-                  {asst.language && (
-                    <>
-                      <span>•</span>
-                      <span className="px-1.5 py-0.5 rounded bg-slate-100 font-mono text-slate-700">
-                        {asst.language}
-                      </span>
-                    </>
-                  )}
-                </div>
-              </div>
-            ))}
+                <option value="">-- Select or Create a Remote Assistant --</option>
+                {dynamicAssistants.map((asst) => (
+                  <option key={asst.id} value={asst.id}>
+                    {asst.name} (ID: {asst.id})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="sm:col-span-4 flex items-center justify-between sm:justify-end gap-2 text-[11px] text-slate-500 font-medium">
+              {lastSyncedTime && (
+                <span className="flex items-center gap-1 text-emerald-600 font-bold bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-200">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>Synced at {lastSyncedTime}</span>
+                </span>
+              )}
+            </div>
           </div>
         </div>
       )}
