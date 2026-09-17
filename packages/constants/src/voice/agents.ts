@@ -121,7 +121,6 @@ export const VAPI_SETTINGS_CATALOG = {
   backgroundSounds: [
     { id: 'off', label: 'Clean Studio (No Background)' },
     { id: 'office', label: 'Subtle Sales Office Ambient' },
-    { id: 'cafe', label: 'Quiet Coffee Shop' },
   ],
 } as const;
 
