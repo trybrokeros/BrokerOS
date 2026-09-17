@@ -17,6 +17,7 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
+    "@brokeros/constants": "workspace:*",
     "@brokeros/types": "workspace:*"
   }
 }

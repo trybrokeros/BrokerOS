@@ -4,13 +4,19 @@
 
 import type { SendVoiceOptions, SendVoiceResult } from '@brokeros/types';
 import { normalizeVapiVoice } from './vapi-voices.js';
+import { buildVapiVoicePayload, formatVapiBackgroundSound } from './vapi-models.js';
 
 export async function dispatchVapiOutboundCall(
   apiKey: string,
   options: SendVoiceOptions,
 ): Promise<SendVoiceResult> {
   const isUUID = (val?: string) => !!val && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
-  const isAssistantId = isUUID(options.llmModel);
+  const resolvedAssistantId = isUUID(options.assistantId)
+    ? options.assistantId
+    : isUUID(options.llmModel)
+      ? options.llmModel
+      : undefined;
+  const isAssistantId = !!resolvedAssistantId;
 
   const payload: any = {
     customer: {
@@ -19,14 +25,37 @@ export async function dispatchVapiOutboundCall(
   };
 
   // Phone number configuration
-  if (options.telephonyCredentials?.accountSid && options.telephonyCredentials?.authToken) {
+  const twilioSid = options.telephonyCredentials?.accountSid || options.telephonyCredentials?.apiKey;
+  const twilioToken = options.telephonyCredentials?.authToken || options.telephonyCredentials?.apiToken;
+  const twilioNumber = options.fromNumber || options.telephonyCredentials?.fromNumbers?.[0] || '';
+
+  if (twilioSid && twilioToken) {
     payload.phoneNumber = {
-      twilioPhoneNumber: options.fromNumber || options.telephonyCredentials.fromNumbers?.[0] || '',
-      twilioAccountSid: options.telephonyCredentials.accountSid,
-      twilioAuthToken: options.telephonyCredentials.authToken,
+      twilioPhoneNumber: twilioNumber,
+      twilioAccountSid: twilioSid,
+      twilioAuthToken: twilioToken,
     };
   } else if (isUUID(options.fromNumber)) {
     payload.phoneNumberId = options.fromNumber;
+  } else {
+    // Look up registered phone numbers in Vapi account
+    try {
+      const pRes = await fetch('https://api.vapi.ai/phone-number', {
+        headers: { Authorization: `Bearer ${apiKey}` },
+      });
+      if (pRes.ok) {
+        const numbers = (await pRes.json()) as any[];
+        if (Array.isArray(numbers) && numbers.length > 0) {
+          const cleanFrom = (options.fromNumber || '').replace(/[^\d+]/g, '');
+          const match = cleanFrom
+            ? numbers.find((n) => (n.number && n.number.replace(/[^\d+]/g, '') === cleanFrom) || n.id === options.fromNumber)
+            : null;
+          payload.phoneNumberId = match ? match.id : numbers[0].id;
+        }
+      }
+    } catch {
+      // Let Vapi return specific phone error
+    }
   }
 
   const { provider: vapiVoiceProvider, voiceId: cleanVoiceId } = normalizeVapiVoice(
@@ -67,20 +96,24 @@ export async function dispatchVapiOutboundCall(
   const waitSeconds = ((options.maxTurnSilenceMs ?? 400) / 1000);
   const startSpeakingPlan = { waitSeconds };
 
+  const voicePayload = buildVapiVoicePayload({
+    voiceProvider: vapiVoiceProvider,
+    voiceId: cleanVoiceId,
+    voiceSpeed: options.voiceSpeed,
+  });
+
+  const safeBgSound = formatVapiBackgroundSound(options.backgroundSound) || 'off';
+
   if (isAssistantId) {
-    payload.assistantId = options.llmModel;
+    payload.assistantId = resolvedAssistantId;
     payload.assistantOverrides = {
       variableValues: options.variables || {},
       firstMessage: options.firstMessage,
       voicemailDetection: voicemailConfig,
       maxDurationSeconds: options.maxDurationSeconds || 600,
-      backgroundSound: options.backgroundSound || 'off',
+      backgroundSound: safeBgSound,
       startSpeakingPlan,
-      voice: {
-        provider: vapiVoiceProvider,
-        voiceId: cleanVoiceId,
-        speed: options.voiceSpeed || 1.0,
-      },
+      voice: voicePayload,
       transcriber: {
         provider: 'deepgram',
         model: options.transcriberModel || 'nova-3',
@@ -111,15 +144,11 @@ export async function dispatchVapiOutboundCall(
           },
         ],
       },
-      voice: {
-        provider: vapiVoiceProvider,
-        voiceId: cleanVoiceId,
-        speed: options.voiceSpeed || 1.0,
-      },
+      voice: voicePayload,
       firstMessage: options.firstMessage,
       firstMessageMode: options.firstMessageMode || 'assistant-speaks-first',
       voicemailDetection: voicemailConfig,
-      backgroundSound: options.backgroundSound || 'off',
+      backgroundSound: safeBgSound,
       maxDurationSeconds: options.maxDurationSeconds || 600,
       startSpeakingPlan,
     };
