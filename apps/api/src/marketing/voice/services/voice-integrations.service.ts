@@ -289,4 +289,202 @@ export class VoiceIntegrationsService {
       };
     }
   }
+
+  async getRemoteAssistants(integrationId: string) {
+    const integration = await this.prisma.voiceAgentIntegration.findUnique({
+      where: { id: integrationId },
+    });
+    if (!integration) {
+      throw new NotFoundException(`Voice Agent Integration ${integrationId} not found`);
+    }
+
+    const credentials = {
+      apiKey: integration.apiKey,
+      orgId: integration.orgId || undefined,
+      serverUrl: integration.serverUrl || undefined,
+    };
+
+    const provider = getVoiceAgentProvider(integration.platform, credentials) as any;
+    if (provider.getAccountAssistants) {
+      return provider.getAccountAssistants(credentials);
+    }
+    return [];
+  }
+
+  async createRemoteAssistant(integrationId: string, payload: { name: string; config?: any }) {
+    const integration = await this.prisma.voiceAgentIntegration.findUnique({
+      where: { id: integrationId },
+    });
+    if (!integration) {
+      throw new NotFoundException(`Voice Agent Integration ${integrationId} not found`);
+    }
+
+    const credentials = {
+      apiKey: integration.apiKey,
+      orgId: integration.orgId || undefined,
+      serverUrl: integration.serverUrl || undefined,
+    };
+
+    const provider = getVoiceAgentProvider(integration.platform, credentials) as any;
+    if (!provider.createRemoteAssistant) {
+      throw new BadRequestException(
+        `Provider ${integration.platform} does not support remote assistant creation via API`,
+      );
+    }
+
+    return provider.createRemoteAssistant(
+      payload.name,
+      payload.config || {},
+      credentials,
+    );
+  }
+
+  async updateRemoteAssistant(
+    integrationId: string,
+    assistantId: string,
+    config: any,
+  ) {
+    const integration = await this.prisma.voiceAgentIntegration.findUnique({
+      where: { id: integrationId },
+    });
+    if (!integration) {
+      throw new NotFoundException(`Voice Agent Integration ${integrationId} not found`);
+    }
+
+    const credentials = {
+      apiKey: integration.apiKey,
+      orgId: integration.orgId || undefined,
+      serverUrl: integration.serverUrl || undefined,
+    };
+
+    const provider = getVoiceAgentProvider(integration.platform, credentials) as any;
+    if (!provider.updateRemoteAssistant) {
+      throw new BadRequestException(
+        `Provider ${integration.platform} does not support remote assistant updates via API`,
+      );
+    }
+
+    return provider.updateRemoteAssistant(assistantId, config, credentials);
+  }
+
+  async deleteRemoteAssistant(integrationId: string, assistantId: string) {
+    const integration = await this.prisma.voiceAgentIntegration.findUnique({
+      where: { id: integrationId },
+    });
+    if (!integration) {
+      throw new NotFoundException(`Voice Agent Integration ${integrationId} not found`);
+    }
+
+    const credentials = {
+      apiKey: integration.apiKey,
+      orgId: integration.orgId || undefined,
+      serverUrl: integration.serverUrl || undefined,
+    };
+
+    const provider = getVoiceAgentProvider(integration.platform, credentials) as any;
+    if (!provider.deleteRemoteAssistant) {
+      throw new BadRequestException(
+        `Provider ${integration.platform} does not support remote assistant deletion via API`,
+      );
+    }
+
+    const success = await provider.deleteRemoteAssistant(assistantId, credentials);
+    return { success };
+  }
+
+  // ── Platform Phone Numbers ───────────────────────────────────────────────────
+
+  /**
+   * Returns phone numbers registered inside the platform workspace (Vapi, Retell, ElevenLabs)
+   * for a given VoiceAgentIntegration. Used by direct test dialers to select caller ID.
+   */
+  async getVapiPhoneNumbers(integrationId: string) {
+    const integration = await this.prisma.voiceAgentIntegration.findUnique({
+      where: { id: integrationId },
+    });
+    if (!integration) {
+      throw new NotFoundException(`Voice AI Integration ${integrationId} not found`);
+    }
+
+    const platform = (integration.platform || '').toUpperCase();
+
+    // 1. RETELL AI Phone Numbers
+    if (platform === 'RETELL') {
+      try {
+        const res = await fetch('https://api.retellai.com/list-phone-numbers', {
+          headers: { Authorization: `Bearer ${integration.apiKey}` },
+        });
+        if (!res.ok) {
+          const text = await res.text().catch(() => '');
+          this.logger.error(`Retell phone-number list failed (${res.status}): ${text}`);
+          return [];
+        }
+        const numbers = (await res.json()) as any[];
+        if (!Array.isArray(numbers)) return [];
+
+        return numbers.map((n: any) => ({
+          id: n.phone_number,
+          number: n.phone_number_pretty || n.phone_number,
+          name: n.nickname || n.phone_number_pretty || n.phone_number,
+          provider: 'retell',
+        }));
+      } catch (err: any) {
+        this.logger.error(`Failed to fetch Retell phone numbers: ${err.message}`);
+        return [];
+      }
+    }
+
+    // 2. ELEVENLABS Phone Numbers
+    if (platform === 'ELEVENLABS') {
+      try {
+        const res = await fetch('https://api.elevenlabs.io/v1/convai/phone-numbers', {
+          headers: { 'xi-api-key': integration.apiKey },
+        });
+        if (!res.ok) {
+          const text = await res.text().catch(() => '');
+          this.logger.error(`ElevenLabs phone-number list failed (${res.status}): ${text}`);
+          return [];
+        }
+        const numbers = (await res.json()) as any[];
+        if (!Array.isArray(numbers)) return [];
+
+        return numbers.map((n: any) => ({
+          id: n.phone_number_id || n.phone_number,
+          number: n.phone_number,
+          name: n.label || n.phone_number,
+          provider: 'elevenlabs',
+        }));
+      } catch (err: any) {
+        this.logger.error(`Failed to fetch ElevenLabs phone numbers: ${err.message}`);
+        return [];
+      }
+    }
+
+    // 3. VAPI Phone Numbers (Default)
+    try {
+      const res = await fetch('https://api.vapi.ai/phone-number', {
+        headers: { Authorization: `Bearer ${integration.apiKey}` },
+      });
+
+      if (!res.ok) {
+        const text = await res.text().catch(() => '');
+        this.logger.error(`Vapi phone-number list failed (${res.status}): ${text}`);
+        return [];
+      }
+
+      const numbers = (await res.json()) as any[];
+      if (!Array.isArray(numbers)) return [];
+
+      return numbers.map((n: any) => ({
+        id: n.id,
+        number: n.number || n.phoneNumber || n.e164Number || n.id,
+        provider: n.provider || (n.twilioPhoneNumber ? 'twilio' : (n.vonagePhoneNumber ? 'vonage' : 'vapi')),
+        name: n.name || n.number || n.id,
+      }));
+    } catch (err: any) {
+      this.logger.error(`Failed to fetch Vapi phone numbers: ${err.message}`);
+      return [];
+    }
+  }
 }
+

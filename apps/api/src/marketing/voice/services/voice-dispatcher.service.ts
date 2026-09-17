@@ -1,6 +1,11 @@
 // ============================================================================
 // BrokerOS — Voice Dispatcher Service (Carrier Line Tests & AI Preview Calls)
 // ============================================================================
+//
+// testMode routing:
+//   "vapi-direct"    → Skip carrier bridge, call api.vapi.ai/call directly.
+//   "carrier-bridge" → Route through selected CRM telephony (Vobiz/Twilio/Exotel).
+//   undefined        → Default: carrier bridge first, then Vapi direct fallback.
 
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { prismaClient } from '@brokeros/prisma';
@@ -56,13 +61,19 @@ export class VoiceDispatcherService {
   }
 
   async testVoiceAiCall(dto: TestVoiceAiCallDto) {
+    const isDirectMode =
+      dto.testMode === 'vapi-direct' ||
+      dto.testMode === 'retell-direct' ||
+      dto.testMode === 'elevenlabs-direct' ||
+      dto.testMode === 'direct';
+
     let telephony = dto.telephonyId
       ? await this.prisma.voiceTelephonyIntegration.findUnique({
         where: { id: dto.telephonyId },
       })
       : null;
 
-    if (!telephony) {
+    if (!telephony && !isDirectMode) {
       telephony = await this.prisma.voiceTelephonyIntegration.findFirst({
         where: { isActive: true },
         orderBy: { isDefault: 'desc' },
@@ -75,6 +86,14 @@ export class VoiceDispatcherService {
       })
       : null;
 
+    if (!agent && dto.voiceProvider) {
+      const provUpper = dto.voiceProvider.toUpperCase();
+      agent = await this.prisma.voiceAgentIntegration.findFirst({
+        where: { platform: provUpper as any, isActive: true },
+        orderBy: { isDefault: 'desc' },
+      });
+    }
+
     if (!agent) {
       agent = await this.prisma.voiceAgentIntegration.findFirst({
         where: { isActive: true },
@@ -82,25 +101,26 @@ export class VoiceDispatcherService {
       });
     }
 
-    if (!telephony) {
+    if (!isDirectMode && !telephony) {
       throw new NotFoundException(
-        'No active Telephony Gateway configured. Please connect Twilio, Vobiz, or Exotel in Voice Settings.',
+        'No active Telephony Gateway configured. Please connect Twilio, Vobiz, or Exotel in Voice Settings, or use Direct PSTN.',
       );
     }
     if (!agent) {
       throw new NotFoundException(
-        'No active Voice AI Platform configured. Please connect Vapi, Retell, Sarvam, or Bolna in Voice Settings.',
+        'No active Voice AI Platform configured. Please connect Vapi, Retell, ElevenLabs, or Sarvam in Voice Settings.',
       );
     }
 
     const telephonyCreds: VoiceTelephonyCredentials = {
-      accountSid: telephony.accountSid || undefined,
-      authToken: telephony.authToken || undefined,
-      apiKey: telephony.apiKey || undefined,
-      apiToken: telephony.apiToken || undefined,
-      subdomain: telephony.subdomain || undefined,
-      sipDomain: telephony.sipDomain || undefined,
-      fromNumbers: telephony.fromNumbers,
+      provider: telephony?.provider,
+      accountSid: telephony?.accountSid || undefined,
+      authToken: telephony?.authToken || undefined,
+      apiKey: telephony?.apiKey || undefined,
+      apiToken: telephony?.apiToken || undefined,
+      subdomain: telephony?.subdomain || undefined,
+      sipDomain: telephony?.sipDomain || undefined,
+      fromNumbers: telephony?.fromNumbers || [],
     };
 
     const agentCreds: VoiceAgentCredentials = {
@@ -113,9 +133,9 @@ export class VoiceDispatcherService {
       agent.platform,
       agentCreds,
     );
-    const validDids = telephony.fromNumbers || [];
+    const validDids = telephony?.fromNumbers || [];
     const fromNumber =
-      dto.fromNumber && validDids.includes(dto.fromNumber)
+      dto.fromNumber
         ? dto.fromNumber
         : validDids[0] || '';
 
@@ -151,6 +171,7 @@ export class VoiceDispatcherService {
       toPhone: dto.toPhone,
       fromNumber,
       campaignId: 'test_preview_call',
+      assistantId: dto.assistantId,
       llmModel: dto.llmModel,
       voiceProvider: dto.voiceProvider,
       voiceId: dto.voiceId,
@@ -176,47 +197,45 @@ export class VoiceDispatcherService {
       reminderTriggerMs: dto.retellReminderMs,
     };
 
-    // 1. Try centralized carrier bridge dispatch (Vobiz, Exotel, Twilio, Telnyx)
+    // ── Route by testMode ──────────────────────────────────────────────────────
+
+    // OPTION A: Direct PSTN via AI Agent Platform (Vapi / Retell / ElevenLabs Direct)
+    if (isDirectMode) {
+      this.logger.log(
+        `[${dto.testMode || 'direct'}] Dispatching outbound call to ${dto.toPhone} via ${agent.platform} API directly`,
+      );
+      const result = await voiceAgentProvider.dispatchOutboundCall(
+        sendOptions,
+        agentCreds,
+      );
+      if (!result.success) {
+        this.logger.error(
+          `[${dto.testMode || 'direct'}] ${agent.platform} outbound call failed: ${result.error}`,
+        );
+      }
+      return result;
+    }
+
+    // OPTION B: CRM Telephony Carrier Bridge (Vobiz / Exotel / Twilio / Telnyx)
+    this.logger.log(
+      `[carrier-bridge] Dispatching outbound call to ${dto.toPhone} via carrier ${telephony?.provider || 'Unknown'} on ${agent.platform}`,
+    );
     const carrierBridge = await tryCarrierBridgeDispatch(
       agent.platform,
       sendOptions,
     );
-    if (carrierBridge.handled && carrierBridge.result?.success) {
+    if (carrierBridge.handled && carrierBridge.result) {
+      if (!carrierBridge.result.success) {
+        this.logger.error(
+          `[carrier-bridge] Carrier ${telephony?.provider || 'Unknown'} failed: ${carrierBridge.result.error}`,
+        );
+      }
       return carrierBridge.result;
     }
 
-    const primaryResult =
-      carrierBridge.handled && carrierBridge.result
-        ? carrierBridge.result
-        : await voiceAgentProvider.dispatchOutboundCall(
-          sendOptions,
-          agentCreds,
-        );
-    if (primaryResult.success) return primaryResult;
-
-    // Carrier Failover: If primary dispatch failed, attempt secondary active telephony line
-    const fallbackTelephony =
-      await this.prisma.voiceTelephonyIntegration.findFirst({
-        where: { isActive: true, id: { not: telephony.id } },
-        orderBy: { isDefault: 'desc' },
-      });
-
-    if (fallbackTelephony) {
-      this.logger.warn(
-        `Primary carrier ${telephony.provider} failed: ${primaryResult.error}. Attempting failover to ${fallbackTelephony.provider}...`,
-      );
-      const fallbackCreds: VoiceTelephonyCredentials = {
-        accountSid: fallbackTelephony.accountSid || undefined,
-        authToken: fallbackTelephony.authToken || undefined,
-        apiKey: fallbackTelephony.apiKey || undefined,
-        apiToken: fallbackTelephony.apiToken || undefined,
-        fromNumbers: fallbackTelephony.fromNumbers,
-      };
-      sendOptions.telephonyCredentials = fallbackCreds;
-      sendOptions.fromNumber = fallbackTelephony.fromNumbers?.[0] || fromNumber;
-      return voiceAgentProvider.dispatchOutboundCall(sendOptions, agentCreds);
-    }
-
-    return primaryResult;
+    return {
+      success: false,
+      error: `Carrier line for ${telephony?.provider || 'selected telephony'} could not be dispatched. Please verify carrier credentials and registered numbers.`,
+    };
   }
 }
