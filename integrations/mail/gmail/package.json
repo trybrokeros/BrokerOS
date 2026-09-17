@@ -12,6 +12,8 @@
     }
   },
   "dependencies": {
-    "@brokeros/types": "workspace:*"
+    "@brokeros/types": "workspace:*",
+    "@types/nodemailer": "^8.0.1",
+    "nodemailer": "^10.0.10"
   }
 }
