@@ -254,20 +254,40 @@ export class MailchimpClient {
 
       if (res.status === 200) {
         const results: any = await res.json().catch(() => []);
-        const firstResult = Array.isArray(results) ? results[0] : null;
-        const messageId =
-          firstResult?._id ||
-          `mc-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+        if (Array.isArray(results) && results.length > 0) {
+          const firstResult = results[0];
+          const rejectedItem = results.find((r) => r.status === 'rejected' || r.status === 'invalid');
+          const sentCount = results.filter((r) => r.status === 'sent' || r.status === 'queued').length;
 
-        const sentCount = Array.isArray(results)
-          ? results.filter((r) => r.status === 'sent' || r.status === 'queued').length
-          : options.to.length;
+          if (sentCount === 0 && rejectedItem) {
+            const reason = rejectedItem.reject_reason ? ` (${rejectedItem.reject_reason})` : '';
+            const domain = options.fromEmail.includes('@') ? options.fromEmail.split('@')[1] : options.fromEmail;
+            return {
+              success: false,
+              provider: 'MAILCHIMP',
+              sentCount: 0,
+              error: `Mandrill rejected email to ${rejectedItem.email}: ${rejectedItem.status}${reason}. Please ensure domain "${domain}" is verified with DKIM/SPF in your Mandrill / Mailchimp account.`,
+            };
+          }
+
+          const messageId =
+            firstResult?._id ||
+            `mc-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+
+          return {
+            success: sentCount > 0,
+            provider: 'MAILCHIMP',
+            providerMessageId: messageId,
+            sentCount,
+            error: sentCount === 0 ? 'No recipients accepted by Mandrill' : undefined,
+          };
+        }
 
         return {
-          success: true,
+          success: false,
           provider: 'MAILCHIMP',
-          providerMessageId: messageId,
-          sentCount: sentCount || options.to.length,
+          sentCount: 0,
+          error: 'Empty response from Mandrill API',
         };
       }
 
