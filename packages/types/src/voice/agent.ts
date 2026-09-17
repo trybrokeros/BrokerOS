@@ -57,4 +57,7 @@ export interface IVoiceAgentProvider {
   getAvailableModels(credentials?: VoiceAgentCredentials): Promise<VoiceModelItem[]>;
   getAvailableVoices(credentials?: VoiceAgentCredentials): Promise<VoicePersonaItem[]>;
   getAccountAssistants?(credentials?: VoiceAgentCredentials): Promise<any[]>;
+  createRemoteAssistant?(name: string, config: any, credentials?: VoiceAgentCredentials): Promise<any>;
+  updateRemoteAssistant?(assistantId: string, config: any, credentials?: VoiceAgentCredentials): Promise<any>;
+  deleteRemoteAssistant?(assistantId: string, credentials?: VoiceAgentCredentials): Promise<boolean>;
 }

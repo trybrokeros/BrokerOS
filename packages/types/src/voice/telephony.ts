@@ -6,6 +6,7 @@ export type VoiceTelephonyType = 'TWILIO' | 'VOBIZ' | 'EXOTEL' | 'TELNYX' | 'AMA
 export const VOICE_TELEPHONY_TYPES: VoiceTelephonyType[] = ['TWILIO', 'VOBIZ', 'EXOTEL', 'TELNYX', 'AMAZON_CONNECT'];
 
 export interface VoiceTelephonyCredentials {
+  provider?: VoiceTelephonyType;
   accountSid?: string;
   authToken?: string;
   apiKey?: string;
