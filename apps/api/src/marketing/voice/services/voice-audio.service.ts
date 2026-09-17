@@ -190,6 +190,18 @@ export class VoiceAudioService {
     }
 
     // 8. Persona Synthesis Fallback
+    if (cartesiaKey) {
+      try {
+        const cartesiaFallback = isMale
+          ? 'a0e99841-438c-4a64-b679-ae501e7d6091' // Barbershop Man / Sonic
+          : '79a125e8-cd45-4c13-8a67-188112f4dd22'; // British Lady / Sonic
+        const audio = await synthesizeCartesia(dto.text, cartesiaFallback, cartesiaKey, isMale);
+        if (audio) return audio;
+      } catch {
+        // Fallback gracefully
+      }
+    }
+
     if (deepgramKey) {
       try {
         const auraVoice = isMale ? 'aura-orion-en' : 'aura-asteria-en';
