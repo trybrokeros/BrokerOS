@@ -76,22 +76,34 @@ export default function NewVoiceCampaignPage() {
 
   // Form State: Step 4 (AI Voice Agent)
   const [agentPlatformId, setAgentPlatformId] = useState<string | undefined>(undefined);
+  const [assistantId, setAssistantId] = useState<string | undefined>(undefined);
+  const [assistantName, setAssistantName] = useState<string>("BrokerOS Luxury Sales AI");
+  const [modelProvider, setModelProvider] = useState<string>("openai");
   const [llmModel, setLlmModel] = useState("gpt-4o-mini");
-  const [voiceProvider, setVoiceProvider] = useState("sarvam");
-  const [voiceId, setVoiceId] = useState("priya");
-  const [voiceName, setVoiceName] = useState("Priya");
+  const [temperature, setTemperature] = useState<number>(0.7);
+  const [maxTokens, setMaxTokens] = useState<number>(500);
+  const [voiceProvider, setVoiceProvider] = useState("11labs");
+  const [voiceId, setVoiceId] = useState("21m00Tcm4TlvDq8ikWAM");
+  const [voiceName, setVoiceName] = useState("Rachel (ElevenLabs)");
+  const [voiceSpeed, setVoiceSpeed] = useState(1.0);
+  const [voiceStability, setVoiceStability] = useState(0.5);
+  const [voiceSimilarityBoost, setVoiceSimilarityBoost] = useState(0.75);
   const [scriptPrompt, setScriptPrompt] = useState<string>(DEFAULT_VOICE_SCRIPTS[0]?.systemPrompt || "");
   const [firstMessage, setFirstMessage] = useState<string>(DEFAULT_VOICE_SCRIPTS[0]?.firstMessage || "");
 
   // Vapi Advanced Studio State (Persisted)
+  const [transcriberProvider, setTranscriberProvider] = useState("deepgram");
   const [transcriberModel, setTranscriberModel] = useState("nova-3");
   const [transcriberLanguage, setTranscriberLanguage] = useState("en");
   const [maxTurnSilenceMs, setMaxTurnSilenceMs] = useState(400);
-  const [voiceSpeed, setVoiceSpeed] = useState(1.0);
-  const [firstMessageMode, setFirstMessageMode] = useState<"assistant-speaks-first" | "assistant-waits-for-user">("assistant-speaks-first");
-  const [voicemailDetection, setVoicemailDetection] = useState<"off" | "machine_detection">("off");
-  const [backgroundSound, setBackgroundSound] = useState<"off" | "office">("off");
+  const [firstMessageMode, setFirstMessageMode] = useState<string>("assistant-speaks-first");
+  const [voicemailDetection, setVoicemailDetection] = useState<string>("off");
+  const [voicemailMessage, setVoicemailMessage] = useState<string>("");
+  const [backgroundSound, setBackgroundSound] = useState<string>("off");
+  const [silenceTimeoutSeconds, setSilenceTimeoutSeconds] = useState<number>(30);
   const [maxDurationSeconds, setMaxDurationSeconds] = useState(600);
+  const [backchannelingEnabled, setBackchannelingEnabled] = useState(true);
+  const [backgroundDenoisingEnabled, setBackgroundDenoisingEnabled] = useState(true);
 
   // Retell Advanced Studio State (Persisted)
   const [retellVoiceModel, setRetellVoiceModel] = useState("eleven_flash_v2_5");
@@ -101,6 +113,36 @@ export default function NewVoiceCampaignPage() {
   const [retellLanguage, setRetellLanguage] = useState("hi-IN");
   const [retellBackchannel, setRetellBackchannel] = useState(true);
   const [retellReminderMs, setRetellReminderMs] = useState(10000);
+
+  // Unified Full Studio Config (Preserves all dynamic settings across Vapi, Retell, ElevenLabs)
+  const [agentStudioConfig, setAgentStudioConfig] = useState<Record<string, any>>({
+    useS2sMode: false,
+    s2sModel: "gpt-realtime-2.1",
+    modelTemperature: 0.0,
+    modelHighPriority: false,
+    voiceTemperature: 1.0,
+    ambientSoundVolume: 0.8,
+    sttMode: "fast",
+    vocabSpecialization: "general",
+    responsiveness: 1.0,
+    interruptionSensitivity: 1.0,
+    enableDynamicResponsiveness: false,
+    endCallAfterSilenceMs: 600000,
+    denoisingMode: "noise-cancellation",
+    voicemailAction: "hangup",
+    enableDynamicVoiceSpeed: false,
+    beginMessageDelayMs: 1000,
+    ttsModel: "eleven_flash_v2_5",
+    elevenLanguage: "en",
+    turnTimeout: 7,
+    turnEagerness: "normal",
+    silenceEndCallTimeout: -1,
+    speculativeTurn: true,
+    asrQuality: "high",
+    asrProvider: "elevenlabs",
+    asrKeywords: [],
+    backgroundVolume: 0.15,
+  });
 
   // Metadata Lists
   const [projects, setProjects] = useState<Array<{ id: string; name: string; city?: string }>>([]);
@@ -181,20 +223,32 @@ export default function NewVoiceCampaignPage() {
         if (draft.telephonyId) setTelephonyId(draft.telephonyId);
         if (draft.callerIdNumber) setCallerIdNumber(draft.callerIdNumber);
         if (draft.agentPlatformId) setAgentPlatformId(draft.agentPlatformId);
+        if (draft.assistantId) setAssistantId(draft.assistantId);
+        if (draft.assistantName) setAssistantName(draft.assistantName);
+        if (draft.modelProvider) setModelProvider(draft.modelProvider);
         if (draft.llmModel) setLlmModel(draft.llmModel);
+        if (draft.temperature !== undefined) setTemperature(draft.temperature);
+        if (draft.maxTokens !== undefined) setMaxTokens(draft.maxTokens);
         if (draft.voiceProvider) setVoiceProvider(draft.voiceProvider);
         if (draft.voiceId) setVoiceId(draft.voiceId);
         if (draft.voiceName) setVoiceName(draft.voiceName);
+        if (draft.voiceSpeed !== undefined) setVoiceSpeed(draft.voiceSpeed);
+        if (draft.voiceStability !== undefined) setVoiceStability(draft.voiceStability);
+        if (draft.voiceSimilarityBoost !== undefined) setVoiceSimilarityBoost(draft.voiceSimilarityBoost);
         if (draft.scriptPrompt) setScriptPrompt(draft.scriptPrompt);
         if (draft.firstMessage) setFirstMessage(draft.firstMessage);
+        if (draft.transcriberProvider) setTranscriberProvider(draft.transcriberProvider);
         if (draft.transcriberModel) setTranscriberModel(draft.transcriberModel);
         if (draft.transcriberLanguage) setTranscriberLanguage(draft.transcriberLanguage);
         if (draft.maxTurnSilenceMs !== undefined) setMaxTurnSilenceMs(draft.maxTurnSilenceMs);
-        if (draft.voiceSpeed !== undefined) setVoiceSpeed(draft.voiceSpeed);
         if (draft.firstMessageMode) setFirstMessageMode(draft.firstMessageMode);
         if (draft.voicemailDetection) setVoicemailDetection(draft.voicemailDetection);
+        if (draft.voicemailMessage !== undefined) setVoicemailMessage(draft.voicemailMessage);
         if (draft.backgroundSound) setBackgroundSound(draft.backgroundSound);
+        if (draft.silenceTimeoutSeconds !== undefined) setSilenceTimeoutSeconds(draft.silenceTimeoutSeconds);
         if (draft.maxDurationSeconds !== undefined) setMaxDurationSeconds(draft.maxDurationSeconds);
+        if (draft.backchannelingEnabled !== undefined) setBackchannelingEnabled(draft.backchannelingEnabled);
+        if (draft.backgroundDenoisingEnabled !== undefined) setBackgroundDenoisingEnabled(draft.backgroundDenoisingEnabled);
         // Retell parameters restore
         if (draft.retellVoiceModel) setRetellVoiceModel(draft.retellVoiceModel);
         if (draft.retellEmotion) setRetellEmotion(draft.retellEmotion);
@@ -203,6 +257,11 @@ export default function NewVoiceCampaignPage() {
         if (draft.retellLanguage) setRetellLanguage(draft.retellLanguage);
         if (draft.retellBackchannel !== undefined) setRetellBackchannel(draft.retellBackchannel);
         if (draft.retellReminderMs !== undefined) setRetellReminderMs(draft.retellReminderMs);
+        if (draft.agentStudioConfig) {
+          setAgentStudioConfig(draft.agentStudioConfig);
+        } else if (draft.studioSettings) {
+          setAgentStudioConfig((prev) => ({ ...prev, ...draft.studioSettings }));
+        }
         if (draft.draftCampaignId) setDraftCampaignId(draft.draftCampaignId);
         if (draft.currentStep) setCurrentStep(draft.currentStep);
         setHasRestoredDraft(true);
@@ -220,14 +279,27 @@ export default function NewVoiceCampaignPage() {
       setIsSavingDraft(true);
 
       const studioSettings = {
+        ...agentStudioConfig,
+        assistantId,
+        assistantName,
+        modelProvider,
+        temperature,
+        maxTokens,
+        transcriberProvider,
         transcriberModel,
         transcriberLanguage,
         maxTurnSilenceMs,
         voiceSpeed,
+        voiceStability,
+        voiceSimilarityBoost,
         firstMessageMode,
         voicemailDetection,
+        voicemailMessage,
         backgroundSound,
+        silenceTimeoutSeconds,
         maxDurationSeconds,
+        backchannelingEnabled,
+        backgroundDenoisingEnabled,
         retellVoiceModel,
         retellEmotion,
         enableExpressiveMode,
@@ -250,21 +322,34 @@ export default function NewVoiceCampaignPage() {
         telephonyId: telephonyId || undefined,
         callerIdNumber: callerIdNumber || undefined,
         agentPlatformId: agentPlatformId || undefined,
+        assistantId,
+        assistantName,
+        modelProvider,
         llmModel,
+        temperature,
+        maxTokens,
         voiceProvider,
         voiceId,
         voiceName,
+        voiceSpeed,
+        voiceStability,
+        voiceSimilarityBoost,
         scriptPrompt,
         firstMessage,
         studioSettings,
+        agentStudioConfig,
+        transcriberProvider,
         transcriberModel,
         transcriberLanguage,
         maxTurnSilenceMs,
-        voiceSpeed,
         firstMessageMode,
         voicemailDetection,
+        voicemailMessage,
         backgroundSound,
+        silenceTimeoutSeconds,
         maxDurationSeconds,
+        backchannelingEnabled,
+        backgroundDenoisingEnabled,
         retellVoiceModel,
         retellEmotion,
         enableExpressiveMode,
@@ -493,6 +578,7 @@ export default function NewVoiceCampaignPage() {
     setIsSubmitting(true);
     try {
       const studioSettings = {
+        ...agentStudioConfig,
         transcriberModel,
         transcriberLanguage,
         maxTurnSilenceMs,
@@ -556,6 +642,44 @@ export default function NewVoiceCampaignPage() {
       setIsSubmitting(false);
     }
   };
+
+  const handleStep4Change = useCallback((f: Record<string, any>) => {
+    setAgentStudioConfig((prev) => ({ ...prev, ...f }));
+    if (f.agentPlatformId !== undefined) setAgentPlatformId(f.agentPlatformId);
+    if (f.assistantId !== undefined) setAssistantId(f.assistantId);
+    if (f.assistantName !== undefined) setAssistantName(f.assistantName);
+    if (f.modelProvider !== undefined) setModelProvider(f.modelProvider);
+    if (f.llmModel !== undefined) setLlmModel(f.llmModel);
+    if (f.temperature !== undefined) setTemperature(f.temperature);
+    if (f.maxTokens !== undefined) setMaxTokens(f.maxTokens);
+    if (f.voiceProvider !== undefined) setVoiceProvider(f.voiceProvider);
+    if (f.voiceId !== undefined) setVoiceId(f.voiceId);
+    if (f.voiceName !== undefined) setVoiceName(f.voiceName);
+    if (f.voiceSpeed !== undefined) setVoiceSpeed(f.voiceSpeed);
+    if (f.voiceStability !== undefined) setVoiceStability(f.voiceStability);
+    if (f.voiceSimilarityBoost !== undefined) setVoiceSimilarityBoost(f.voiceSimilarityBoost);
+    if (f.scriptPrompt !== undefined) setScriptPrompt(f.scriptPrompt);
+    if (f.firstMessage !== undefined) setFirstMessage(f.firstMessage);
+    if (f.transcriberProvider !== undefined) setTranscriberProvider(f.transcriberProvider);
+    if (f.transcriberModel !== undefined) setTranscriberModel(f.transcriberModel);
+    if (f.transcriberLanguage !== undefined) setTranscriberLanguage(f.transcriberLanguage);
+    if (f.maxTurnSilenceMs !== undefined) setMaxTurnSilenceMs(f.maxTurnSilenceMs);
+    if (f.firstMessageMode !== undefined) setFirstMessageMode(f.firstMessageMode);
+    if (f.voicemailDetection !== undefined) setVoicemailDetection(f.voicemailDetection);
+    if (f.voicemailMessage !== undefined) setVoicemailMessage(f.voicemailMessage);
+    if (f.backgroundSound !== undefined) setBackgroundSound(f.backgroundSound);
+    if (f.silenceTimeoutSeconds !== undefined) setSilenceTimeoutSeconds(f.silenceTimeoutSeconds);
+    if (f.maxDurationSeconds !== undefined) setMaxDurationSeconds(f.maxDurationSeconds);
+    if (f.backchannelingEnabled !== undefined) setBackchannelingEnabled(f.backchannelingEnabled);
+    if (f.backgroundDenoisingEnabled !== undefined) setBackgroundDenoisingEnabled(f.backgroundDenoisingEnabled);
+    if (f.retellVoiceModel !== undefined) setRetellVoiceModel(f.retellVoiceModel);
+    if (f.retellEmotion !== undefined) setRetellEmotion(f.retellEmotion);
+    if (f.enableExpressiveMode !== undefined) setEnableExpressiveMode(f.enableExpressiveMode);
+    if (f.retellAmbientSound !== undefined) setRetellAmbientSound(f.retellAmbientSound);
+    if (f.retellLanguage !== undefined) setRetellLanguage(f.retellLanguage);
+    if (f.retellBackchannel !== undefined) setRetellBackchannel(f.retellBackchannel);
+    if (f.retellReminderMs !== undefined) setRetellReminderMs(f.retellReminderMs);
+  }, []);
 
   return (
     <DashboardPageWrapper
@@ -705,21 +829,34 @@ export default function NewVoiceCampaignPage() {
         {currentStep === 4 && (
           <VoiceStep4AgentComposer
             formData={{
+              ...agentStudioConfig,
               agentPlatformId,
+              assistantId,
+              assistantName,
+              modelProvider,
               llmModel,
+              temperature,
+              maxTokens,
               voiceProvider,
               voiceId,
               voiceName,
+              voiceSpeed,
+              voiceStability,
+              voiceSimilarityBoost,
               scriptPrompt,
               firstMessage,
+              transcriberProvider,
               transcriberModel,
               transcriberLanguage,
               maxTurnSilenceMs,
-              voiceSpeed,
               firstMessageMode,
               voicemailDetection,
+              voicemailMessage,
               backgroundSound,
+              silenceTimeoutSeconds,
               maxDurationSeconds,
+              backchannelingEnabled,
+              backgroundDenoisingEnabled,
               retellVoiceModel,
               retellEmotion,
               enableExpressiveMode,
@@ -728,31 +865,9 @@ export default function NewVoiceCampaignPage() {
               retellBackchannel,
               retellReminderMs,
             }}
-            onChange={(f) => {
-              if (f.agentPlatformId !== undefined) setAgentPlatformId(f.agentPlatformId);
-              if (f.llmModel !== undefined) setLlmModel(f.llmModel);
-              if (f.voiceProvider !== undefined) setVoiceProvider(f.voiceProvider);
-              if (f.voiceId !== undefined) setVoiceId(f.voiceId);
-              if (f.voiceName !== undefined) setVoiceName(f.voiceName);
-              if (f.scriptPrompt !== undefined) setScriptPrompt(f.scriptPrompt);
-              if (f.firstMessage !== undefined) setFirstMessage(f.firstMessage);
-              if (f.transcriberModel !== undefined) setTranscriberModel(f.transcriberModel);
-              if (f.transcriberLanguage !== undefined) setTranscriberLanguage(f.transcriberLanguage);
-              if (f.maxTurnSilenceMs !== undefined) setMaxTurnSilenceMs(f.maxTurnSilenceMs);
-              if (f.voiceSpeed !== undefined) setVoiceSpeed(f.voiceSpeed);
-              if (f.firstMessageMode !== undefined) setFirstMessageMode(f.firstMessageMode);
-              if (f.voicemailDetection !== undefined) setVoicemailDetection(f.voicemailDetection);
-              if (f.backgroundSound !== undefined) setBackgroundSound(f.backgroundSound);
-              if (f.maxDurationSeconds !== undefined) setMaxDurationSeconds(f.maxDurationSeconds);
-              if (f.retellVoiceModel !== undefined) setRetellVoiceModel(f.retellVoiceModel);
-              if (f.retellEmotion !== undefined) setRetellEmotion(f.retellEmotion);
-              if (f.enableExpressiveMode !== undefined) setEnableExpressiveMode(f.enableExpressiveMode);
-              if (f.retellAmbientSound !== undefined) setRetellAmbientSound(f.retellAmbientSound);
-              if (f.retellLanguage !== undefined) setRetellLanguage(f.retellLanguage);
-              if (f.retellBackchannel !== undefined) setRetellBackchannel(f.retellBackchannel);
-              if (f.retellReminderMs !== undefined) setRetellReminderMs(f.retellReminderMs);
-            }}
+            onChange={handleStep4Change}
             agentIntegrations={agentIntegrations}
+            telephonyIntegrations={telephonyIntegrations}
             csvRecipients={csvRecipients}
             selectedProject={projects.find((p) => p.id === projectId)}
             apiBaseUrl={baseUrl}
