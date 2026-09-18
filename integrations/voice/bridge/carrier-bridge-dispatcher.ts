@@ -9,8 +9,25 @@ export interface CarrierBridgeResult {
   result?: SendVoiceResult;
 }
 
+function isPublicHttpUrl(url?: string): boolean {
+  if (!url) return false;
+  const lower = url.trim().toLowerCase();
+  if (!lower.startsWith('http://') && !lower.startsWith('https://')) return false;
+  if (lower.includes('localhost') || lower.includes('127.0.0.1') || lower.includes('0.0.0.0')) return false;
+  return true;
+}
+
+function escapeXml(unsafe: string): string {
+  return unsafe
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
 /**
- * Checks if carrier credentials (Vobiz, Exotel, Twilio) are present in SendVoiceOptions
+ * Checks if carrier credentials (Vobiz, Exotel, Twilio, Telnyx) are present in SendVoiceOptions
  * and dispatches the call directly through the selected carrier's PSTN trunking line.
  */
 export async function tryCarrierBridgeDispatch(
@@ -24,6 +41,7 @@ export async function tryCarrierBridgeDispatch(
 
   const message = options.firstMessage || 'Hello! Thank you for connecting with us.';
   const publicUrl = (process.env.API_PUBLIC_URL || '').replace(/\/$/, '');
+  const isPublicUrl = isPublicHttpUrl(publicUrl);
   const prov = (telCreds.provider || '').toUpperCase();
 
   // ── 1. VOBIZ PSTN Carrier Bridge ──
@@ -56,6 +74,16 @@ export async function tryCarrierBridgeDispatch(
       };
     }
 
+    if (!isPublicUrl) {
+      return {
+        handled: true,
+        result: {
+          success: false,
+          error: `Vobiz API requires a public HTTP/HTTPS webhook URL for 'answer_url'. Current API_PUBLIC_URL is "${publicUrl || 'empty'}". Please configure a public domain or ngrok tunnel in your .env (e.g., API_PUBLIC_URL="https://your-domain.ngrok-free.app").`,
+        },
+      };
+    }
+
     const answerUrl = `${publicUrl}/api/marketing/voice/webhooks/vobiz-answer?campaignId=${options.campaignId || 'direct_test'}&firstMessage=${encodeURIComponent(message)}&scriptPrompt=${encodeURIComponent(options.scriptPrompt || '')}&agent=${platform}&voice=${encodeURIComponent(options.voiceId || '')}`;
 
     try {
@@ -75,22 +103,22 @@ export async function tryCarrierBridgeDispatch(
         }),
       });
 
+      const data = (await res.json().catch(() => ({}))) as any;
       if (res.status >= 200 && res.status < 300) {
-        const data = (await res.json().catch(() => ({}))) as any;
         return {
           handled: true,
           result: {
             success: true,
-            providerCallId: data.callId || data.call_uuid || `vobiz_${platform.toLowerCase()}_${Date.now()}`,
+            providerCallId: data.callId || data.call_uuid || data.request_uuid || `vobiz_${platform.toLowerCase()}_${Date.now()}`,
           },
         };
       } else {
-        const errText = await res.text().catch(() => '');
+        const errorDetail = data.error || data.message || data.detail || `HTTP ${res.status}`;
         return {
           handled: true,
           result: {
             success: false,
-            error: `Vobiz call failed (HTTP ${res.status}): ${errText || res.statusText}`,
+            error: `Vobiz call failed (HTTP ${res.status}): ${errorDetail}`,
           },
         };
       }
@@ -159,8 +187,8 @@ export async function tryCarrierBridgeDispatch(
         body: body.toString(),
       });
 
+      const data = (await res.json().catch(() => ({}))) as any;
       if (res.status >= 200 && res.status < 300) {
-        const data = (await res.json().catch(() => ({}))) as any;
         return {
           handled: true,
           result: {
@@ -169,12 +197,12 @@ export async function tryCarrierBridgeDispatch(
           },
         };
       } else {
-        const errText = await res.text().catch(() => '');
+        const errorDetail = data?.RestException?.Message || data?.message || `HTTP ${res.status}`;
         return {
           handled: true,
           result: {
             success: false,
-            error: `Exotel call failed (HTTP ${res.status}): ${errText || res.statusText}`,
+            error: `Exotel call failed (HTTP ${res.status}): ${errorDetail}`,
           },
         };
       }
@@ -220,14 +248,23 @@ export async function tryCarrierBridgeDispatch(
 
     try {
       const authHeader = Buffer.from(`${sid}:${token}`).toString('base64');
-      const twilioUrl = `${publicUrl}/api/marketing/voice/webhooks/twilio-answer?campaignId=${options.campaignId || 'direct_test'}&firstMessage=${encodeURIComponent(message)}&scriptPrompt=${encodeURIComponent(options.scriptPrompt || '')}&agent=${platform}&voice=${encodeURIComponent(options.voiceId || '')}`;
-
-      const body = new URLSearchParams({
+      const bodyParams: Record<string, string> = {
         To: options.toPhone,
         From: fromNum,
-        Url: twilioUrl,
-        Method: 'POST',
-      });
+      };
+
+      if (isPublicUrl) {
+        // Public domain / ngrok tunnel active — use full media stream webhook
+        const twilioUrl = `${publicUrl}/api/marketing/voice/webhooks/twilio-answer?campaignId=${options.campaignId || 'direct_test'}&firstMessage=${encodeURIComponent(message)}&scriptPrompt=${encodeURIComponent(options.scriptPrompt || '')}&agent=${platform}&voice=${encodeURIComponent(options.voiceId || '')}`;
+        bodyParams.Url = twilioUrl;
+        bodyParams.Method = 'POST';
+      } else {
+        // Local environment fallback — use inline TwiML so the call dials and speaks without 400 rejection
+        const twiml = `<Response><Say voice="Polly.Aditi">${escapeXml(message)}</Say><Pause length="2"/><Hangup/></Response>`;
+        bodyParams.Twiml = twiml;
+      }
+
+      const body = new URLSearchParams(bodyParams);
 
       const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Calls.json`, {
         method: 'POST',
@@ -238,8 +275,8 @@ export async function tryCarrierBridgeDispatch(
         body: body.toString(),
       });
 
+      const data = (await res.json().catch(() => ({}))) as any;
       if (res.status >= 200 && res.status < 300) {
-        const data = (await res.json().catch(() => ({}))) as any;
         return {
           handled: true,
           result: {
@@ -248,7 +285,6 @@ export async function tryCarrierBridgeDispatch(
           },
         };
       } else {
-        const data = (await res.json().catch(() => ({}))) as any;
         return {
           handled: true,
           result: {
@@ -299,6 +335,16 @@ export async function tryCarrierBridgeDispatch(
       };
     }
 
+    if (!isPublicUrl) {
+      return {
+        handled: true,
+        result: {
+          success: false,
+          error: `Telnyx API requires a public HTTP/HTTPS webhook URL for 'Url'. Current API_PUBLIC_URL is "${publicUrl || 'empty'}". Please configure a public domain or ngrok tunnel in your .env.`,
+        },
+      };
+    }
+
     const answerUrl = `${publicUrl}/api/marketing/voice/webhooks/telnyx-answer?campaignId=${options.campaignId || 'direct_test'}&firstMessage=${encodeURIComponent(message)}&scriptPrompt=${encodeURIComponent(options.scriptPrompt || '')}&agent=${platform}&voice=${encodeURIComponent(options.voiceId || '')}`;
 
     try {
@@ -316,8 +362,8 @@ export async function tryCarrierBridgeDispatch(
         }),
       });
 
+      const data = (await res.json().catch(() => ({}))) as any;
       if (res.status >= 200 && res.status < 300) {
-        const data = (await res.json().catch(() => ({}))) as any;
         return {
           handled: true,
           result: {
@@ -326,7 +372,6 @@ export async function tryCarrierBridgeDispatch(
           },
         };
       } else {
-        const data = (await res.json().catch(() => ({}))) as any;
         const detail = data?.errors?.[0]?.detail || data?.errors?.[0]?.title || data?.message;
         return {
           handled: true,
