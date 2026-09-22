@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Modal, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, Alert } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { Feather } from '@expo/vector-icons';
 import PossessionModal from './PossessionModal';
 import { UnitDetailsView } from './UnitDetailsView';
@@ -84,8 +85,9 @@ export function UnitDetailsModal({ unit, visible, onClose, onSave }: UnitDetails
         commissionPercentage: Number(formData.commissionPercentage),
       });
       setIsEditing(false);
+      Toast.show({ type: 'success', text1: 'Success', text2: 'Unit details updated successfully' });
     } catch (e) {
-      alert('Failed to save unit details');
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to save unit details' });
     } finally {
       setIsSaving(false);
     }
@@ -103,7 +105,7 @@ export function UnitDetailsModal({ unit, visible, onClose, onSave }: UnitDetails
           style: "destructive",
           onPress: async (reason?: string) => {
             if (!reason) {
-              alert("Reason is required to cancel a booking.");
+              Toast.show({ type: 'error', text1: 'Validation Error', text2: 'Reason is required to cancel a booking.' });
               return;
             }
             try {
@@ -117,13 +119,14 @@ export function UnitDetailsModal({ unit, visible, onClose, onSave }: UnitDetails
               if (res.ok) {
                 // Trigger a fake "AVAILABLE" update to refresh grid and close drawer safely
                 await onSave(unit.id || unit.unitNumber, { ...formData, status: 'AVAILABLE', clearBooking: true });
+                Toast.show({ type: 'success', text1: 'Success', text2: 'Booking cancelled successfully' });
                 onClose(); // Close and refresh
               } else {
-                alert('Failed to cancel booking');
+                Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to cancel booking' });
               }
             } catch (error) {
               console.error(error);
-              alert('Error cancelling booking');
+              Toast.show({ type: 'error', text1: 'Error', text2: 'Error cancelling booking' });
             } finally {
               setIsCancelling(false);
             }

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, Modal, TouchableOpacity, TextInput, ActivityIndicator, ScrollView } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { Feather } from '@expo/vector-icons';
 import { UnitGrid } from '../grid/UnitGrid';
 import { UnitDetailsModal } from '../modals/UnitDetailsModal';
@@ -33,8 +34,9 @@ export function AiTowerGenerator({ projectId, visible, onClose, onSuccess }: AiT
 
       if (res.error) throw new Error(res.error.message || "AI Generation failed");
       setGeneratedData(res.data);
+      Toast.show({ type: 'success', text1: 'Success', text2: 'Tower plan generated successfully' });
     } catch (err: any) {
-      alert(err?.message || "Failed to generate tower");
+      Toast.show({ type: 'error', text1: 'Error', text2: err?.message || "Failed to generate tower" });
     } finally {
       setIsGenerating(false);
     }
@@ -52,9 +54,10 @@ export function AiTowerGenerator({ projectId, visible, onClose, onSuccess }: AiT
       });
 
       if (res.error) throw new Error(res.error.message || "Failed to save generated tower");
+      Toast.show({ type: 'success', text1: 'Success', text2: 'Tower saved successfully' });
       onSuccess();
     } catch (err: any) {
-      alert(err?.message || "Failed to save tower");
+      Toast.show({ type: 'error', text1: 'Error', text2: err?.message || "Failed to save tower" });
     } finally {
       setIsSaving(false);
     }
