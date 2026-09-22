@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, Modal, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { Feather } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
@@ -33,7 +34,7 @@ export function CommissionCompleteModal({ visible, onClose, onConfirm, isSaving,
     try {
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
       if (status !== 'granted') {
-        alert('Sorry, we need camera permissions to make this work!');
+        Toast.show({ type: 'error', text1: 'Permission Denied', text2: 'Sorry, we need camera permissions to capture receipts.' });
         return;
       }
       
