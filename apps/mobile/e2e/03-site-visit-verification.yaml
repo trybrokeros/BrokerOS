@@ -1,0 +1,19 @@
+appId: com.anonymous.mobile
+---
+# Flow 3: GPS Site Visit & Location Verification
+- runFlow: subflows/login-salesexec.yaml
+
+# Automatically grant Android location and camera permissions
+- grantPermissions:
+    permissions:
+      - "android.permission.ACCESS_FINE_LOCATION"
+      - "android.permission.ACCESS_COARSE_LOCATION"
+      - "android.permission.CAMERA"
+
+# Navigate to site visits tab or section
+- tapOn:
+    text: ".*Site Visit.*"
+    optional: true
+
+- assertVisible:
+    text: ".*Site Visit.*"

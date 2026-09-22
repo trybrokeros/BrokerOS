@@ -1,0 +1,37 @@
+appId: com.anonymous.mobile
+---
+# Launch app and sign in as Pre-Sales Manager
+- launchApp:
+    clearState: false
+
+- runScript:
+    script: |
+      // Check if already authenticated on dashboard
+- assertVisible:
+    text: "Sign In.*"
+    optional: true
+
+- tapOn:
+    text: "agent@brokeros.com"
+    optional: true
+- inputText: "presalesmanager@demo.com"
+
+- tapOn:
+    text: "••••••••"
+    optional: true
+- inputText: "Demo@1234"
+
+- tapOn:
+    text: "Select Assigned Role Identity"
+    optional: true
+
+- tapOn:
+    text: "Pre-Sales Manager.*"
+    optional: true
+
+- tapOn:
+    text: "Sign In to BrokerOS"
+    optional: true
+
+- assertVisible:
+    text: ".*Pre-Sales.*"

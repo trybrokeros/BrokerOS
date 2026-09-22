@@ -1,0 +1,40 @@
+appId: com.anonymous.mobile
+---
+# Flow 1: Authentication & Role Workspace Resolution
+- launchApp:
+    clearState: true
+
+# Assert login interface rendered
+- assertVisible: "Sign In to BrokerOS"
+- assertVisible: "Work Email"
+- assertVisible: "Registered Phone Number"
+
+# Test invalid login error handling
+- tapOn: "agent@brokeros.com"
+- inputText: "invalid.agent@brokeros.com"
+- tapOn: "••••••••"
+- inputText: "WrongPassword123"
+- tapOn: "Select Assigned Role Identity"
+- tapOn:
+    text: "Pre-Sales Manager.*"
+    optional: true
+- tapOn: "Sign In to BrokerOS"
+
+# Assert error alert appears
+- assertVisible:
+    text: ".*Invalid credentials.*"
+
+# Now perform valid authentication
+- tapOn: "agent@brokeros.com"
+- eraseText: 50
+- inputText: "presalesmanager@demo.com"
+- tapOn: "••••••••"
+- eraseText: 50
+- inputText: "Demo@1234"
+- tapOn: "Sign In to BrokerOS"
+
+# Verify Dashboard header and bottom navigation loaded
+- assertVisible:
+    text: ".*Pre-Sales.*"
+- assertVisible:
+    text: ".*Dashboard.*"

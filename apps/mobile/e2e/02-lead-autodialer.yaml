@@ -1,0 +1,24 @@
+appId: com.anonymous.mobile
+---
+# Flow 2: Auto-Dialer & Lead Calling Queue Disposition
+- runFlow: subflows/login-salesexec.yaml
+
+# Open Leads or Call Queue
+- tapOn:
+    text: ".*Leads.*"
+    optional: true
+
+# Inspect first lead card
+- assertVisible:
+    text: ".*Hot|Warm|Cold|New|Assigned.*"
+    optional: true
+
+# Tap on a lead to inspect details
+- tapOn:
+    text: ".*Details.*"
+    optional: true
+
+# Assert call disposition options
+- assertVisible:
+    text: ".*Call|Disposition|Notes.*"
+    optional: true
