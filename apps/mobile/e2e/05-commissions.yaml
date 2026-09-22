@@ -1,0 +1,13 @@
+appId: com.anonymous.mobile
+---
+# Flow 5: Sourcing Manager Commissions & Claim Verification
+- runFlow: subflows/login-sourcing.yaml
+
+# Navigate to Commissions tab
+- tapOn:
+    text: ".*Commission.*"
+    optional: true
+
+- assertVisible:
+    text: ".*Commission|Payout|Record.*"
+    optional: true

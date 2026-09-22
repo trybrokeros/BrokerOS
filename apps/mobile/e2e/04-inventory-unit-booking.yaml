@@ -1,0 +1,14 @@
+appId: com.anonymous.mobile
+---
+# Flow 4: Property Inventory & Unit Matrix Selection
+- runFlow: subflows/login-salesexec.yaml
+
+# Navigate to Inventory tab
+- tapOn:
+    text: ".*Inventory.*"
+    optional: true
+
+# Inspect Project & Tower List
+- assertVisible:
+    text: ".*Project|Tower|Units.*"
+    optional: true

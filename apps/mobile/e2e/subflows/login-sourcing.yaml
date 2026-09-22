@@ -1,0 +1,34 @@
+appId: com.anonymous.mobile
+---
+# Launch app and sign in as Sourcing Manager
+- launchApp:
+    clearState: false
+
+- assertVisible:
+    text: "Sign In.*"
+    optional: true
+
+- tapOn:
+    text: "agent@brokeros.com"
+    optional: true
+- inputText: "sourcingmanager1@demo.com"
+
+- tapOn:
+    text: "••••••••"
+    optional: true
+- inputText: "Demo@1234"
+
+- tapOn:
+    text: "Select Assigned Role Identity"
+    optional: true
+
+- tapOn:
+    text: "Sourcing Manager.*"
+    optional: true
+
+- tapOn:
+    text: "Sign In to BrokerOS"
+    optional: true
+
+- assertVisible:
+    text: ".*Sourcing.*"
