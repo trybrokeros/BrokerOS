@@ -79,6 +79,8 @@ pnpm --filter @brokeros/workers start:dev
 # Compile workers to dist/
 pnpm --filter @brokeros/workers build
 
-# Run unit tests
+# Run workers E2E tests (Vitest)
+pnpm test:workers:e2e
+# Or using workspace filter:
 pnpm --filter @brokeros/workers test
 ```

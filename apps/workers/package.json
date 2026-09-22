@@ -9,7 +9,7 @@
     "start:prod": "node dist/main",
     "build": "nest build",
     "lint": "eslint \"{src}/**/*.ts\" --fix",
-    "test": "jest"
+    "test": "vitest run test/e2e"
   },
   "dependencies": {
     "@brokeros/constants": "workspace:*",
