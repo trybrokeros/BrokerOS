@@ -214,6 +214,7 @@ scripts/
 | `test-all-integrations.ts` | Comprehensive automated audit across Telephony, Voice AI, Mail, and SMS | `DATABASE_URL` |
 | `check-integrations.ts` | Lists all connected integrations across all marketing channels in PostgreSQL | `DATABASE_URL` |
 | `scan-types-constants.ts` | Scans codebase to detect un-migrated types and legacy constant definitions | None |
+| `test-mobile-e2e.ts` | Maestro CLI detection and native mobile E2E test suite runner | None |
 
 ---
 
