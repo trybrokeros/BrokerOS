@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -565,12 +566,12 @@ export default function NewVoiceCampaignPage() {
   // 7. Launch Campaign
   const handleLaunchCampaign = async () => {
     if (!title.trim()) {
-      alert("Please enter a campaign title.");
+      toast.error("Please enter a campaign title.");
       setCurrentStep(1);
       return;
     }
     if (!scriptPrompt.trim()) {
-      alert("Please compose the conversational agent script.");
+      toast.error("Please compose the conversational agent script.");
       setCurrentStep(4);
       return;
     }
@@ -635,9 +636,10 @@ export default function NewVoiceCampaignPage() {
 
       localStorage.removeItem(VOICE_DRAFT_STORAGE_KEY);
       const campaign = await res.json();
+      toast.success("Voice campaign launched successfully");
       router.push(`/dashboard/marketing/voice/campaigns/${campaign.id}`);
     } catch (err: any) {
-      alert(err?.message || "Failed to launch campaign");
+      toast.error(err?.message || "Failed to launch campaign");
     } finally {
       setIsSubmitting(false);
     }

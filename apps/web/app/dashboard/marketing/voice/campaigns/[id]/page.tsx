@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, use } from "react";
+import { toast } from "sonner";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -92,10 +93,14 @@ export default function VoiceCampaignDetailPage({
         method: "POST",
       });
       if (res.ok) {
+        toast.success("Voice campaign dispatch triggered successfully");
         await loadData(true);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.message || "Failed to trigger voice dispatch");
       }
     } catch (err: any) {
-      alert(err?.message || "Failed to trigger voice dispatch");
+      toast.error(err?.message || "Failed to trigger voice dispatch");
     } finally {
       setIsDispatching(false);
     }
@@ -110,9 +115,10 @@ export default function VoiceCampaignDetailPage({
         const data = await res.json();
         throw new Error(data?.message || "Failed to promote recipient");
       }
+      toast.success("Prospect converted to CRM lead successfully");
       await loadData(true);
     } catch (err: any) {
-      alert(err?.message || "Failed to convert voice prospect to CRM lead");
+      toast.error(err?.message || "Failed to convert voice prospect to CRM lead");
     }
   };
 
