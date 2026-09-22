@@ -215,6 +215,18 @@ function nextBookingNumber(): string {
 // ============================================================
 
 async function main() {
+  if (process.argv.includes('--if-empty')) {
+    try {
+      const existingUsers = await prisma.user.count();
+      if (existingUsers > 0) {
+        console.log(`\n🌱 Database already populated (${existingUsers} users found). Skipping demo seed (--if-empty).\n`);
+        return;
+      }
+    } catch {
+      // If table doesn't exist yet, proceed with initial seed
+    }
+  }
+
   console.log('\n🌱 Starting BrokerOS Demo Seed...\n');
 
   // ── STEP 1: Roles ──────────────────────────────────────────
