@@ -6,6 +6,7 @@
 
 ```
 apps/mobile/
+  app.config.ts          ← Dynamic Expo config (reads EXPO_PUBLIC_* vars at build time)
   app/
     _layout.tsx        ← Root layout (expo-router entry, font loading, auth redirect)
     admin.tsx          ← Admin-specific entry
@@ -40,7 +41,10 @@ apps/mobile/
     location-tracking.ts ← GPS tracking utilities for site visit verification
   modules/
     auto-dialer/       ← Custom native Android module (local package)
+  plugins/             ← Custom Expo config plugins (withCmakeShortPath.js)
   assets/              ← Images, fonts, icons
+  google-services.json ← Firebase config — gitignored, required for push notifications
+  google-services.json.example ← Template for the above
 ```
 
 ---
@@ -97,4 +101,7 @@ Run from `apps/mobile/` directory (or use `pnpm --filter @brokeros/mobile <cmd>`
 npx expo start           # Expo dev server (Metro bundler)
 npx expo run:android     # build + run on Android device/emulator
 npm run lint             # ESLint (expo lint)
+
+# Maestro Native E2E Tests (run from root):
+pnpm test:mobile:e2e     # Executes scripts/test-mobile-e2e.ts (checks Maestro + runs apps/mobile/e2e/)
 ```
