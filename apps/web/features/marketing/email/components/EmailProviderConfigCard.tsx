@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { toast } from "sonner";
 import {
   Key,
   ShieldCheck,
@@ -101,9 +102,10 @@ export function EmailProviderConfigCard({
         provider: selectedProvider,
         ...formData,
       });
+      toast.success("Email provider verified and connected successfully");
       setSelectedProvider(null);
     } catch (err: any) {
-      alert(err?.message || "Failed to verify and connect provider");
+      toast.error(err?.message || "Failed to verify and connect provider");
     } finally {
       setIsSubmitting(false);
     }

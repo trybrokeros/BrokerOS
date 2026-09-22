@@ -110,9 +110,10 @@ export const TelephonyCarriersTab: React.FC<TelephonyCarriersTabProps> = ({
         isDefault: telephonyIntegrations.length === 0,
       });
 
+      toast.success('Telephony carrier verified and connected successfully');
       setSelectedTelephonyProvider(null);
     } catch (err: any) {
-      alert(err?.message || 'Failed to verify and connect telephony carrier');
+      toast.error(err?.message || 'Failed to verify and connect telephony carrier');
     } finally {
       setSubmitting(false);
     }
