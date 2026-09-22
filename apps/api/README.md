@@ -93,32 +93,26 @@ pnpm install
 
 ### 2. Environment Setup
 
-This monorepo uses a **Split Environment Architecture**.
-
-#### A. Root Infrastructure (`/.env`)
-
-The heavy infrastructure secrets must be placed in the **root** `.env` file (at `../../.env`).
-
-Populate these in the **root `.env`**:
-
-- **`DATABASE_URL`**: Use `postgresql://crm:crm@localhost:5432/crm` for local Docker, or a cloud Neon URL.
-- **`BETTER_AUTH_SECRET`**: Generate one with `openssl rand -hex 32`.
-- **`BLOB_READ_WRITE_TOKEN`**: From Vercel Storage.
-- **`GROQ_API_KEY`**: From Groq Console.
-
-#### B. API Local Overrides (`apps/api/.env`)
-
-The API-specific environment file is strictly for local routing.
-Create it:
-
 ```bash
-cp .env.example .env
+cp apps/api/.env.example apps/api/.env
 ```
-
 Populate these in `apps/api/.env`:
 
-- `FRONTEND_URL="http://localhost:3000"`
-- `MOBILE_URL="exp://192.168.x.x:8081"` _(CRITICAL: Replace with your actual LAN IP. Mobile physical devices cannot connect to `localhost`)._
+| Variable | Purpose | Default |
+|---|---|---|
+| `FRONTEND_URL` | Web app origin — allow Next.js session cookies | `http://localhost:3000` |
+| `MOBILE_URL` | Mobile app origin — allow Expo dev client session cookies | `http://192.168.x.x:8081` |
+
+**For `MOBILE_URL` — you must use your machine's LAN IP**, not `localhost`:
+
+| OS | Command |
+|---|---|
+| Windows | `ipconfig \| findstr /i "ipv4"` |
+| Mac / Linux | `ifconfig \| grep "inet " \| grep -v 127.0.0.1` |
+
+URL format depends on how you run the mobile app:
+- **Custom dev client** (`npx expo run:android`) → `http://192.168.x.x:8081` ← use this
+- **Expo Go** (not supported — app has native modules) → `exp://192.168.x.x:8081`
 
 ### 3. Database Initialization
 
@@ -155,9 +149,9 @@ pnpm --filter @brokeros/api test:e2e          # Run end-to-end tests
 
 The backend uses a highly optimized multi-stage Dockerfile powered by Turborepo:
 
-1. **Stage 1 (Prune):** Runs `turbo prune @brokeros/api` to isolate only the backend code and its internal dependencies (like `@brokeros/prisma`).
-2. **Stage 2 (Installer):** Installs dependencies with frozen lockfile and builds the NestJS distribution.
-3. **Stage 3 (Runner):** A lightweight Node image that automatically runs pending migrations (`prisma migrate deploy`), seeds demo data if the DB is unseeded (`tsx seed.ts --if-empty`), and launches the API.
+1. **Stage 1 (Prune):** Runs `turbo prune @brokeros/api --docker` to isolate only the backend code and its workspace dependencies (`packages/`, `integrations/`).
+2. **Stage 2 (Installer):** Installs dependencies with frozen lockfile, generates the Prisma client, and compiles the NestJS distribution.
+3. **Stage 3 (Runner):** Lightweight Node 22 Alpine production image that automatically runs pending migrations (`prisma migrate deploy`), seeds demo data if the DB is unseeded (`tsx seed.ts --if-empty`), and launches the API.
 
 **Crucial Note:** Because it relies on Turborepo, the Dockerfile **must be built from the root context**, not from inside `apps/api/`.
 
