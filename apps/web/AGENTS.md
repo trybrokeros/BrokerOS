@@ -132,6 +132,7 @@ apps/web/
     utils.ts           ← Shared utility functions
 
   middleware.ts        ← Route protection (cookie check only)
+  next.config.ts       ← Proxy rewrites: /api/proxy/* → BACKEND_URL/*, /api/marketing/* → BACKEND_URL/api/marketing/*
 ```
 
 ---
@@ -182,4 +183,8 @@ pnpm --filter @brokeros/web build  # production build (next build)
 pnpm --filter @brokeros/web exec next build  # full verified production build
 pnpm --filter @brokeros/web start  # serve production build
 pnpm --filter @brokeros/web lint   # ESLint
+
+# Playwright E2E Tests:
+pnpm test:web:e2e                 # Runs all Playwright specs in apps/web/e2e/specs/
+pnpm --filter @brokeros/web exec playwright install chromium # Install headless browser
 ```

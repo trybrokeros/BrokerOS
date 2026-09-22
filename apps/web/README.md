@@ -152,25 +152,32 @@ cp .env.example .env
 
 #### A. API Configuration
 
-The frontend uses a proxy pattern. In local development, client-side requests go through Next.js to avoid CORS issues.
+The frontend uses a **proxy pattern** via Next.js rewrites (see [`next.config.ts`](next.config.ts)). In local dev, all API calls from the browser go through Next.js to avoid CORS:
 
-- `NEXT_PUBLIC_API_URL="/api/proxy"` _(Keep this default for local dev)_
-- `BACKEND_URL="http://localhost:3333"` _(This is the direct server-side connection to your NestJS backend)_
+| Variable | Default | Purpose |
+|---|---|---|
+| `NEXT_PUBLIC_API_URL` | `/api/proxy` | Base URL used by all client-side API calls. Keep as `/api/proxy` in dev and production (unless frontend and API are on completely separate domains). |
+| `BACKEND_URL` | `http://127.0.0.1:3333` | Server-side URL Next.js uses to forward proxied requests. **Never exposed to the browser.** In Docker, this defaults to `http://backend:3333` (compose service name). |
+| `NEXT_PUBLIC_APP_URL` | `http://localhost:3000` | Public URL of this web app. Used by Better Auth for callback URLs and by Socket.IO connection origin. Change to your production domain. |
 
-#### B. App URL
+The two active proxy routes:
+```
+/api/proxy/*      → BACKEND_URL/*
+/api/marketing/*  → BACKEND_URL/api/marketing/*
+```
 
-Used for authentication callbacks and Next.js internal redirects.
+#### B. Mapbox Token (Required for Live Agent Tracking)
 
-- `NEXT_PUBLIC_APP_URL="http://localhost:3000"`
+> ⚠️ **Naming note:** The env variable is called `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` but the web app actually uses **Mapbox** (via `react-map-gl`) for the live GPS tracking map. The value must be a **Mapbox access token**, not a Google Maps key.
 
-#### C. Mapbox (Required for CP & Sales)
-
-The CRM relies on Mapbox for GPS-verified field meetings (Sourcing Managers) and site visits (Sales Executives).
+Used by: [`components/LiveTrackingMap.tsx`](components/LiveTrackingMap.tsx) — the director/manager real-time agent location view.
 
 1. Go to [Mapbox Account](https://account.mapbox.com/).
-2. Create an account and generate an access token.
-3. Set it in your `.env` file:
-   `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY="your-mapbox-access-token-here"`
+2. Create an account and generate a **public access token**.
+3. Set it in your `.env`:
+   ```env
+   NEXT_PUBLIC_GOOGLE_MAPS_API_KEY="pk.eyJ1...your-mapbox-token"
+   ```
 
 ### 3. Run & Build
 
@@ -189,6 +196,23 @@ pnpm --filter @brokeros/web dev
 ```bash
 pnpm --filter @brokeros/web exec next build   # Full verified production build
 pnpm --filter @brokeros/web start             # Serve production build
+```
+
+#### Testing (Playwright E2E)
+
+The web dashboard includes comprehensive Playwright browser E2E test specs located in `apps/web/e2e/specs/`:
+- `01-auth.spec.ts`: Authentication, login branding, credential validation, and role redirection.
+- `02-lead-pipeline.spec.ts`: Lead board rendering, search filters, and detail modals.
+- `03-marketing-wizards.spec.ts`: Omnichannel campaign wizards (SMS, Voice, Email).
+- `04-inventory.spec.ts`: Property inventory matrix, towers, units, and CP/Brokerage isolation.
+- `05-commissions.spec.ts`: Commission settlement summaries and payouts.
+
+```bash
+# Run all web E2E tests (automatically launches Next.js dev server on port 3000 if not running):
+pnpm test:web:e2e
+
+# If Chromium headless shell is not yet installed:
+pnpm --filter @brokeros/web exec playwright install chromium
 ```
 
 ---

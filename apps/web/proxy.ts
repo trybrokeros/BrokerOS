@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const sessionToken = request.cookies.get("better-auth.session_token");
 
   // Protect /dashboard and all its subpaths
