@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -94,10 +95,14 @@ export default function CampaignDetailPage() {
         method: "POST",
       });
       if (res.ok) {
+        toast.success("Email campaign dispatch triggered successfully");
         await fetchCampaignData();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.message || "Failed to trigger dispatch");
       }
     } catch (err: any) {
-      alert(err?.message || "Failed to trigger dispatch");
+      toast.error(err?.message || "Failed to trigger dispatch");
     } finally {
       setIsDispatching(false);
     }
@@ -112,9 +117,10 @@ export default function CampaignDetailPage() {
         const data = await res.json();
         throw new Error(data?.message || "Failed to promote recipient");
       }
+      toast.success("Recipient successfully converted to CRM lead");
       await fetchCampaignData();
     } catch (err: any) {
-      alert(err?.message || "Failed to convert prospect to CRM lead");
+      toast.error(err?.message || "Failed to convert prospect to CRM lead");
     }
   };
 

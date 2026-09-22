@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -365,12 +366,12 @@ export default function NewEmailCampaignPage() {
   // 7. Launch Campaign
   const handleLaunchCampaign = async () => {
     if (!title.trim()) {
-      alert("Please provide a campaign title.");
+      toast.error("Please provide a campaign title.");
       setCurrentStep(1);
       return;
     }
     if (audienceSource === "CSV_UPLOAD" && csvRecipients.length === 0) {
-      alert("Please upload a CSV file with valid contacts.");
+      toast.error("Please upload a CSV file with valid contacts.");
       setCurrentStep(2);
       return;
     }
@@ -420,9 +421,10 @@ export default function NewEmailCampaignPage() {
       localStorage.removeItem(DRAFT_STORAGE_KEY);
 
       const data = await res.json();
+      toast.success("Email campaign launched successfully");
       router.push(`/dashboard/marketing/email/campaigns/${data.id}`);
     } catch (err: any) {
-      alert(err?.message || "Failed to launch campaign");
+      toast.error(err?.message || "Failed to launch campaign");
     } finally {
       setIsSubmitting(false);
     }
