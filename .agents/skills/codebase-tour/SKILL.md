@@ -17,80 +17,88 @@ Use `view_file` to read `docs/role-password.md`.
 
 ## 2. Gather Ground Truth Context
 
-Read the foundational rules, but do not stop here.
+Read the foundational rules across the entire monorepo:
 - Read `AGENTS.md` and `README.md` at the project root.
-- Read the subtree rules: `apps/api/AGENTS.md`, `apps/web/AGENTS.md`, `apps/mobile/AGENTS.md`.
-**Completion Criterion**: You understand the core business logic (e.g., the strict separation of Brokerage vs Channel Partner, the `isCpProject` flag, the marketing suite — Email, SMS, Voice).
+- Read the subtree rules:
+  - `apps/api/AGENTS.md` (Backend REST API & Socket.IO)
+  - `apps/web/AGENTS.md` (Next.js 16 Web Dashboard & Feature Architecture)
+  - `apps/mobile/AGENTS.md` (Expo 54 Android App & Auto-Dialer)
+  - `apps/workers/AGENTS.md` (BullMQ Background Workers & Redis 7)
+  - `integrations/AGENTS.md` (Third-party adapters & Integration Laws)
+**Completion Criterion**: You understand the core business logic (e.g., the strict separation of Brokerage vs Channel Partner via the `Project.isCpProject` flag, the 12 system roles, and the 5 omnichannel marketing pillars: WhatsApp, AI Voice, Email, SMS, and Ads).
 
 ## 3. Examine the Data Layer
 
 - Open `packages/prisma/schema.prisma`. Locate every model related to the feature, department, or flow requested by the user.
-- Open `packages/prisma/seed.ts`. Trace exactly how those models are populated with initial data.
-**Completion Criterion**: You have traced every relational link, enum, and boolean flag for the requested domain.
+- Open `packages/prisma/seed.ts`. Trace exactly how those models are populated with initial data (Brokerage `Luxury Villas` vs CP `Grand Horizon CP`, 20 Pre-Sales leads, 20 Sales Exec leads, bookings, units, external brokers).
+**Completion Criterion**: You have traced relational links, enums, soft-delete patterns (`deletedAt`), and boolean flags for the requested domain.
 
 ## 4. Explore the Shared Packages
 
-- `packages/types/src/` — Shared TypeScript interfaces. Domain sub-modules: `common.ts`, `email.ts`, `sms.ts`, `voice/` (telephony, agent, options, webhook, analytics, streaming).
-- `packages/constants/src/` — Shared constants and pure logic. Domain sub-modules: `campaign.ts`, `email.ts`, `sms.ts`, `voice/` (telephony, agents, voices, scripts, pricing, normalizer).
-- `packages/validators/src/` — Shared Zod schemas.
-- `packages/storage/src/` — Vercel Blob wrappers.
-**Completion Criterion**: You understand what lives in each package and can explain where shared types/constants come from.
+Explore the centralized packages under `packages/`:
+- `packages/prisma/` — Central Prisma ORM schema, migrations, seed, and generated client (`@brokeros/prisma`).
+- `packages/storage/` — Centralized Vercel Blob cloud storage wrappers (`@brokeros/storage`).
+- `packages/types/src/` — Shared TypeScript domain interfaces and DTOs (`@brokeros/types`). Sub-modules: `common.ts`, `email.ts`, `sms.ts`, `voice/` (telephony, agent, options, webhook, analytics, streaming).
+- `packages/constants/src/` — Pure constants, enums, UI palettes, and utility functions (`@brokeros/constants`). Sub-modules: `campaign.ts`, `email.ts`, `sms.ts`, `voice/` (telephony, agents, voices, scripts, pricing, normalizer).
+- `packages/validators/src/` — Shared Zod validation schemas (`@brokeros/validators`).
+**Completion Criterion**: You understand what lives in each shared package and can trace how types and constants flow into apps without circular dependencies.
 
 ## 5. Explore the Integrations Layer
 
-- Read `integrations/README.md` for an overview.
-- Explore `integrations/voice/` — understand the 8 AI voice agent adapters (`vapi`, `retell`, `sarvam`, `bolna`, `elevenlabs`, `livekit`, `openai-realtime`, `pipecat`) and the 4 PSTN carrier adapters in `integrations/voice/bridge/carrier-bridge-dispatcher.ts`.
-- Explore `integrations/mail/` — 4 email provider adapters (`sendgrid`, `brevo`, `mailchimp`, `aws-ses`).
-- Explore `integrations/sms/` — 4 SMS gateway adapters (`twilio`, `gupshup`, `sinch`, `aws-sns`).
-**Completion Criterion**: You can explain how external API calls are routed through integration adapters and never called directly from NestJS services.
+Explore `integrations/` packages (`@brokeros/int-*`):
+- Read `integrations/README.md` and `integrations/AGENTS.md`.
+- `integrations/voice/` (`@brokeros/int-voice`) — 8 AI voice agent adapters (`vapi`, `retell`, `sarvam`, `bolna`, `elevenlabs`, `livekit`, `openai-realtime`, `pipecat`) + 4 PSTN carrier bridges (`exotel`, `telnyx`, `twilio`, `vobiz`) routed via `carrier-bridge-dispatcher.ts`.
+- `integrations/mail/` — 8 email provider adapters (`@brokeros/int-mail-*`): SendGrid, AWS SES, Brevo, Mailgun, Mailchimp, Gmail, Outlook, and Constant Contact.
+- `integrations/sms/` — 9 SMS gateway adapters (`@brokeros/int-sms-*`): Twilio, Infobip, Sinch, Plivo, Telnyx, Vonage, Gupshup, Bird, and AWS SNS.
+- `integrations/whatsapp/` (`@brokeros/int-whatsapp`) — Meta WhatsApp Cloud API client, interactive message builders (buttons, lists), and HMAC signature verification.
+- `integrations/ads/` — Ad webhook & sync adapters: Meta Lead Ads (`@brokeros/int-ads-meta`) and Google Ads / YouTube (`@brokeros/int-ads-google`).
+**Completion Criterion**: You can explain how external API calls are strictly routed through integration adapters and never called directly or inlined inside NestJS controllers or services.
 
 ## 6. Relentless Code Search
 
-This is where you must do the heavy **legwork**. Do not guess folder names based on `AGENTS.md`. You must aggressively explore the codebase.
-- Use `list_dir` and `grep_search` repeatedly to explore `apps/api/src/`, `apps/web/app/`, `apps/web/features/marketing/`, `apps/mobile/app/`, `apps/workers/src/`, and `packages/`.
-- For the marketing module specifically, trace the exact flow: frontend wizard step → API controller → service → BullMQ job → worker processor → integration adapter → external provider.
-- Trace the exact `.ts` and `.tsx` files that implement the logic.
-**Completion Criterion**: You have successfully found the absolute file paths for the backend controllers/services, frontend UI pages, worker processors, and mobile screens.
+Perform the heavy **legwork**. Do not guess folder names. Aggressively search and verify the active codebase:
+- Use `list_dir` and `grep_search` to explore:
+  - `apps/api/src/` (auth, leads, inventory, brokers, approvals, chat, notifications, dashboard, marketing)
+  - `apps/web/app/` (login, 12 role dashboards, marketing hubs)
+  - `apps/web/features/marketing/` (email, sms, voice, whatsapp, ads, shared components)
+  - `apps/mobile/app/` & `apps/mobile/modules/auto-dialer/` (role screens, native Android auto-dialer module, GPS tracking)
+  - `apps/workers/src/` (main bootstrap, BullMQ processors for email, sms, voice, whatsapp)
+- For the marketing modules specifically, trace the complete execution pipeline: UI wizard / studio → NestJS API controller & service → BullMQ job queue → worker processor → integration adapter → external API.
+**Completion Criterion**: You have identified the exact, verified file paths for backend controllers/services, frontend UI pages, worker processors, and mobile modules.
 
 ## 7. Explore Tooling & Commands
 
-Read the root `package.json` and the `package.json` of relevant apps/packages to understand how the monorepo is operated. Be sure to find commands for testing (`.spec` files in API, tests in web/mobile), script running, Prisma generation/migrations, and starting all apps (web, mobile, api, workers).
-**Completion Criterion**: You have mapped out the Turborepo scripts, installation commands, database scripts, testing scripts, and dev server commands.
+Read `package.json` at root and within each sub-app to understand how the system is operated:
+- **Docker Compose**: `docker compose up --build`, clean resets (`docker compose down -v --remove-orphans`), and manual seeding (`docker exec -it crm-backend pnpm db:seed`).
+- **Turborepo Root Commands**: `pnpm dev:api`, `pnpm dev:web`, `pnpm dev:workers`, `pnpm dev:mobile`.
+- **Database Scripts**: `pnpm db:generate`, `pnpm db:migrate`, `pnpm db:seed`.
+- **Build & Verification**: `pnpm build`, `pnpm build:packages`, `pnpm lint`, `pnpm test`.
+**Completion Criterion**: You have mapped out the operational toolchain and commands.
 
 ## 8. Produce the Tour Artifact
 
-Do not output the tour in standard chat text. You MUST use the `write_to_file` tool to create a new markdown artifact named `<topic_name>_tour.md` in the artifact directory. You must provide `ArtifactMetadata` with `UserFacing: true`.
+Do not output the entire tour in standard chat text. You MUST use the `write_to_file` tool to create a new markdown artifact named `<topic_name>_tour.md` in the artifact directory with `ArtifactMetadata` (`UserFacing: true`).
 
-The artifact must be exhaustive and structured as follows:
+The tour artifact must be exhaustive and structured as follows:
 
 ### Required Sections
 
-- **Departments & Roles**: Exhaustively list all departments and roles (from `role-password.md`). Map each role to its business line (Brokerage / CP / Both).
+1. **Executive Summary & Monorepo Map**: High-level overview of the monorepo architecture, Turborepo setup, and the core business separation (`isCpProject`).
+2. **Departments & Human Hierarchy**: Exhaustively list all 12 roles across Brokerage, Channel Partner, and Cross-business operations with credentials from `docs/role-password.md`.
+3. **Database Architecture & Seed**: Deep dive into `schema.prisma` models, enums, soft-delete patterns, and seed data from `packages/prisma/seed.ts`.
+4. **Shared Packages Architecture**: Detailed explanation of `@brokeros/types`, `@brokeros/constants`, `@brokeros/validators`, `@brokeros/storage`, and `@brokeros/prisma`.
+5. **Integrations Layer Architecture**: Complete inventory of all external adapters (Voice, Email, SMS, WhatsApp, Ads) and the Integration Laws (zero credential hardcoding, adapter purity).
+6. **Core Operational Commands**: Full guide for Docker Compose and manual monorepo workflows (database migrations, development servers, worker processors, mobile builds).
+7. **End-to-End Architectural Flows**: Step-by-step breakdown of how data flows across the system with **at least 15 clickable `file:///` links** to actual implementation files:
+   - Lead lifecycle flow (ingestion → AI transcription via Groq → scoring → follow-up)
+   - Booking & negotiation flow (lead → negotiation approval → booking → unit marked SOLD → brokerage settlement)
+   - Mobile Auto-Dialer flow (native Java/Kotlin module → call status sync hook → CRM call record)
+   - Authentication & RBAC flow (Better Auth session → `roles.guard.ts` → `@Roles()` decorator)
+8. **Omnichannel Marketing Suite Deep Dive**:
+   - **WhatsApp**: Meta Cloud API, shared team inbox, visual flow builder, keyword automations, template sync.
+   - **AI Voice**: 8 agent platforms, 4 PSTN carrier bridges, assistant studios (`Retell`, `Vapi`, `ElevenLabs`), dual-mode test calls, WebSocket media stream gateway, call logs studio with audio player.
+   - **Email**: 8 email providers, 4-step campaign wizard, HTML template editor, pre-flight safety modal, 2-way team inbox.
+   - **SMS**: 9 SMS gateways, live smartphone mockup preview, GSM segment counter, URL shortener with click tracking, 2-way chat inbox.
+   - **Ads**: Meta and Google Lead Ads webhooks (HMAC SHA-256 verification), GAQL/Graph API sync, cross-channel Comparison Studio, ad creative galleries, search keyword quality scores, YouTube retention curves, and bulk lead assignment.
 
-- **Database Architecture**: Explain the Prisma models, enums, and relations in extreme detail. Include file links to `schema.prisma`. Highlight key models: Lead, Booking, Unit, BrokerageRecord, MarketingCampaign, VoiceAgentIntegration, EmailIntegration, SmsIntegration.
-
-- **Shared Packages Architecture**: Explain what each `packages/` package provides, with its domain sub-module structure. Note which modules in `@brokeros/types` and `@brokeros/constants` cover email, SMS, and voice domains.
-
-- **Integrations Architecture**: Explain the `integrations/` layer — which AI voice agents are supported, how the PSTN carrier bridge works, what email and SMS providers are available.
-
-- **Commands & Tooling**: Provide all essential monorepo commands:
-  - Starting the servers (web, mobile, api, workers).
-  - Running tests (how to run spec files in api, web, mobile).
-  - Running utility scripts (e.g., /script files, syncing).
-  - Database commands (Prisma generate, migrate, seed).
-  - Marketing-specific build verification (`pnpm --filter @brokeros/web exec next build`).
-
-- **Codebase Structure & Flow**: Provide a granular, step-by-step breakdown of how the code executes for each major feature. You **MUST include at least 15 clickable `file:///` links** to specific `.ts` and `.tsx` implementation files. Cover:
-  - A complete lead management flow (lead created → AI transcription → scoring → follow-up)
-  - A complete marketing voice campaign flow (wizard → API → BullMQ worker → carrier bridge → AI agent)
-  - A complete booking flow (lead → negotiation → booking → unit SOLD)
-  - The auth + RBAC pattern (session → role guard → controller)
-
-- **Marketing Suite Deep Dive**: A dedicated section covering:
-  - Email campaign wizard steps (4) and their corresponding API endpoints
-  - SMS campaign wizard steps (4) and their corresponding API endpoints
-  - Voice campaign wizard steps (5) with special attention to VoiceStep4AgentComposer and its 6 studio subcomponents in `components/composer/`
-  - How `normalizeVoiceLeadVariables` from `@brokeros/constants` bridges CRM lead data to AI script merge tags
-  - How `tryCarrierBridgeDispatch` from `@brokeros/int-voice` dispatches actual phone calls
-
-**Completion Criterion**: The artifact is successfully written to disk, is exhaustively detailed, contains at least 15 clickable file links to actual code, covers all major business flows including the full marketing suite, and you have responded to the user pointing them to the new artifact.
+**Completion Criterion**: The artifact is written to disk, is exhaustively detailed, contains at least 15 clickable file links to verified code files, covers all major business flows and the full marketing suite, and you respond to the user pointing them to the new artifact.

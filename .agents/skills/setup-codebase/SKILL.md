@@ -1,185 +1,179 @@
 ---
 name: setup-codebase
-description: Use when the user asks to "setup the codebase", "run locally", or "get started". Sets up the complete BrokerOS codebase locally without Docker.
+description: Use when the user asks to "setup the codebase", "run locally", or "get started". Sets up the complete BrokerOS codebase locally via Docker Compose or native manual pnpm monorepo commands.
 ---
 
-This skill guides the agent to set up the entire BrokerOS project locally for the user. Execute these steps sequentially.
+This skill guides the agent to set up the entire BrokerOS project for the user. Execute these steps systematically.
 
-**Important Context**: Before you begin, or if you run into any setup issues, read the READMEs for deep context:
-- `apps/api/README.md`
-- `apps/web/README.md`
-- `apps/mobile/README.md` (Crucial for Push Notifications and Expo configuration)
-- `integrations/README.md` (For marketing channel integrations)
+**Important Context**: Before you begin, or if you run into any setup issues, refer to the subsystem documentation:
+- `apps/api/README.md` (NestJS REST API & Socket.IO)
+- `apps/web/README.md` (Next.js 16 Web Dashboard)
+- `apps/mobile/README.md` (Expo 54 Android App & Native Auto-Dialer)
+- `apps/workers/README.md` (BullMQ Campaign Workers & Redis 7)
+- `integrations/README.md` (External provider adapters)
 
 ---
 
 ## 1. Prerequisite Check
 
-First, verify the user's environment by running commands to check versions of:
-- `node -v`
-- `pnpm -v`
-- `docker -v` (optional, for local Postgres)
+Verify the user's host environment by checking installed versions:
+- `node -v` (requires Node.js ≥ 22)
+- `pnpm -v` (requires pnpm ≥ 10)
+- `docker -v` (for full Docker stack or local Postgres/Redis containers)
 
-If any critical tool is missing, guide the user to install it before proceeding.
-
----
-
-## 2. Create Environments & Automate "Bot Work"
-
-Users should not paste their private API keys into the chat. Instead, you will prepare the `.env` files for them so they can fill them in manually.
-
-First, create the `.env` files. Try using the terminal to copy them (e.g., `cp .env.example .env` and `cp apps/api/.env.example apps/api/.env` or `Copy-Item` in PowerShell). If the terminal command fails, fall back to using `view_file` and `write_to_file` to read the `.env.example` files and create `.env` in the root folder, `apps/api/`, `apps/web/`, and `apps/mobile/`.
-
-Next, automate the non-sensitive configuration:
-1. **Generate Auth Secret**: Run a node script or powershell command to generate a secure 32-character random hex string and inject it into the **root `/.env`** as `BETTER_AUTH_SECRET`.
-2. **Fetch Local IP**: Run `ipconfig` (Windows) or `ifconfig` (Mac/Linux), parse the IPv4 address, and automatically set `MOBILE_URL="exp://<LAN_IP>:8081"` in `apps/api/.env` and `EXPO_PUBLIC_API_URL="http://<LAN_IP>:3333"` in `apps/mobile/.env`.
-
-**Completion criterion**: The root `/.env` and `apps/api/.env`, `apps/web/.env`, and `apps/mobile/.env` are created and the non-sensitive automated variables are injected.
+If any critical tool is missing, provide instructions for the user to install it before proceeding.
 
 ---
 
-## 3. Prompt User for Core API Keys
+## 2. Choose Setup Workflow (Ask the User)
 
-Once the `.env` files are ready, send a single, conversational, and friendly message to the user. **Do NOT just copy-paste a list.** Act as a helpful guide:
+Ask the user how they would like to run BrokerOS:
 
-1. **Explain the goal**: Tell them you've created the `.env` files and automated the local configuration, but for security reasons, they must manually paste their private API keys.
-2. **Walk them through the required core keys** (these are always needed):
-   - `DATABASE_URL` in the **root `/.env`** (They can use a local Docker DB which you'll spin up, or a cloud DB like [NeonDB](https://neon.tech/))
-   - `BLOB_READ_WRITE_TOKEN` in the **root `/.env`** (From [Vercel Storage](https://vercel.com/storage/blob))
-   - `GROQ_API_KEY` in the **root `/.env`** (From [Groq Console](https://console.groq.com/keys) — free tier available)
-   - `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` in `apps/web/.env` (From [Google Cloud Console](https://console.cloud.google.com/apis/credentials))
-   - `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY` in `apps/mobile/.env` (Same Google key, enable Maps SDK for Android)
-   - Optional: Push Notifications (Refer them to `apps/mobile/README.md` if they want Firebase/Expo notifications)
-3. **Ask them to reply with "done"** when they have finished pasting the core keys.
-
-**Completion criterion**: User has explicitly replied indicating they are done with core keys. **Do not proceed to step 4 until the user confirms.**
+> **"How would you like to set up BrokerOS?"**
+>
+> 1. **Option A: Quick Start with Docker (Recommended for full stack)**
+>    - Spins up all 5 containerized services simultaneously: PostgreSQL 16, Redis 7, NestJS API, BullMQ Workers, and Next.js Web Dashboard.
+>    - Automatically runs database migrations and seeds demo data on initial boot.
+>
+> 2. **Option B: Manual Monorepo Setup (Native pnpm)**
+>    - Runs services directly on your host machine via Turborepo (`pnpm dev:api`, `pnpm dev:web`, `pnpm dev:workers`).
+>    - Choose whether to spin up PostgreSQL & Redis via Docker (`docker compose up postgres redis -d`) or connect an external cloud database (e.g., Neon & Upstash).
 
 ---
 
-## 4. Install Dependencies
+## 🚀 Flow A: Quick Start with Docker
 
-Once the user confirms the `.env` files are populated, run dependency installation using the monorepo root command:
-- `pnpm install`
+If the user chooses Docker, execute the following steps:
 
-**Completion criterion**: `node_modules` exists in all workspaces and the command completes successfully.
-
----
-
-## 5. Initialize Database
-
-Based on the user's database preference (ask them to clarify if they didn't in step 3):
-- **If Local Docker**:
-  1. Run `docker compose up postgres -d` in the root folder.
-  2. **Wait for Health**: Wait a few seconds and run a verification command (e.g., checking `docker ps`) to ensure the Postgres container is healthy and ready to accept connections.
-- **If Cloud DB (Neon, etc.)**:
-  1. Assume the user has injected it into the **root `/.env`**.
-
-Once the database is reachable, execute database migrations using Turborepo or specific filter:
-- `pnpm --filter @brokeros/prisma db:generate`
-- `pnpm --filter @brokeros/prisma db:migrate`
-- `pnpm --filter @brokeros/prisma db:seed`
-
-**Completion criterion**: Prisma client is generated, tables exist, and seed data is populated without errors.
-
----
-
-## 6. Start Core Services
-
-Start the core services (API + Web) as background terminal tasks:
-- **API**: `pnpm --filter @brokeros/api start:dev` → http://localhost:3333
-- **Web**: `pnpm --filter @brokeros/web dev` → http://localhost:3000
-- **Mobile** (if they want it): `cd apps/mobile; npx expo start` or `npx expo run:android`
-
-**Critical Mobile Note for Windows**: The mobile app uses custom native code (Auto-Dialer). If building on Windows, ensure your terminal command includes the Java Home before running `npx expo run:android`:
-`$env:JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"; npx expo run:android`
-
-**Completion criterion**: API and Web services are running. Confirm both are reachable before moving on.
-
----
-
-## 7. Optional Setup — Workers (BullMQ / Redis)
-
-After the core CRM is running, ask the user:
-
-> **"Do you want to use the Marketing Campaign Workers (Email, SMS, and AI Voice broadcast)? If yes, you'll need a Redis connection for the BullMQ job queue."**
-
-If they say **yes**:
-
-1. **Set up Redis** — guide them to one of these options:
-   - **Upstash Redis** (recommended, free tier): Go to [Upstash Console](https://console.upstash.com/), create a Redis database, copy the **Redis CLI TLS URL** and set it in the **root `/.env`**:
-     ```
-     REDIS_URL="redis://default:<password>@<host>.upstash.io:6379"
-     ```
-   - **Local Redis via Docker**: Run `docker run -d -p 6379:6379 redis:alpine` and set `REDIS_URL="redis://127.0.0.1:6379"`
-   - **Railway / Render Redis**: Copy the connection string from their dashboard.
-
-2. **If they need a public URL for AI voice webhooks** (Vapi, Retell, etc. call back to your server), they also need `API_PUBLIC_URL` in the root `.env`:
-   - For local dev, use [ngrok](https://ngrok.com/): `ngrok http 3333` → copy the HTTPS URL
-   - Set: `API_PUBLIC_URL="https://xxxx.ngrok-free.app"`
-
-3. **Start the Workers service**:
-   ```bash
-   pnpm --filter @brokeros/workers start:dev
-   ```
-
-If they say **no**: skip this section entirely.
-
----
-
-## 8. Optional Setup — AI Voice TTS/STT Keys
-
-After the core setup, ask the user:
-
-> **"Do you plan to use the AI Voice Campaign feature? If yes, add the TTS/STT provider keys you want to use in the root `.env`."**
-
-All keys are **optional** — add only the providers you plan to use. Email providers, SMS gateways, and PSTN telephony carriers are all configured **inside the web app** at runtime — no `.env` needed for those.
-
-Add the relevant keys to the **root `/.env`**:
-
-```env
-# ElevenLabs — Conversational AI + TTS
-# Get key: https://elevenlabs.io/ → Profile → API Keys
-ELEVENLABS_API_KEY=""
-
-# Deepgram — Speech-to-Text transcription
-# Get key: https://console.deepgram.com/ → API Keys
-DEEPGRAM_API_KEY=""
-
-# Cartesia — High quality neural TTS
-# Get key: https://cartesia.ai/ → Dashboard → API Keys
-CARTESIA_API_KEY=""
-
-# Sarvam AI — Indic language neural TTS + voice calls
-# Get key: https://dashboard.sarvam.ai/ → API Keys
-SARVAM_API_KEY=""
-
-# Inworld AI — Conversational AI characters
-# Get key: https://studio.inworld.ai/ → Workspace → API Keys
-INWORLD_API_KEY=""
-
-# MiniMax — Multilingual neural TTS
-# Get key: https://www.minimax.io/ → Console → API Keys
-MINIMAX_API_KEY=
-
-# Fish Audio — Voice cloning TTS
-# Get key: https://fish.audio/ → Dashboard → API Keys
-FISH_AUDIO_API_KEY=
+### A1. Copy Environment Files
+Run shell commands (or fallback to file tools) to copy the required templates:
+```bash
+cp .env.example .env
+cp apps/api/.env.example apps/api/.env
+cp apps/web/.env.example apps/web/.env
+cp apps/workers/.env.example apps/workers/.env
 ```
 
-If they say **no** to Voice: skip this step entirely.
+### A2. Automate Non-Sensitive Variables
+- **Generate Auth Secret**: Generate a secure 32-character random hex string and inject it into the **root `/.env`** as `BETTER_AUTH_SECRET`.
+- Inform the user that the sub-app `.env` files already contain the pre-configured container networking routes (`http://crm-backend:3333`, `http://crm-frontend:3000`, `http://crm-workers:3334`).
+
+### A3. Clean Reset (If Prior Containers Exist)
+If previous containers or volumes exist, run a clean teardown:
+```bash
+docker compose down -v --remove-orphans
+```
+
+### A4. Build and Start All Services
+```bash
+docker compose up --build
+```
+
+### A5. Verification
+Verify service availability:
+- Web Dashboard: `http://localhost:3000`
+- Backend API: `http://localhost:3333`
+- Workers Health: `http://localhost:3334/health`
+- Demo credentials reference: `docs/role-password.md`
 
 ---
 
-## 9. Final Health Check & Summary
+## 🛠️ Flow B: Manual Monorepo Setup (Native pnpm)
 
-After all services are started, do a final verification:
+If the user chooses Manual Setup, execute these steps:
 
-1. Hit `http://localhost:3333` — should return `{"status":"ok"}` or NestJS response.
-2. Hit `http://localhost:3000` — should load the BrokerOS login page.
-3. If workers are running, confirm the BullMQ connection logged successfully.
+### B1. Copy Environments & Automate Configuration
+Copy all required `.env` templates:
+```bash
+cp .env.example .env
+cp apps/api/.env.example apps/api/.env
+cp apps/web/.env.example apps/web/.env
+cp apps/workers/.env.example apps/workers/.env
+cp apps/mobile/.env.example apps/mobile/.env
+```
 
-Then give the user a friendly **setup complete** summary listing:
-- Which services are running and on which ports
-- Reminder that email/SMS/PSTN carriers are connected **inside the web app** under Marketing → Settings — no `.env` needed for those
-- Credentials file: `docs/role-password.md` — all seeded demo user logins are here
-- Next steps: suggest running `/codebase-tour` to explore the full system
+Automate non-sensitive variables:
+1. **Generate Auth Secret**: Generate a 32-character random hex string and save into **root `/.env`** as `BETTER_AUTH_SECRET`.
+2. **Fetch Local LAN IP**: Run `ipconfig` (Windows) or `ifconfig` / `ip a` (Mac/Linux), parse the IPv4 address, and set:
+   - `MOBILE_URL="exp://<LAN_IP>:8081"` in `apps/api/.env`
+   - `EXPO_PUBLIC_API_URL="http://<LAN_IP>:3333"` in `apps/mobile/.env`
+
+### B2. Ask User About Database & Redis Preference
+Ask the user directly:
+
+> **"How would you like to run your database and Redis queue?"**
+>
+> - **Option 1: Local Docker Containers (Easiest)**
+>   We spin up Postgres (port 5432) and Redis (port 6379) locally using:
+>   `docker compose up postgres redis -d`
+>   (Default `DATABASE_URL` and `REDIS_URL` in root `.env` are already configured for this).
+>
+> - **Option 2: Cloud Services**
+>   You supply your cloud credentials in root `/.env`:
+>   - `DATABASE_URL` from [Neon](https://neon.tech/) or another PostgreSQL provider.
+>   - `REDIS_URL` from [Upstash](https://console.upstash.com/) or another Redis provider.
+
+Remind them to also paste:
+- `GROQ_API_KEY` in root `/.env` (from [Groq Console](https://console.groq.com/keys) — free tier available).
+- `BLOB_READ_WRITE_TOKEN` in root `/.env` (from [Vercel Storage](https://vercel.com/storage/blob)).
+- Ask the user to reply with **"done"** once their root `.env` is updated.
+
+**Completion criterion**: Wait for the user to confirm before proceeding.
+
+### B3. Install Dependencies
+Run from the monorepo root:
+```bash
+pnpm install
+```
+
+### B4. Initialize Database
+1. If using Local Docker for DB:
+   ```bash
+   docker compose up postgres redis -d
+   ```
+   Verify containers are healthy via `docker ps`.
+
+2. Run Prisma migrations and seed sample real estate data:
+   ```bash
+   pnpm db:generate
+   pnpm db:migrate
+   pnpm db:seed
+   ```
+   *(All demo login credentials are saved in `docs/role-password.md`).*
+
+### B5. Start Services
+Launch services as background processes:
+- **Backend API**: `pnpm dev:api` → `http://localhost:3333`
+- **Next.js Web Dashboard**: `pnpm dev:web` → `http://localhost:3000`
+- **BullMQ Campaign Workers**: `pnpm dev:workers` → `http://localhost:3334/health`
+- **Mobile App (Optional)**:
+  - Metro bundler: `pnpm dev:mobile`
+  - Or native Android build:
+    ```powershell
+    # On Windows:
+    $env:JAVA_HOME="C:\Program Files\Android\Android Studio\jbr"; cd apps/mobile; npx expo run:android
+    ```
+
+---
+
+## 3. Optional Setup — AI Voice Platform Keys
+
+If the user wants to test the AI Voice Campaign Studio (`marketing/voice`), they can add optional AI voice provider keys to the **root `/.env`**:
+- `ELEVENLABS_API_KEY` (Conversational AI + TTS: https://elevenlabs.io/)
+- `DEEPGRAM_API_KEY` (STT transcription: https://deepgram.com/)
+- `CARTESIA_API_KEY` (Sonic neural TTS: https://cartesia.ai/)
+- `SARVAM_API_KEY` (Indic language neural TTS: https://sarvam.ai/)
+
+*Note: Telephony carriers (Twilio, Exotel, Vobiz, Telnyx), Email providers (SendGrid, SES, Brevo), and SMS gateways are connected dynamically inside the Web App UI under Marketing Settings.*
+
+---
+
+## 4. Final Verification & Completion Summary
+
+1. Hit `http://localhost:3333` — verify NestJS API responds.
+2. Hit `http://localhost:3000` — verify Next.js login screen renders without console errors.
+3. Hit `http://localhost:3334/health` — verify BullMQ workers report healthy Redis status.
+4. Present a clear summary to the user:
+   - Running services, ports, and health status.
+   - Credentials link: `docs/role-password.md`.
+   - Recommend exploring the system by typing `/codebase-tour`.
