@@ -20,7 +20,7 @@ import type { VoiceAgentPlatform } from '@brokeros/types';
 @Public()
 @Controller('api/marketing/voice/webhooks')
 export class VoiceWebhooksController {
-  constructor(private readonly trackingService: VoiceTrackingService) {}
+  constructor(private readonly trackingService: VoiceTrackingService) { }
 
   @Get('vobiz-answer')
   @Post('vobiz-answer')
@@ -29,27 +29,21 @@ export class VoiceWebhooksController {
     @Query('campaignId') campaignId?: string,
     @Query('recipientId') recipientId?: string,
     @Query('firstMessage') firstMessage?: string,
-    @Query('scriptPrompt') scriptPrompt?: string,
     @Query('agent') agentPlatform?: string,
     @Query('voice') voiceId?: string,
-    @Res() res?: Response,
-  ) {
-    const publicUrl = process.env.API_PUBLIC_URL || '';
-    const wsUrl = publicUrl.replace(/^http/, 'ws') + '/voice/stream';
-
-    // Vobiz / Plivo Bidirectional Real-time WebSocket Audio Stream
-    const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<Response>
-  <Stream bidirectional="true" keepCallAlive="true" contentType="audio/x-mulaw;rate=8000">
-    ${wsUrl}
-  </Stream>
-</Response>`;
-
+    @Res({ passthrough: true }) res?: Response,
+  ): string {
     if (res) {
-      res.setHeader('Content-Type', 'text/xml');
-      return res.send(xml);
+      res.type('text/xml');
     }
-    return xml;
+
+    const greeting = firstMessage || 'Hello! Thank you for connecting with us from BrokerOS. Your voice session is active.';
+
+    // Vobiz XML Response
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Speak>${greeting.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</Speak>
+</Response>`;
   }
 
   @Get('twilio-answer')
@@ -59,26 +53,52 @@ export class VoiceWebhooksController {
     @Query('campaignId') campaignId?: string,
     @Query('recipientId') recipientId?: string,
     @Query('firstMessage') firstMessage?: string,
-    @Res() res?: Response,
-  ) {
+    @Query('agent') agentPlatform?: string,
+    @Query('voice') voiceId?: string,
+    @Res({ passthrough: true }) res?: Response,
+  ): string {
+    if (res) {
+      res.type('text/xml');
+    }
+
+    const greeting = firstMessage || 'Hello! Thank you for connecting with us from BrokerOS. Your voice session is active.';
+
+    // Twilio TwiML Response
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Say voice="Polly.Aditi">${greeting.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</Say>
+  <Pause length="2"/>
+</Response>`;
+  }
+
+  @Get('telnyx-answer')
+  @Post('telnyx-answer')
+  @Header('Content-Type', 'text/xml')
+  handleTelnyxAnswer(
+    @Query('campaignId') campaignId?: string,
+    @Query('recipientId') recipientId?: string,
+    @Query('firstMessage') firstMessage?: string,
+    @Query('agent') agentPlatform?: string,
+    @Query('voice') voiceId?: string,
+    @Res({ passthrough: true }) res?: Response,
+  ): string {
     const publicUrl = process.env.API_PUBLIC_URL || '';
     const wsUrl = publicUrl.replace(/^http/, 'ws') + '/voice/stream';
 
-    // Twilio Bidirectional Media Stream
-    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+    if (res) {
+      res.type('text/xml');
+    }
+
+    // Telnyx TeXML Media Stream
+    return `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
   <Connect>
     <Stream url="${wsUrl}">
       <Parameter name="campaignId" value="${campaignId || 'direct_call'}"/>
+      <Parameter name="agent" value="${agentPlatform || 'VAPI'}"/>
     </Stream>
   </Connect>
 </Response>`;
-
-    if (res) {
-      res.setHeader('Content-Type', 'text/xml');
-      return res.send(xml);
-    }
-    return xml;
   }
 
   @Post(':provider')
@@ -86,8 +106,47 @@ export class VoiceWebhooksController {
   async handleWebhook(
     @Param('provider') providerName: string,
     @Headers() headers: Record<string, any>,
+    @Query() query: Record<string, any>,
     @Body() body: any,
+    @Res({ passthrough: true }) res?: Response,
   ) {
+    // 1. Dedicated Handler for Twilio Answer Webhook
+    if (providerName === 'twilio-answer') {
+      return this.handleTwilioAnswer(
+        query.campaignId,
+        query.recipientId,
+        query.firstMessage,
+        query.agent,
+        query.voice,
+        res,
+      );
+    }
+
+    // 2. Dedicated Handler for Vobiz Answer Webhook
+    if (providerName === 'vobiz-answer') {
+      return this.handleVobizAnswer(
+        query.campaignId,
+        query.recipientId,
+        query.firstMessage,
+        query.agent,
+        query.voice,
+        res,
+      );
+    }
+
+    // 3. Dedicated Handler for Telnyx Answer Webhook
+    if (providerName === 'telnyx-answer') {
+      return this.handleTelnyxAnswer(
+        query.campaignId,
+        query.recipientId,
+        query.firstMessage,
+        query.agent,
+        query.voice,
+        res,
+      );
+    }
+
+    // 4. Voice Agent Platform Webhook Events (Vapi, Retell, ElevenLabs, Sarvam)
     const platform = providerName.toUpperCase() as VoiceAgentPlatform;
 
     try {
