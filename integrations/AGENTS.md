@@ -25,20 +25,36 @@ integrations/
 │   ├── bridge/         carrier-bridge-dispatcher.ts (central PSTN carrier router)
 │   └── telephony/      4 PSTN carrier adapters (vobiz, exotel, twilio, telnyx)
 │
-├── mail/               Email provider adapters
+├── mail/               Email provider adapters (8 providers)
 │   ├── aws-ses/        @brokeros/int-mail-ses
 │   ├── sendgrid/       @brokeros/int-mail-sendgrid
 │   ├── brevo/          @brokeros/int-mail-brevo
-│   └── mailchimp/      @brokeros/int-mail-mailchimp
+│   ├── mailchimp/      @brokeros/int-mail-mailchimp
+│   ├── mailgun/        @brokeros/int-mail-mailgun
+│   ├── gmail/          @brokeros/int-mail-gmail
+│   ├── outlook/        @brokeros/int-mail-outlook
+│   └── constant-contact/ @brokeros/int-mail-constant-contact
 │
-├── sms/                SMS gateway adapters
+├── sms/                SMS gateway adapters (9 providers)
 │   ├── twilio/         @brokeros/int-sms-twilio
 │   ├── gupshup/        @brokeros/int-sms-gupshup
 │   ├── sinch/          @brokeros/int-sms-sinch
-│   └── aws-sns/        @brokeros/int-sms-aws-sns
+│   ├── aws-sns/        @brokeros/int-sms-aws-sns
+│   ├── bird/           @brokeros/int-sms-bird
+│   ├── infobip/        @brokeros/int-sms-infobip
+│   ├── plivo/          @brokeros/int-sms-plivo
+│   ├── telnyx/         @brokeros/int-sms-telnyx
+│   └── vonage/         @brokeros/int-sms-vonage
 │
 ├── whatsapp/           @brokeros/int-whatsapp
-│   └── src/            Meta WhatsApp Cloud API (meta-api.ts, interactive.ts, webhook-sign.ts, ssrf-guard.ts)
+│   └── src/
+│       ├── meta-api.ts         Core Meta Cloud API client
+│       ├── interactive.ts      Interactive message builders (buttons, lists, quick replies)
+│       ├── webhook-sign.ts     X-Hub-Signature-256 HMAC verification
+│       ├── ssrf-guard.ts       SSRF protection for media URLs
+│       ├── encryption.ts       AES-GCM WABA credential encryption
+│       ├── phone-utils.ts      E.164 normalization + retry phone variants
+│       └── index.ts            Barrel export
 │
 └── ads/                Ad platform lead ingestion adapters
     ├── google/         @brokeros/int-ads-google (Google Ads lead form webhook parser & auth)
@@ -69,3 +85,6 @@ integrations/
    - Create a sub-folder under the relevant channel (e.g. `integrations/mail/new-provider/`).
    - Add `package.json` with appropriate `@brokeros/int-*` name.
    - Export standard functions and build cleanly with `pnpm --filter "@brokeros/int-*" run build`.
+7. **Testing Integrations**:
+   - Run all integration unit tests via: `pnpm test:packages` (or `vitest run integrations`).
+   - Integration tests live in `__tests__/` subdirectories within each adapter.
