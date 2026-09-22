@@ -26,8 +26,9 @@ try { process.loadEnvFile(); } catch { }
 
 async function bootstrap() {
   const app = await NestFactory.create(WorkersModule);
-  await app.listen(3334);
-  console.log('Workers app running on port 3334');
+  const port = process.env.PORT ?? 3334;
+  await app.listen(port, '0.0.0.0');
+  console.log(`Workers app running on port ${port}`);
 }
 
 bootstrap();
