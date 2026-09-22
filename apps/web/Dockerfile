@@ -46,7 +46,7 @@ ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
 ENV NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=$NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
 ENV BACKEND_URL=$BACKEND_URL
 
-RUN pnpm turbo run build --filter=@brokeros/web...
+RUN pnpm turbo run build --filter=@brokeros/web... --env-mode=loose
 
 # ── Stage 3: Production Image ──────────────────────────────────
 FROM node:22-alpine AS runner
@@ -55,6 +55,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
+RUN apk add --no-cache libc6-compat
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
@@ -71,4 +72,6 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
 # Note: standalone mode outputs server.js inside apps/web folder
-CMD ["node", "apps/web/server.js"]
+# Dynamically sync runtime BACKEND_URL into routes-manifest.json before starting server
+CMD ["sh", "-c", "node -e \"const fs = require('fs'); const file = 'apps/web/.next/routes-manifest.json'; if (fs.existsSync(file) && process.env.BACKEND_URL) { let content = fs.readFileSync(file, 'utf8'); content = content.replace(/http:\\/\\/(?:127\\.0\\.0\\.1|backend):3333/g, process.env.BACKEND_URL); fs.writeFileSync(file, content); }\" && node apps/web/server.js"]
+

@@ -1,5 +1,5 @@
 # =============================================================
-# Backend Dockerfile — NestJS 11 + Prisma 7 (Turborepo)
+# Workers Dockerfile — NestJS 11 Background Worker (Turborepo)
 # Multi-stage: prune → install → build → production
 # =============================================================
 
@@ -14,8 +14,8 @@ RUN apk add --no-cache libc6-compat openssl
 FROM base AS builder
 WORKDIR /app
 COPY . .
-# Extract only the packages/apps needed for @brokeros/api
-RUN turbo prune @brokeros/api --docker
+# Extract only the packages/apps needed for @brokeros/workers
+RUN turbo prune @brokeros/workers --docker
 
 # ── Stage 2: Install & Build ───────────────────────────────────
 FROM base AS installer
@@ -32,9 +32,9 @@ RUN pnpm install --frozen-lockfile --ignore-scripts
 COPY --from=builder /app/out/full/ .
 COPY turbo.json turbo.json
 
-# Generate Prisma client and build the API
+# Generate Prisma client and build the Workers app
 RUN pnpm --filter @brokeros/prisma db:generate
-RUN pnpm turbo run build --filter=@brokeros/api...
+RUN pnpm turbo run build --filter=@brokeros/workers...
 
 # ── Stage 3: Production Image ──────────────────────────────────
 FROM base AS runner
@@ -46,10 +46,9 @@ ENV NODE_ENV=production
 COPY --from=installer /app/node_modules ./node_modules
 COPY --from=installer /app/packages ./packages
 COPY --from=installer /app/integrations ./integrations
-COPY --from=installer /app/apps/api ./apps/api
+COPY --from=installer /app/apps/workers ./apps/workers
 COPY --from=installer /app/package.json ./package.json
 
-EXPOSE 3333
+EXPOSE 3334
 
-# Run database sync (creates all tables/enums from schema) and seed if empty, then start the server
-CMD ["sh", "-c", "cd packages/prisma && npx prisma db push --accept-data-loss && npx tsx seed.ts --if-empty && cd ../../apps/api && node dist/main"]
+CMD ["node", "apps/workers/dist/main"]

@@ -6,8 +6,18 @@
 node_modules
 apps/*/node_modules
 packages/*/node_modules
-integrations/*/node_modules
+integrations/**/node_modules
 apps/workers/node_modules
+
+# Mobile App (Native Android Gradle artifacts & caches — 1.8GB+, never in Docker)
+apps/mobile
+
+# Docs, Agents, Scripts & Metadata
+docs
+.agents
+scripts 
+*.md
+LICENSE
 
 # Next.js / Build Outputs
 .next
@@ -17,7 +27,7 @@ build
 out
 apps/*/dist
 packages/*/dist
-integrations/*/dist
+integrations/**/dist
 
 # Environment Variables
 .env
@@ -26,12 +36,12 @@ apps/*/.env
 apps/*/.env.*
 packages/*/.env
 packages/*/.env.*
-integrations/*/.env
-integrations/*/.env.*
+integrations/**/.env
+integrations/**/.env.*
 !.env.example
 !apps/*/.env.example
 !packages/*/.env.example
-!integrations/*/.env.example
+!integrations/**/.env.example
 
 # Turborepo
 .turbo
