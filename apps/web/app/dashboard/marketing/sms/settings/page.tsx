@@ -5,6 +5,7 @@
 "use client";
 
 import React, { useState, useEffect, Suspense } from "react";
+import { toast } from "sonner";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
@@ -168,9 +169,10 @@ function SmsSettingsInner() {
     );
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      alert(err?.message || "Failed to remove sender number");
+      toast.error(err?.message || "Failed to remove sender number");
       return;
     }
+    toast.success("Sender phone number removed");
     await fetchIntegrations();
   };
 
