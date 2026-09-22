@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, ScrollView, RefreshControl, TouchableOpacity, ActivityIndicator } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { Feather } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { authClient } from '../../../../lib/auth-client';
@@ -47,13 +48,14 @@ export default function PostSalesCommissionsScreen() {
         body: { remarks: data.remarks }
       });
       if (!res.error) {
+        Toast.show({ type: 'success', text1: 'Success', text2: 'Commission updated successfully' });
         setModalVisible(false);
         fetchCommissions();
       } else {
-        alert(res.error.message || 'Failed to update commission');
+        Toast.show({ type: 'error', text1: 'Error', text2: res.error.message || 'Failed to update commission' });
       }
     } catch (err: any) {
-      alert(err.message || 'Failed to update commission');
+      Toast.show({ type: 'error', text1: 'Error', text2: err.message || 'Failed to update commission' });
     } finally {
       setIsSaving(false);
     }
