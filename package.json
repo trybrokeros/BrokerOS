@@ -17,6 +17,12 @@
     "build:packages": "pnpm --filter @brokeros/types build && pnpm --filter @brokeros/constants build && pnpm --filter \"@brokeros/int-*\" run build",
     "postinstall": "pnpm db:generate && pnpm build:packages",
     "test": "turbo run test",
+    "test:packages": "vitest run packages integrations",
+    "test:api:e2e": "vitest run apps/api/test/e2e",
+    "test:workers:e2e": "vitest run apps/workers/test/e2e",
+    "test:all:e2e": "vitest run packages integrations apps/api/test/e2e apps/workers/test/e2e",
+    "test:web:e2e": "playwright test --config=apps/web/playwright.config.ts",
+    "test:mobile:e2e": "tsx scripts/test-mobile-e2e.ts",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\" --ignore-path .gitignore"
   },
@@ -24,7 +30,8 @@
     "prettier": "^3.9.5",
     "tsx": "^4.19.3",
     "turbo": "^2.5.4",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.1"
   },
   "pnpm": {
     "overrides": {
