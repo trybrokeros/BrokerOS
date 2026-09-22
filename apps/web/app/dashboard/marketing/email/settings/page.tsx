@@ -5,6 +5,7 @@
 "use client";
 
 import React, { useState, useEffect, Suspense } from "react";
+import { toast } from "sonner";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
@@ -169,9 +170,10 @@ function EmailSettingsInner() {
     });
     if (!res.ok) {
       const err = await res.json();
-      alert(err?.message || "Failed to remove sender domain");
+      toast.error(err?.message || "Failed to remove sender domain");
       return;
     }
+    toast.success("Sender domain identity removed successfully");
     await fetchIntegrations();
   };
 
