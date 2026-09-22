@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Modal, ScrollView, ActivityIndicator } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { Feather } from '@expo/vector-icons';
 import { authClient } from '../../lib/auth-client';
 
@@ -49,7 +50,7 @@ export function BrokerAddModal({ visible, onClose, onSuccess, isCP }: BrokerAddM
 
   const handleSubmit = async () => {
     if (!form.companyName || !form.name || !form.phone || !form.city) {
-      alert("Please fill in all required fields.");
+      Toast.show({ type: 'error', text1: 'Validation Error', text2: 'Please fill in all required fields.' });
       return;
     }
 
@@ -63,11 +64,11 @@ export function BrokerAddModal({ visible, onClose, onSuccess, isCP }: BrokerAddM
       });
       if (res.error) throw new Error(res.error.message);
 
-      onSuccess();
+      Toast.show({ type: 'success', text1: 'Success', text2: 'Broker created successfully' });
       onSuccess();
       setForm({ companyName: '', name: '', phone: '', city: '', sourcingManagerId: '', reraNumber: '', gstNumber: '', serviceAreas: '', assignedProjects: [] });
     } catch (e: any) {
-      alert(e.message || 'Failed to create broker');
+      Toast.show({ type: 'error', text1: 'Error', text2: e.message || 'Failed to create broker' });
     } finally {
       setLoading(false);
     }
