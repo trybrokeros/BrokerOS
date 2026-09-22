@@ -9,13 +9,13 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@brokeros/types": "workspace:*",
     "@brokeros/constants": "workspace:*",
+    "@brokeros/types": "workspace:*",
     "@brokeros/validators": "workspace:*",
     "@headlessui/react": "^2.2.10",
-    "@hookform/resolvers": "^3.9.0",
     "@heroui/react": "^3.2.2",
     "@heroui/styles": "^3.2.2",
+    "@hookform/resolvers": "^3.9.0",
     "@types/mapbox-gl": "^3.5.0",
     "@vis.gl/react-google-maps": "^1.9.0",
     "better-auth": "^1.6.23",
@@ -35,6 +35,7 @@
     "tailwind-variants": "^3.3.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/papaparse": "^5.5.2",
