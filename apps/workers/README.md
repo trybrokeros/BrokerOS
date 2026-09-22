@@ -78,12 +78,9 @@ apps/workers/
 
 ## Environment & Configuration
 
-Workers inherit heavy infrastructure keys from the **root `/.env`** file:
-
-- `DATABASE_URL`: PostgreSQL connection string.
-- Telephony & Voice API keys (Vobiz, Twilio, Exotel, Telnyx, Vapi, Retell, Sarvam, etc.).
-- Email & SMS provider credentials.
-- Meta WhatsApp Cloud API credentials (`WHATSAPP_API_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`).
+Workers use a **two-file loading strategy** (see [`src/main.ts`](src/main.ts)):
+1. **Root `/.env`** — loaded first. Contains all heavy infrastructure and provider credentials.
+2. **`apps/workers/.env`** — loaded second. Workers-only overrides.
 
 ---
 
@@ -101,8 +98,26 @@ pnpm --filter @brokeros/workers build
 # Run production build
 pnpm --filter @brokeros/workers start:prod
 
-# Run unit tests
+# Run worker E2E tests (Vitest)
+pnpm test:workers:e2e
+# Or using workspace filter directly:
 pnpm --filter @brokeros/workers test
+```
+
+---
+
+## Docker
+
+The worker service uses a multi-stage Dockerfile powered by Turborepo:
+1. **Stage 1 (Prune):** Runs `turbo prune @brokeros/workers --docker` to isolate only the worker code and its workspace dependencies (`packages/`, `integrations/`).
+2. **Stage 2 (Installer):** Installs dependencies with layer caching, generates the Prisma client, and compiles the NestJS microservice.
+3. **Stage 3 (Runner):** Lightweight Node 22 Alpine production image exposing port 3334.
+
+**Crucial Note:** Because it relies on Turborepo, the Dockerfile **must be built from the monorepo root context**, not from inside `apps/workers/`.
+
+```bash
+# Run via docker compose from the repo root (recommended):
+docker compose up --build workers
 ```
 
 ---
