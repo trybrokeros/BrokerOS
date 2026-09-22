@@ -82,8 +82,12 @@ export class MarketingVoiceProcessor implements OnModuleInit, OnModuleDestroy {
     const [startH, startM] = start.split(':').map(Number);
     const [endH, endM] = end.split(':').map(Number);
 
-    const startMinutes = (startH || 9) * 60 + (startM || 0);
-    const endMinutes = (endH || 20) * 60 + (endM || 0);
+    const startMinutes =
+      (Number.isFinite(startH) ? startH : 9) * 60 +
+      (Number.isFinite(startM) ? startM : 0);
+    const endMinutes =
+      (Number.isFinite(endH) ? endH : 20) * 60 +
+      (Number.isFinite(endM) ? endM : 0);
 
     return currentMinutes >= startMinutes && currentMinutes <= endMinutes;
   }
