@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, ScrollView, RefreshControl, TouchableOpacity, ActivityIndicator } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { Feather } from '@expo/vector-icons';
 import { CommissionCompleteModal } from '@/components/commissions/CommissionCompleteModal';
 import { useFocusEffect } from 'expo-router';
@@ -67,15 +68,16 @@ export default function CommissionsScreen() {
       });
 
       if (!res.error) {
+        Toast.show({ type: 'success', text1: 'Success', text2: 'Commission marked as paid successfully' });
         await fetchCommissions();
         setModalVisible(false);
         setSelectedRecord(null);
       } else {
-        alert('Failed to mark commission as paid');
+        Toast.show({ type: 'error', text1: 'Error', text2: 'Failed to mark commission as paid' });
       }
     } catch (e) {
       console.error(e);
-      alert('Error updating commission');
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Error updating commission' });
     } finally {
       setIsSaving(false);
     }
