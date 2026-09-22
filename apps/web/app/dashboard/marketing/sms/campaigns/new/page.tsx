@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -324,12 +325,12 @@ export default function NewSmsCampaignPage() {
   // 7. Launch Campaign
   const handleLaunchCampaign = async () => {
     if (!title.trim()) {
-      alert("Please enter a campaign title.");
+      toast.error("Please enter a campaign title.");
       setCurrentStep(1);
       return;
     }
     if (!messageContent.trim()) {
-      alert("Please compose SMS message copy.");
+      toast.error("Please compose SMS message copy.");
       setCurrentStep(3);
       return;
     }
@@ -367,9 +368,10 @@ export default function NewSmsCampaignPage() {
 
       localStorage.removeItem(SMS_DRAFT_STORAGE_KEY);
       const data = await res.json();
+      toast.success("SMS campaign launched successfully");
       router.push(`/dashboard/marketing/sms/campaigns/${data.id}`);
     } catch (err: any) {
-      alert(err?.message || "Failed to launch SMS campaign");
+      toast.error(err?.message || "Failed to launch SMS campaign");
     } finally {
       setIsSubmitting(false);
     }
