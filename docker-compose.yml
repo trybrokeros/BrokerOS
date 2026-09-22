@@ -1,6 +1,6 @@
 # =============================================================
 # BrokerOS — Root Docker Compose
-# Runs: PostgreSQL + NestJS Backend + Next.js Frontend
+# Runs: PostgreSQL + Redis + NestJS Backend + Async Workers + Next.js Frontend
 # Mobile is NOT here — run with: npx expo start (from mobile/)
 #
 # Usage:
@@ -21,11 +21,26 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-crm}
       POSTGRES_DB: ${POSTGRES_DB:-crm}
     ports:
-      - "5432:5432"           # exposed so you can connect from Prisma Studio
+      - "5432:5432"           # exposed so you can connect from Prisma Studio or local tools
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-crm} -d ${POSTGRES_DB:-crm}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Redis ──────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: crm-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"           # exposed for local redis-cli / worker debugging
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -40,16 +55,55 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     env_file:
-      - .env                     # The crucial root env
-      - ./apps/api/.env          # copy apps/api/.env.example → apps/api/.env and fill in
+      - path: .env
+        required: false
+      - path: ./apps/api/.env
+        required: false
     environment:
       # Override DATABASE_URL to point at the postgres service (not localhost)
       DATABASE_URL: postgresql://${POSTGRES_USER:-crm}:${POSTGRES_PASSWORD:-crm}@postgres:5432/${POSTGRES_DB:-crm}
+      REDIS_URL: redis://redis:6379
+      WORKER_URL: http://workers:3334
       PORT: 3333
       FRONTEND_URL: http://localhost:3000
     ports:
       - "3333:3333"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3333/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # ── Async Workers ───────────────────────────────────────────
+  workers:
+    build:
+      context: .
+      dockerfile: apps/workers/Dockerfile
+    container_name: crm-workers
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    env_file:
+      - path: .env
+        required: false
+      - path: ./apps/workers/.env
+        required: false
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-crm}:${POSTGRES_PASSWORD:-crm}@postgres:5432/${POSTGRES_DB:-crm}
+      REDIS_URL: redis://redis:6379
+      API_PUBLIC_URL: http://backend:3333
+      PORT: 3334
+    ports:
+      - "3334:3334"
 
   # ── Next.js Frontend ────────────────────────────────────────
   frontend:
@@ -65,15 +119,21 @@ services:
     container_name: crm-frontend
     restart: unless-stopped
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     env_file:
-      - .env                    # The crucial root env
-      - ./apps/web/.env         # copy apps/web/.env.example → apps/web/.env and fill in
+      - path: .env
+        required: false
+      - path: ./apps/web/.env
+        required: false
     environment:
       # Server-side: hits the backend service by its docker-compose name
       BACKEND_URL: http://backend:3333
+      PORT: 3000
+      HOSTNAME: "0.0.0.0"
     ports:
       - "3000:3000"
 
 volumes:
   postgres_data:
+  redis_data:
