@@ -84,7 +84,7 @@ export async function tryCarrierBridgeDispatch(
       };
     }
 
-    const answerUrl = `${publicUrl}/api/marketing/voice/webhooks/vobiz-answer?campaignId=${options.campaignId || 'direct_test'}&firstMessage=${encodeURIComponent(message)}&scriptPrompt=${encodeURIComponent(options.scriptPrompt || '')}&agent=${platform}&voice=${encodeURIComponent(options.voiceId || '')}`;
+    const answerUrl = `${publicUrl}/api/marketing/voice/webhooks/vobiz-answer?campaignId=${encodeURIComponent(options.campaignId || 'direct_test')}&agent=${encodeURIComponent(platform)}&voice=${encodeURIComponent(options.voiceId || '')}`;
 
     try {
       const res = await fetch(`https://api.vobiz.ai/api/v1/Account/${id}/Call/`, {
@@ -253,16 +253,8 @@ export async function tryCarrierBridgeDispatch(
         From: fromNum,
       };
 
-      if (isPublicUrl) {
-        // Public domain / ngrok tunnel active — use full media stream webhook
-        const twilioUrl = `${publicUrl}/api/marketing/voice/webhooks/twilio-answer?campaignId=${options.campaignId || 'direct_test'}&firstMessage=${encodeURIComponent(message)}&scriptPrompt=${encodeURIComponent(options.scriptPrompt || '')}&agent=${platform}&voice=${encodeURIComponent(options.voiceId || '')}`;
-        bodyParams.Url = twilioUrl;
-        bodyParams.Method = 'POST';
-      } else {
-        // Local environment fallback — use inline TwiML so the call dials and speaks without 400 rejection
-        const twiml = `<Response><Say voice="Polly.Aditi">${escapeXml(message)}</Say><Pause length="2"/><Hangup/></Response>`;
-        bodyParams.Twiml = twiml;
-      }
+      const twiml = `<Response><Say voice="Polly.Aditi">${escapeXml(message)}</Say><Pause length="2"/><Hangup/></Response>`;
+      bodyParams.Twiml = twiml;
 
       const body = new URLSearchParams(bodyParams);
 
@@ -345,7 +337,7 @@ export async function tryCarrierBridgeDispatch(
       };
     }
 
-    const answerUrl = `${publicUrl}/api/marketing/voice/webhooks/telnyx-answer?campaignId=${options.campaignId || 'direct_test'}&firstMessage=${encodeURIComponent(message)}&scriptPrompt=${encodeURIComponent(options.scriptPrompt || '')}&agent=${platform}&voice=${encodeURIComponent(options.voiceId || '')}`;
+    const answerUrl = `${publicUrl}/api/marketing/voice/webhooks/telnyx-answer?campaignId=${encodeURIComponent(options.campaignId || 'direct_test')}&agent=${encodeURIComponent(platform)}&voice=${encodeURIComponent(options.voiceId || '')}`;
 
     try {
       const res = await fetch('https://api.telnyx.com/v2/texml/calls', {
