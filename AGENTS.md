@@ -81,7 +81,7 @@ External service adapters live in `integrations/` — one directory per channel.
 
 - **Better Auth is the only auth system.** Do not implement custom JWT minting, custom session management, or custom password hashing.
 - Backend: `@thallesp/nestjs-better-auth`. Sessions validated via the `better-auth` server instance in `apps/api/src/auth/`.
-- Frontend: `better-auth` client in `apps/web/lib/auth-client.ts`. Route protection via `apps/web/middleware.ts`.
+- Frontend: `better-auth` client in `apps/web/lib/auth-client.ts`. Route protection via `apps/web/proxy.ts` (Next.js 16 convention).
 - Mobile: `@better-auth/expo` with `expo-secure-store` for token persistence.
 - Role is read from `session.user.role`. Never accept role from request body or query string.
 - Do not add any new passport strategy. Existing `passport-jwt` is legacy-only.
@@ -142,6 +142,18 @@ As BrokerOS grows to include background workers, 3rd-party integrations, and new
 - **Location:** `scripts/` (Repo root)
 - **Execution:** We use `tsx` mapped in the root `package.json`. To run a script, use: `pnpm run script scripts/your-script.ts`
 - **Rule:** Never create scripts locked inside `apps/api/scripts/` unless they are strictly bound to API-only internals that will never be used by other parts of the monorepo. When in doubt, put them in root `scripts/`.
+
+---
+
+## Testing Law
+
+- **Vitest for headless suites:**
+  - `pnpm test:api:e2e` runs API E2E tests (`apps/api/test/e2e/`).
+  - `pnpm test:workers:e2e` runs background worker E2E tests (`apps/workers/test/e2e/`).
+  - `pnpm test:packages` runs tests across packages and integrations.
+  - `pnpm test:all:e2e` runs all headless test suites in a single pass.
+- **Playwright for web E2E:** `pnpm test:web:e2e` runs browser specs (`apps/web/e2e/specs/`). Playwright automatically boots the Next.js dev server on port 3000 via `webServer`. Headless browser binaries are installed via `pnpm --filter @brokeros/web exec playwright install chromium`.
+- **Maestro for mobile E2E:** `pnpm test:mobile:e2e` executes `scripts/test-mobile-e2e.ts`, which tests Maestro availability and runs native Android flows in `apps/mobile/e2e/`.
 
 ---
 

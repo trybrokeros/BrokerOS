@@ -45,7 +45,7 @@ This project follows the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.
 
 - Node.js ≥ 22
 - pnpm ≥ 10
-- PostgreSQL 16+ (or Docker)
+- PostgreSQL 16+ & Redis 7+ (or Docker)
 - Android Studio (for mobile work only)
 
 ### 🤖 AI Agent Setup
@@ -62,15 +62,16 @@ If you are using the **AI IDE / CLI**, you can skip running commands manually. U
 cp .env.example .env
 cp apps/api/.env.example apps/api/.env
 cp apps/web/.env.example apps/web/.env
+cp apps/workers/.env.example apps/workers/.env
 
 # Note: The root /.env file is the most important one!
 # Edit it with your Database URL, Better Auth secret, etc.
-# apps/web/.env and apps/api/.env are mostly pre-filled with local URLs.
+# Sub-app .env files are pre-filled with local development routing.
 
 # If you have previous containers or volumes running, perform a clean reset:
 docker compose down -v --remove-orphans
 
-# Build and start everything
+# Build and start all 5 services (PostgreSQL, Redis, Backend, Workers, Frontend)
 docker compose up --build
 
 # Note: The backend container automatically deploys migrations and seeds
@@ -78,6 +79,12 @@ docker compose up --build
 # To manually re-seed at any time:
 docker exec -it crm-backend pnpm db:seed
 # 🔑 View all demo users & passwords created: docs/role-password.md
+
+# Endpoints:
+# Frontend:  http://localhost:3000
+# Backend:   http://localhost:3333
+# Workers:   http://localhost:3334/health
+# DBs:       PostgreSQL (5432) · Redis (6379)
 ```
 
 ### Manual Setup
@@ -93,12 +100,13 @@ pnpm install
 cp .env.example .env
 cp apps/api/.env.example apps/api/.env
 cp apps/web/.env.example apps/web/.env
+cp apps/workers/.env.example apps/workers/.env
 cp apps/mobile/.env.example apps/mobile/.env
 
 # IMPORTANT:
 # 1. Edit the root /.env file with your Database URL, Auth secret, Groq API key, etc.
 # 2. Edit apps/mobile/.env and set EXPO_PUBLIC_API_URL to your machine's LAN IP address.
-# 3. For apps/web and apps/api, the defaults are usually fine for local development.
+# 3. For apps/web, apps/api, and apps/workers, the defaults are usually fine for local development.
 ```
 
 **2. Backend (API) & Database Setup:**
@@ -120,7 +128,14 @@ pnpm dev:api                 # → http://localhost:3333
 pnpm dev:web                 # → http://localhost:3000
 ```
 
-**4. Mobile (Android Only):**
+**4. Background Workers:**
+
+```bash
+# Start BullMQ asynchronous queue processors (run from root)
+pnpm dev:workers             # → http://localhost:3334/health
+```
+
+**5. Mobile (Android Only):**
 
 ```bash
 # Start Metro bundler (run from root)
@@ -160,28 +175,28 @@ cd apps/mobile && npx expo run:android
 ```
 BrokerOS/
 ├── apps/
-│   ├── api/       NestJS 11 API + Socket.IO (TypeScript ESM)
+│   ├── api/       NestJS 11 REST API + Socket.IO server (TypeScript ESM)
 │   │              Modules: auth, leads, inventory, brokers, approvals,
-│   │              chat, notifications, dashboard, marketing (email/sms/voice/whatsapp)
-│   ├── web/       Next.js 16 App Router web dashboard
+│   │              chat, notifications, dashboard, marketing (email, sms, voice, whatsapp, ads)
+│   ├── web/       Next.js 16 App Router web dashboard (React 19 + Tailwind CSS v4)
 │   │              Features: leads, inventory, brokers, approvals,
-│   │              marketing (email/sms/voice/whatsapp campaign wizards)
-│   ├── mobile/    Expo 54 React Native Android app
-│   └── workers/   BullMQ async background processors
+│   │              marketing (email, sms, voice, whatsapp, ads comparison & attribution)
+│   ├── mobile/    Expo 54 React Native Android app for field teams (native auto-dialer)
+│   └── workers/   BullMQ async background processors (powered by Redis 7)
 │                  (marketing-email, marketing-sms, marketing-voice, marketing-whatsapp)
 ├── packages/
 │   ├── prisma/      Prisma ORM schema, migrations, and client (@brokeros/prisma)
-│   ├── storage/     Vercel Blob storage wrappers (@brokeros/storage)
+│   ├── storage/     Centralized Vercel Blob cloud storage wrappers (@brokeros/storage)
 │   ├── types/       Shared TS interfaces with domain sub-modules (@brokeros/types)
-│   ├── validators/  Shared Zod schemas (@brokeros/validators)
-│   └── constants/   Shared logic and constants with domain sub-modules (@brokeros/constants)
+│   ├── validators/  Shared Zod validation schemas (@brokeros/validators)
+│   └── constants/   Shared constants, enums, UI palettes, and voice normalizers (@brokeros/constants)
 ├── integrations/
-│   ├── voice/       @brokeros/int-voice — 8 AI voice agents + 4 PSTN carriers
-│   ├── mail/        Email provider adapters (SendGrid, Brevo, Mailchimp, AWS SES)
-│   ├── sms/         SMS gateway adapters (Twilio, Gupshup, Sinch, AWS SNS)
-│   ├── whatsapp/    @brokeros/int-whatsapp — Meta WhatsApp Cloud API adapter
-│   └── ads/         Lead webhook adapters (@brokeros/int-ads-google, @brokeros/int-ads-meta)
-└── docs/          Project documentation
+│   ├── voice/       @brokeros/int-voice — 8 AI voice agents + 4 PSTN telephony carriers
+│   ├── mail/        Email provider adapters (8 providers: SendGrid, SES, Brevo, Mailgun, Mailchimp, Gmail, Outlook, Constant Contact)
+│   ├── sms/         SMS gateway adapters (9 gateways: Twilio, Gupshup, Sinch, Plivo, Telnyx, Vonage, Bird, Infobip, AWS SNS)
+│   ├── whatsapp/    @brokeros/int-whatsapp — Meta WhatsApp Cloud API client & interactive builders
+│   └── ads/         Lead ingestion & sync adapters (@brokeros/int-ads-google, @brokeros/int-ads-meta)
+└── scripts/         Root deployment, database seeding, and synchronization utility scripts
 ```
 
 This is a **pnpm monorepo** managed by Turborepo. You can run commands globally via `pnpm --filter <package_name> <command>`, or work within specific subtrees.
@@ -302,7 +317,7 @@ Open an issue with:
 3. **Alternatives considered:** Other approaches you thought about
 4. **Which role(s) benefit:** Which of the 12 roles would use this?
 5. **Which business line:** Brokerage, Channel Partner, or both?
-6. **Which channel (if marketing):** Email, SMS, or AI Voice?
+6. **Which channel (if marketing):** Email, SMS, AI Voice, WhatsApp, or Ads?
 
 ---
 

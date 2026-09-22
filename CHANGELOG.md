@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Ads Management & Attribution (`apps/api/src/marketing/ads/`, `apps/web/features/marketing/ads/`)**:
+  - Meta Lead Ads integration with real-time HMAC SHA-256 webhook verification (`x-hub-signature-256`) and automated prospect form data retrieval via `@brokeros/int-ads-meta`.
+  - Google Ads Lead Form Asset webhooks and GAQL (Google Ads Query Language) on-demand/scheduled sync for Search and Performance Max campaigns via `@brokeros/int-ads-google`.
+  - Master Ads Overview Dashboard in Next.js web frontend featuring channel status cards, cross-channel Comparison Studio, ad creative galleries, search keyword quality scores, YouTube audience retention curves, and direct bulk lead assignment to pre-sales reps.
+- **Omnichannel Marketing Suite Enhancements (`apps/web/features/marketing/`, `apps/api/src/marketing/`)**:
+  - Multi-provider email management across 8 providers (AWS SES, SendGrid, Brevo, Mailgun, Mailchimp, Constant Contact, Gmail, Outlook) with 2-way shared team inboxes, pre-flight verification modals, and automated drip flows.
+  - Multi-gateway SMS management across 9 gateways (Twilio, Infobip, Sinch, Plivo, Telnyx, Vonage, Bird, Gupshup, AWS SNS) with live smartphone mockups, GSM counters, short-link click tracking, and 2-way chat inboxes.
+  - AI Voice Assistant Composer Studio supporting 8 AI voice platforms, 4 PSTN carrier bridges, dual-mode test calling (in-browser WebRTC and live phone), WebSocket bidirectional media stream gateway, and in-browser audio recording playback with AI transcripts.
+  
 ## [1.1.0] - 2026-09-09
 
 ### Added
