@@ -423,7 +423,8 @@ export class VoiceCampaignService {
 
     // Notify workers async
     if (initialStatus === 'PROCESSING') {
-      fetch('http://localhost:3334/dispatch-voice', {
+      const workerUrl = process.env.WORKER_URL || 'http://127.0.0.1:3334';
+      fetch(`${workerUrl}/dispatch-voice`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ campaignId: campaign.id }),
@@ -474,7 +475,8 @@ export class VoiceCampaignService {
       },
     });
 
-    fetch('http://localhost:3334/dispatch-voice', {
+    const workerUrl = process.env.WORKER_URL || 'http://127.0.0.1:3334';
+    fetch(`${workerUrl}/dispatch-voice`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ campaignId: campaign.id }),
