@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Modal, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { Feather } from '@expo/vector-icons';
 import { authClient } from '../../../lib/auth-client';
 
@@ -33,12 +34,13 @@ export default function NewProjectModal({ isVisible, onClose, onSuccess, isCpPro
       });
 
       if (error) throw new Error(error.message || "Failed to create project");
-      
+
+      Toast.show({ type: 'success', text1: 'Success', text2: 'Project created successfully' });
       onSuccess();
       onClose();
       setForm({ name: '', builderName: '', type: 'RESIDENTIAL', city: '', address: '' }); // reset
     } catch (err: any) {
-      alert(err.message || "Failed to create project");
+      Toast.show({ type: 'error', text1: 'Error', text2: err.message || "Failed to create project" });
     } finally {
       setIsSaving(false);
     }
@@ -46,7 +48,7 @@ export default function NewProjectModal({ isVisible, onClose, onSuccess, isCpPro
 
   return (
     <Modal visible={isVisible} animationType="slide" transparent>
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1 bg-slate-900/50 justify-end"
       >
@@ -135,14 +137,14 @@ export default function NewProjectModal({ isVisible, onClose, onSuccess, isCpPro
           </ScrollView>
 
           <View className="p-6 border-t border-slate-100 bg-slate-50 flex-row gap-3 pb-8">
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={onClose}
               className="flex-1 py-3.5 bg-white border border-slate-200 rounded-xl items-center"
             >
               <Text className="text-slate-700 font-semibold">Cancel</Text>
             </TouchableOpacity>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               onPress={handleSubmit}
               disabled={isSaving || !form.name.trim() || !form.builderName.trim()}
               className={`flex-1 py-3.5 rounded-xl flex-row items-center justify-center gap-2 ${isSaving || !form.name.trim() || !form.builderName.trim() ? 'bg-indigo-400' : 'bg-indigo-600'}`}

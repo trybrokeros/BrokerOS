@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, ActivityIndicator, TouchableOpacity, ScrollView, Linking } from 'react-native';
+import Toast from 'react-native-toast-message';
 import { Feather } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
 import { authClient } from '../../../lib/auth-client';
@@ -37,11 +38,11 @@ export function ProjectDocuments({ projectId, towers }: { projectId: string; tow
       if (supported) {
         await Linking.openURL(url);
       } else {
-        alert("WhatsApp is not installed on your device.");
+        Toast.show({ type: 'info', text1: 'WhatsApp Not Available', text2: 'WhatsApp is not installed on your device.' });
       }
     } catch (error) {
       console.error(error);
-      alert("Error opening WhatsApp.");
+      Toast.show({ type: 'error', text1: 'Error', text2: 'Error opening WhatsApp.' });
     }
   };
 
