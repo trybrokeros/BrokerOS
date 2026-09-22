@@ -5,6 +5,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { toast } from "sonner";
 import {
   Key,
   CheckCircle2,
@@ -69,10 +70,11 @@ export function SmsProviderConfigCard({
         dltHeader: numberFormData.dltHeader.trim() || undefined,
         dailyQuota: Number(numberFormData.dailyQuota) || 5000,
       });
+      toast.success("Sender phone number added successfully");
       setAddingNumberIntegrationId(null);
       setNumberFormData({ phoneNumber: "", dltHeader: "", dailyQuota: 5000 });
     } catch (err: any) {
-      alert(err?.message || "Failed to add sender phone number");
+      toast.error(err?.message || "Failed to add sender phone number");
     } finally {
       setIsSubmittingNumber(false);
     }

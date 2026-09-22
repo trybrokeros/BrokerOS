@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { Users, FileSpreadsheet } from 'lucide-react';
 import type { AudienceSourceType, CsvLeadRow, AudienceEstimation } from '../types';
 import { AudienceCrmFilters } from './audience/AudienceCrmFilters';
@@ -137,7 +138,7 @@ export function AudienceSelector({
   // Handle CSV File Parse
   const handleFileUpload = (file: File) => {
     if (!file.name.endsWith('.csv')) {
-      alert('Please upload a valid .csv file');
+      toast.error('Please upload a valid .csv file');
       return;
     }
 

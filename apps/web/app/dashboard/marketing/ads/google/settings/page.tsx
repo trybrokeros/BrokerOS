@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { toast } from "sonner";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -63,10 +64,14 @@ export default function GoogleAdsSettingsPage() {
         method: "DELETE",
       });
       if (res.ok) {
+        toast.success("Google Ads account disconnected successfully");
         fetchIntegrations();
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData?.message || "Failed to delete integration");
       }
     } catch (err: any) {
-      alert(err?.message || "Failed to delete integration");
+      toast.error(err?.message || "Failed to delete integration");
     }
   };
 

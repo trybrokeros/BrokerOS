@@ -104,9 +104,10 @@ export const VoiceAgentPlatformsTab: React.FC<VoiceAgentPlatformsTabProps> = ({
         isDefault: agentIntegrations.length === 0,
       });
 
+      toast.success('AI voice platform verified and connected successfully');
       setSelectedAgentPlatform(null);
     } catch (err: any) {
-      alert(err?.message || 'Failed to verify and authenticate AI voice platform');
+      toast.error(err?.message || 'Failed to verify and authenticate AI voice platform');
     } finally {
       setSubmitting(false);
     }

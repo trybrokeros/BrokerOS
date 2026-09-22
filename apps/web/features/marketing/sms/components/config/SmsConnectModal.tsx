@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { X } from "lucide-react";
 import { SMS_PROVIDERS } from "@brokeros/constants";
 import type { SmsProviderType } from "@/features/marketing/types";
@@ -82,9 +83,10 @@ export function SmsConnectModal({
         dltEntityId: formData.dltEntityId || undefined,
         isDefault: formData.isDefault,
       });
+      toast.success("SMS provider connected successfully");
       onClose();
     } catch (err: unknown) {
-      alert((err as Error)?.message || "Failed to verify and connect SMS provider");
+      toast.error((err as Error)?.message || "Failed to verify and connect SMS provider");
     } finally {
       setIsSubmitting(false);
     }
