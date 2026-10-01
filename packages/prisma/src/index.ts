@@ -5,9 +5,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 // Load root .env if available, regardless of where this script is executed from
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const rootEnv = path.resolve(__dirname, '../../../.env');
+const rootEnv = path.resolve(process.cwd(), '.env');
 try { process.loadEnvFile(rootEnv); } catch {}
 
 const adapter = new PrismaPg({
