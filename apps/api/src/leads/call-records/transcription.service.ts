@@ -62,17 +62,17 @@ export class TranscriptionService implements OnModuleInit {
     availableProjects: AvailableProjectDto[] = [],
   ): Promise<
     | {
-      summary: string;
-      nextStepSuggestion: string;
-      extractedBudget?: number | null;
-      extractedProjectId?: string | null;
-      extractedLocation?: string | null;
-      extractedRequirements?: string | null;
-      scheduleFollowUp?: boolean;
-      followUpIsoDate?: string | null;
-      followUpTitle?: string | null;
-      followUpRemarks?: string | null;
-    }
+        summary: string;
+        nextStepSuggestion: string;
+        extractedBudget?: number | null;
+        extractedProjectId?: string | null;
+        extractedLocation?: string | null;
+        extractedRequirements?: string | null;
+        scheduleFollowUp?: boolean;
+        followUpIsoDate?: string | null;
+        followUpTitle?: string | null;
+        followUpRemarks?: string | null;
+      }
     | string
   > {
     try {
