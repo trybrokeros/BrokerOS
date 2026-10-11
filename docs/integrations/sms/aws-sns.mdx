@@ -1,0 +1,90 @@
+---
+title: "Connect AWS SNS (Cloud SMS Infrastructure)"
+sidebarTitle: "AWS SNS"
+description: "Configure Amazon Simple Notification Service (SNS) for high-scale, cost-effective transactional and promotional SMS broadcasting."
+---
+
+**Amazon Simple Notification Service (SNS)** is Amazon Web Services' high-throughput push messaging service. For large enterprise real estate brokerages sending hundreds of thousands of SMS notifications monthly, AWS SNS delivers institutional reliability, AWS IAM security, and competitive wholesale pricing.
+
+The BrokerOS integration (`@brokeros/int-sms-aws-sns`) connects to the AWS SNS API using AWS Signature Version 4 (SigV4) authentication.
+
+---
+
+## AWS SNS Calling Pipeline
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Worker as BullMQ SMS Processor
+    participant Adapter as AwsSnsSmsClient (@brokeros/int-sms-aws-sns)
+    participant SNS as Amazon SNS Service (sns.ap-south-1.amazonaws.com)
+    actor Lead as Buyer Handset
+    participant CloudWatch as AWS CloudWatch / SNS Feedback Topic
+    participant WebhookAPI as SMS Webhooks Controller
+
+    Worker->>Adapter: sendSms(options, credentials)
+    Adapter->>SNS: POST / (Action=Publish, PhoneNumber, Message, SigV4 Signed)
+    SNS->>Lead: MNO Carrier Delivers SMS to Handset
+    SNS-->>Adapter: 200 OK with PublishResult (MessageId: 98a3b...)
+    
+    SNS->>CloudWatch: Emit Delivery Status Metric (dwellTimeMs, status: SUCCESS)
+    CloudWatch->>WebhookAPI: POST Delivery Feedback to /api/marketing/sms/webhooks/aws-sns
+    WebhookAPI->>Worker: Mark Recipient DELIVERED
+```
+
+---
+
+## Required Credentials
+
+To connect AWS SNS to BrokerOS, create an IAM User with Amazon SNS publish permissions and retrieve:
+
+| Credential Field | Parameter in BrokerOS | Requirements & Format |
+| :--- | :--- | :--- |
+| **AWS Access Key ID** | `AWS Access Key ID` | 20-character uppercase alphanumeric string (e.g., `AKIAIOSFODNN7EXAMPLE`). |
+| **AWS Secret Access Key** | `AWS Secret Key` | 40-character secret key string. |
+| **AWS Region** | `AWS Region` | Target AWS deployment region (e.g., `ap-south-1` for Mumbai, `us-east-1` for N. Virginia). |
+| **Sender ID** | `Sender ID` | (Optional) Custom alphanumeric sender header (up to 11 characters). |
+
+---
+
+## Configuration Steps
+
+<Steps>
+  <Step title="Create IAM Policy & User in AWS Console">
+    In the AWS IAM Console, create an IAM user with programmatic access and attach the following minimal policy:
+    ```json
+    {
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Effect": "Allow",
+          "Action": [
+            "sns:Publish",
+            "sns:GetSMSAttributes",
+            "sns:SetSMSAttributes"
+          ],
+          "Resource": "*"
+        }
+      ]
+    }
+    ```
+  </Step>
+
+  <Step title="Add AWS SNS in BrokerOS Settings">
+    In the BrokerOS web application:
+    1. Navigate to **Dashboard -> Marketing -> SMS -> Settings -> Gateways & Phone Pools** tab (`/dashboard/marketing/sms/settings?tab=providers`).
+    2. Click **Connect Gateway** (or select **AWS SNS** from the available gateways list).
+    3. In the **Connect AWS SNS** modal, configure the parameters:
+       - **Account Nickname**: A descriptive label (e.g., `AWS SNS India Production`).
+       - **Default From Sender / Header**: Your approved sender ID or verified carrier phone number.
+       - **AWS Access Key ID**: Your 20-character AWS IAM access key ID (`AKIAIOSFODNN7EXAMPLE`).
+       - **AWS Secret Access Key**: Your 40-character AWS IAM secret key.
+       - **AWS Region**: Deployment region identifier (e.g., `ap-south-1` for Mumbai, `us-east-1` for N. Virginia).
+       - **Set as default gateway for SMS broadcasts**: Toggle on if AWS SNS is your primary SMS route.
+    4. Click **Verify & Save Credentials**. BrokerOS tests credentials, encrypts secrets with AES-256-GCM, and persists the configuration to PostgreSQL (`SmsIntegration`).
+  </Step>
+
+  <Step title="Configure Delivery Status Logging (Optional)">
+    In the AWS SNS Console under **Text messaging (SMS) -> Delivery status logging**, configure IAM role permissions for CloudWatch Logs or an SNS topic routed to `https://api.yourdomain.com/api/marketing/sms/webhooks/aws-sns`.
+  </Step>
+</Steps>
