@@ -568,12 +568,15 @@ model User {
 
   isOnCall Boolean @default(false)
 
+  twoFactorEnabled Boolean? @default(false)
+
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
-  sessions Session[]
-  accounts Account[]
+  sessions   Session[]
+  accounts   Account[]
+  twoFactors TwoFactor[]
 
   loginHistory             LoginHistory[]
   assignedLeads            Lead[]                  @relation("AssignedUser")
@@ -690,6 +693,21 @@ model Verification {
   updatedAt  DateTime? @updatedAt
 
   @@map("verification")
+}
+
+model TwoFactor {
+  id                      String    @id @default(uuid())
+  secret                  String
+  backupCodes             String
+  userId                  String
+  user                    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  verified                Boolean   @default(true)
+  failedVerificationCount Int       @default(0)
+  lockedUntil             DateTime?
+
+  @@index([secret])
+  @@index([userId])
+  @@map("twoFactor")
 }
 
 model Role {

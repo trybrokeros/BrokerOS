@@ -1,7 +1,6 @@
 import { PrismaClient } from "../generated/client/index.js";
 import { PrismaPg } from "@prisma/adapter-pg";
 import path from 'path';
-import { fileURLToPath } from 'url';
 import fs from 'fs';
 import dotenv from 'dotenv';
 
@@ -9,13 +8,11 @@ import dotenv from 'dotenv';
 // Guarantees DATABASE_URL is populated regardless of whether execution cwd is
 // repo root, apps/api, apps/workers, apps/web, or packages/prisma.
 if (!process.env.DATABASE_URL) {
-  const currentDir = path.dirname(fileURLToPath(import.meta.url));
   const candidateEnvPaths = [
-    path.resolve(currentDir, '../../../.env'), // from packages/prisma/src/ -> repo root
-    path.resolve(currentDir, '../../.env'),    // from packages/prisma/ -> repo root
     path.resolve(process.cwd(), '.env'),
-    path.resolve(process.cwd(), '../../.env'),
     path.resolve(process.cwd(), '../.env'),
+    path.resolve(process.cwd(), '../../.env'),
+    path.resolve(process.cwd(), '../../../.env'),
   ];
 
   for (const envPath of candidateEnvPaths) {
@@ -70,7 +67,12 @@ pool.on('error', (err: any) => {
 
 const adapter = new PrismaPg(pool);
 
-export const prismaClient = new PrismaClient({ adapter });
+const isProduction = process.env.NODE_ENV === 'production';
+
+export const prismaClient = new PrismaClient({
+  adapter,
+  log: isProduction ? ['error'] : ['error', 'warn'],
+});
 
 // Re-export PrismaClient class and ALL generated types/enums so that
 // apps/api, apps/workers, integrations/ can all import from '@brokeros/prisma'
