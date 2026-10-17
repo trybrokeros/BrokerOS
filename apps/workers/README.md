@@ -1,8 +1,8 @@
 <div align="center">
 
-# Background Workers — BrokerOS
+# Background Workers - BrokerOS
 
-**Asynchronous campaign dispatchers, voice AI bridges, and queue processors**
+**Asynchronous campaign dispatchers, voice AI bridges, and scheduled queue processors**
 
 [![NestJS](https://img.shields.io/badge/NestJS-11-E0234E?logo=nestjs&logoColor=white)](https://nestjs.com/)
 [![BullMQ](https://img.shields.io/badge/Queue-BullMQ-orange)](https://bullmq.io/)
@@ -17,7 +17,7 @@
 
 `apps/workers` is the dedicated background processing service for BrokerOS. It handles all compute-intensive, high-latency, and batch I/O operations outside of the user-facing NestJS API cycle.
 
-When a marketing user schedules or launches a broadcast (Email, SMS, AI Voice, or WhatsApp) from the web dashboard, `apps/api` delegates the dispatch execution to this worker service.
+When a marketing user schedules or launches a broadcast (Email, SMS, AI Voice, or WhatsApp) from the web dashboard, `apps/api` delegates the dispatch execution to this worker service. Additionally, background crons scan for scheduled outbound messages and dispatch them atomically using `@brokeros/messaging`.
 
 ---
 
@@ -35,6 +35,7 @@ apps/workers/
 │       ├── marketing-sms.processor.ts      # SMS campaigns (Twilio, Gupshup, Sinch, AWS SNS)
 │       ├── marketing-voice.processor.ts    # AI Voice calls + PSTN carrier bridge
 │       ├── marketing-whatsapp.processor.ts # Meta WhatsApp Cloud API dispatcher
+│       ├── scheduled-messages.processor.ts # Scheduled message scanner via @brokeros/messaging
 │       │
 │       └── whatsapp/
 │           ├── whatsapp-automation.runner.ts  # Event-triggered automation drips
@@ -74,13 +75,21 @@ apps/workers/
   - `whatsapp-automation.runner.ts`: Drip sequence triggers (e.g. follow-up after site visit).
   - `whatsapp-template.syncer.ts`: Synchronizes approved message templates from Meta Business Manager into the CRM.
 
+### 5. Scheduled Messages Processor (`scheduled-messages.processor.ts`)
+
+- Powered by `@brokeros/messaging`.
+- Scans database for scheduled outgoing messages across SMS, Email, and WhatsApp channels.
+- Employs atomic state transitions (`SCHEDULED` -> `PROCESSING`) to eliminate double-send race conditions.
+- Resolves integration credentials dynamically with fallback to environment variables.
+- Updates in-place delivery lifecycle statuses (`DELIVERED`, `SENT`, `FAILED`).
+
 ---
 
 ## Environment & Configuration
 
 Workers use a **two-file loading strategy** (see [`src/main.ts`](src/main.ts)):
-1. **Root `/.env`** — loaded first. Contains all heavy infrastructure and provider credentials.
-2. **`apps/workers/.env`** — loaded second. Workers-only overrides.
+1. **Root `/.env`** - loaded first. Contains all heavy infrastructure and provider credentials.
+2. **`apps/workers/.env`** - loaded second. Workers-only overrides.
 
 ---
 
@@ -98,45 +107,6 @@ pnpm --filter @brokeros/workers build
 # Run production build
 pnpm --filter @brokeros/workers start:prod
 
-# Run worker E2E tests (Vitest)
+# Run worker E2E test suite (Vitest)
 pnpm test:workers:e2e
-# Or using workspace filter directly:
-pnpm --filter @brokeros/workers test
 ```
-
----
-
-## Docker
-
-The worker service uses a multi-stage Dockerfile powered by Turborepo:
-1. **Stage 1 (Prune):** Runs `turbo prune @brokeros/workers --docker` to isolate only the worker code and its workspace dependencies (`packages/`, `integrations/`).
-2. **Stage 2 (Installer):** Installs dependencies with layer caching, generates the Prisma client, and compiles the NestJS microservice.
-3. **Stage 3 (Runner):** Lightweight Node 22 Alpine production image exposing port 3334.
-
-**Crucial Note:** Because it relies on Turborepo, the Dockerfile **must be built from the monorepo root context**, not from inside `apps/workers/`.
-
-```bash
-# Run via docker compose from the repo root (recommended):
-docker compose up --build workers
-```
-
----
-
-## HTTP Endpoints
-
-The worker exposes HTTP triggers used by `apps/api` for job delegation:
-
-| Method | Endpoint          | Description                          | Payload                      |
-| ------ | ----------------- | ------------------------------------ | ---------------------------- |
-| `GET`  | `/health`         | Service health probe                 | None                         |
-| `POST` | `/dispatch`       | Trigger email campaign processing    | `{ "campaignId": "string" }` |
-| `POST` | `/dispatch-sms`   | Trigger SMS campaign processing      | `{ "campaignId": "string" }` |
-| `POST` | `/dispatch-voice` | Trigger AI Voice campaign processing | `{ "campaignId": "string" }` |
-
----
-
-<div align="center">
-
-**[← Back to main README](../../README.md)**
-
-</div>

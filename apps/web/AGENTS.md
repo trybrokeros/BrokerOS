@@ -1,4 +1,4 @@
-# AGENTS.md — apps/web/
+# AGENTS.md - apps/web/
 
 ---
 
@@ -14,10 +14,16 @@ apps/web/
     layout.tsx         ← Root layout (HTML shell, fonts)
     globals.css        ← Global CSS + Tailwind v4 imports
     page.tsx           ← Root redirect (sends to /dashboard or /login)
-    login/             ← Public page — no auth guard
+    login/             ← Public page with MFA TOTP verification challenge
     dashboard/
       layout.tsx       ← THE MAIN SHELL: role-based sidebar, NotificationBell, ChatWidget
                          Reads role from session, renders role-specific nav items
+      page.tsx         ← Dashboard landing page with role-based routing
+      inbox/           ← UNIFIED DEPARTMENTAL INBOX (accessible to all 12 roles)
+        page.tsx       ← Root inbox redirect
+        whatsapp/      ← WhatsApp departmental conversation view
+        sms/           ← SMS departmental conversation view
+        email/         ← Email departmental conversation view
       [role-slug]/     ← One sub-dir per role (e.g., sales-executive/, pre-sales/, etc.)
       marketing/
         email/
@@ -40,82 +46,19 @@ apps/web/
         ads/                ← Ad platform integrations and lead form mapping
 
   features/
-    leads/             ← Lead list, detail, follow-ups, call history UI
-    inventory/         ← Project/unit browser UI
-    brokers/           ← Broker management UI
-    approvals/         ← Approval request UI
+    leads/             ← Lead list, detail, follow-ups, call history UI (canonical barrel export)
+    inventory/         ← Project/unit browser UI (canonical barrel export)
+    brokers/           ← Broker management UI (canonical barrel export)
+    approvals/         ← Approval request UI (canonical barrel export)
+    security/          ← AdminSecuritySettings.tsx (MFA / 2FA TOTP configuration & recovery codes)
     marketing/
       shared/          ← Shared CSV/lead audience picker, stepper, preview modals
       components/      ← Shared marketing components (funnel charts, tables, cards)
-      email/           ← Email components and 4-step wizard
-      sms/             ← SMS components and 4-step wizard
+      email/           ← Email components, 4-step wizard, departmental & team inboxes
+      sms/             ← SMS components, 4-step wizard, phone mockup, departmental & team inboxes
       voice/           ← Voice components (composer studio) and 5-step wizard
-      whatsapp/        ← WhatsApp components, template cards, and broadcast wizard
+      whatsapp/        ← WhatsApp components, template cards, broadcast wizard, team inbox
       ads/             ← Ad account connectors and lead form sync UI
-      components/
-        MarketingChannelGrid.tsx  ← Channel picker grid (Email / SMS / Voice)
-        CampaignListTable.tsx     ← Unified broadcast table (all channels)
-        UnifiedBroadcastsTable.tsx
-        ProviderConfigCard.tsx    ← Generic provider connection card
-        MergeTagSelector.tsx      ← Merge tag chip inserter (shared)
-        CampaignFunnelAnalytics.tsx
-        RecipientActivityTable.tsx
-        AudienceSelector.tsx
-        EmailTemplatePicker.tsx
-        SmsCampaignListTable.tsx, SmsFunnelAnalytics.tsx
-        SmsMessageEditor.tsx, SmsPhoneMockup.tsx
-        SmsProviderConfigCard.tsx, SmsRecipientActivityTable.tsx
-      email/
-        components/
-          EmailCampaignListTable.tsx
-          EmailFunnelAnalytics.tsx
-          EmailMergeTagSelector.tsx
-          EmailProviderConfigCard.tsx
-          EmailRecipientTable.tsx
-          EmailTemplatePicker.tsx
-        wizard/
-          EmailStep1ProjectSender.tsx   ← Select project + sender identity + provider
-          EmailStep2Audience.tsx        ← CSV upload or lead segment picker
-          EmailStep3TemplateEditor.tsx  ← Rich HTML email template editor
-          EmailStep4ReviewLaunch.tsx    ← Preview, schedule, launch
-      sms/
-        components/
-          SmsCampaignListTable.tsx
-          SmsFunnelAnalytics.tsx
-          SmsMessageEditor.tsx
-          SmsPhoneMockup.tsx
-          SmsProviderConfigCard.tsx
-          SmsRecipientTable.tsx
-        wizard/
-          SmsStep1ProjectGateway.tsx    ← Select project + SMS gateway
-          SmsStep2Audience.tsx          ← CSV / lead audience picker
-          SmsStep3MessageMockup.tsx     ← Message composer + phone mockup preview
-          SmsStep4ReviewLaunch.tsx      ← Review, schedule, launch
-      voice/
-        components/
-          InBrowserAudioPlayer.tsx      ← Web Speech API + backend TTS preview player
-          VoiceCallLogsTable.tsx        ← Per-call outcome logs
-          VoiceCampaignFunnel.tsx       ← Dialed/answered/converted funnel chart
-          VoiceCampaignListTable.tsx    ← Campaign list with status badges
-          VoiceModelSelector.tsx        ← LLM model picker cards
-          VoicePickerModal.tsx          ← Voice persona browser modal (TTS catalog)
-          VoiceProviderConfigCard.tsx   ← AI platform connection card
-          composer/                     ← Studio subcomponents (see below)
-            AgentPlatformSelector.tsx   ← Active AI voice platform grid picker + workspace agents
-            StudioVapiSettings.tsx      ← Vapi STT, silence, speed, ambience, voicemail
-            StudioRetellSettings.tsx    ← Retell emotion, ambient, backchannel, reminder
-            StudioSarvamSettings.tsx    ← Sarvam Indic language, pace, duration
-            LivePromptVariablePreview.tsx ← Real-time interpolation preview badge
-            VoiceScriptEditor.tsx       ← Script templates, first message, prompt, tag chips
-            index.ts                    ← Barrel export
-        wizard/
-          VoiceStep1ProjectSchedule.tsx  ← Select project + campaign schedule
-          VoiceStep2Audience.tsx         ← CSV / lead audience picker
-          VoiceStep3TelephonyCarrier.tsx ← PSTN carrier selection (Vobiz/Exotel/Twilio/Telnyx)
-          VoiceStep4AgentComposer.tsx    ← AI agent composer COORDINATOR (~250 lines, delegates to composer/)
-          VoiceStep5ReviewLaunch.tsx     ← Final review, test call, launch
-    types.ts           ← All shared marketing TypeScript types (VoiceAgentIntegrationRecord, CsvLeadRow, etc.)
-    index.ts           ← Feature barrel export
 
   components/
     analytics/         ← Recharts-based chart components
@@ -128,23 +71,42 @@ apps/web/
     ui/                ← Primitive UI elements (Button, Badge, etc.)
 
   lib/
-    auth-client.ts     ← Better Auth client (createAuthClient)
+    auth-client.ts     ← Better Auth client with twoFactorClient() plugin
+    api-client.ts      ← Type-safe ApiClient with error normalization and auth headers
+    inbox.ts           ← Unified inbox state and communication utilities
+    inbox-scope.ts     ← Departmental inbox scope resolver for 12 CRM roles
     utils.ts           ← Shared utility functions
 
-  middleware.ts        ← Route protection (cookie check only)
-  next.config.ts       ← Proxy rewrites: /api/proxy/* → BACKEND_URL/*, /api/marketing/* → BACKEND_URL/api/marketing/*
+  proxy.ts             ← Next.js 16 route protection and role-slug verification
+  next.config.ts       ← Proxy rewrites, image remote patterns, package transpilation
 ```
 
 ---
 
-## Marketing Feature Conventions
+## Route Protection via Next.js 16 Proxy
 
-- Each channel (email, sms, voice, whatsapp) follows the same structure: `components/` + `wizard/` (N-step wizard).
-- Wizard steps are thin page-level components. Business logic lives in subcomponents in `components/`.
-- `VoiceStep4AgentComposer.tsx` is a coordinator only — it must stay < 300 lines. All studio UI is in `components/composer/`.
-- Shared audience picking and campaign stepping live in `features/marketing/shared/`.
-- All shared TypeScript types for marketing live in `features/marketing/types.ts` — do not scatter them across wizard files.
-- Merge tags, script templates, and provider catalogs are imported from `@brokeros/constants`. Never hardcode them in UI.
+In accordance with Next.js 16 conventions, route protection and workspace authorization are handled in `apps/web/proxy.ts`:
+
+- Checks Better Auth session cookies (`better-auth.session_token`).
+- Validates the user's role against the URL role slug (e.g. `/dashboard/sales-executive`, `/dashboard/admin`, `/dashboard/finance`).
+- Redirects unauthorized users directly to their designated home dashboard or `/login`.
+- Protects the unified `/dashboard/inbox` routes while allowing all authenticated CRM roles access to their department-filtered queues.
+
+---
+
+## Marketing & Inbox Conventions
+
+- **Unified Departmental Inbox**:
+  - Located at `app/dashboard/inbox/` (with tabs/sub-routes for `email/`, `sms/`, `whatsapp/`).
+  - Scoped dynamically by user department via `lib/inbox-scope.ts`.
+  - Pre-sales, Sales, Post-sales, Sourcing, Closing, and Management roles access their prospective leads without switching accounts.
+- **Marketing Feature Architecture**:
+  - Each channel (email, sms, voice, whatsapp) follows the structure: `components/` + `wizard/` (N-step wizard).
+  - Wizard steps are thin page-level components; business logic lives in subcomponents in `components/`.
+  - `VoiceStep4AgentComposer.tsx` is a coordinator only (< 300 lines). Studio UI is in `components/composer/`.
+  - Shared audience picking lives in `features/marketing/shared/`.
+  - Shared types live in `features/marketing/types.ts`.
+  - Merge tags and catalogs are imported from `@brokeros/constants`.
 
 ---
 
@@ -171,7 +133,7 @@ You **MUST** consult the appropriate skill before making changes, based on the t
 
 ---
 
-## Scripts
+## Scripts & Testing
 
 > **CRITICAL SCRIPTING RULE:** If you are creating a new utility, migration, or maintenance script, DO NOT put it inside `apps/web/`. Create it in the monorepo root at `scripts/` and execute it from the root using `pnpm run script scripts/your-script.ts`.
 
