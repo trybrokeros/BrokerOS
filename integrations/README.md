@@ -1,6 +1,6 @@
 # BrokerOS Integrations
 
-External service adapters for the BrokerOS platform. Each sub-directory is an isolated adapter for one external service channel. The `apps/api` backend consumes these adapters — it never calls third-party SDKs directly.
+External service adapters for the BrokerOS platform. Each sub-directory is an isolated adapter for one external service channel. The `apps/api` backend consumes these adapters - it never calls third-party SDKs directly.
 
 ---
 
@@ -21,7 +21,7 @@ integrations/
 │   ├── bridge/
 │   │   └── carrier-bridge-dispatcher.ts  Central PSTN carrier router
 │   ├── telephony/      PSTN carrier adapters (Vobiz, Exotel, Twilio, Telnyx)
-│   ├── index.ts        Barrel export — exports all adapters + tryCarrierBridgeDispatch
+│   ├── index.ts        Barrel export - exports all adapters + tryCarrierBridgeDispatch
 │   └── package.json    Package name: @brokeros/int-voice
 │
 ├── mail/               Email provider adapters (8 providers)
@@ -36,7 +36,7 @@ integrations/
 │
 ├── sms/                SMS gateway adapters (9 providers)
 │   ├── twilio/         Twilio SMS (@brokeros/int-sms-twilio)
-│   ├── gupshup/        Gupshup SMS — India-focused (@brokeros/int-sms-gupshup)
+│   ├── gupshup/        Gupshup SMS - India-focused (@brokeros/int-sms-gupshup)
 │   ├── sinch/          Sinch SMS (@brokeros/int-sms-sinch)
 │   ├── aws-sns/        AWS SNS SMS (@brokeros/int-sms-aws-sns)
 │   ├── bird/           Bird (MessageBird) SMS (@brokeros/int-sms-bird)
@@ -70,14 +70,14 @@ The voice integration package manages two separate layers:
 
 Each AI platform adapter handles:
 
-- **Agent/assistant listing** — fetch all configured agents from the platform workspace
-- **Call dispatch** — initiate an outbound AI call to a phone number
-- **Catalog fetch** — list available LLM models and TTS voices
-- **Webhook processing** — handle inbound call status events
+- **Agent/assistant listing** - fetch all configured agents from the platform workspace
+- **Call dispatch** - initiate an outbound AI call to a phone number
+- **Catalog fetch** - list available LLM models and TTS voices
+- **Webhook processing** - handle inbound call status events
 
 ### PSTN Carrier Layer (`integrations/voice/bridge/`)
 
-The `carrier-bridge-dispatcher.ts` provides `tryCarrierBridgeDispatch(phone, config)` — a single function that:
+The `carrier-bridge-dispatcher.ts` provides `tryCarrierBridgeDispatch(phone, config)` - a single function that:
 
 1. Determines the configured telephony carrier (Vobiz / Exotel / Twilio / Telnyx)
 2. Dials the number via that carrier's PSTN API
@@ -91,8 +91,8 @@ The `apps/workers` `marketing-voice.processor.ts` calls `tryCarrierBridgeDispatc
 
 8 provider adapters covering major email platforms. Each exports:
 
-- `sendEmail(payload)` — send a single transactional or marketing email
-- `validateConfig(config)` — verify API key is valid
+- `sendEmail(payload)` - send a single transactional or marketing email
+- `validateConfig(config)` - verify API key is valid
 - Provider-specific webhook signature verification helpers
 
 | Package | Provider |
@@ -112,8 +112,8 @@ The `apps/workers` `marketing-voice.processor.ts` calls `tryCarrierBridgeDispatc
 
 9 provider adapters covering global and India-specific SMS gateways. Each exports:
 
-- `sendSms(payload)` — dispatch a single SMS message
-- `validateConfig(config)` — verify API key is valid
+- `sendSms(payload)` - dispatch a single SMS message
+- `validateConfig(config)` - verify API key is valid
 - Provider-specific DLR (delivery receipt) webhook parsers
 
 | Package | Provider |
@@ -134,7 +134,7 @@ The `apps/workers` `marketing-voice.processor.ts` calls `tryCarrierBridgeDispatc
 
 The WhatsApp package manages direct communication with Meta's WhatsApp Cloud API:
 
-- **`meta-api.ts`**: Core Cloud API client — send text, image, document, audio, and template messages.
+- **`meta-api.ts`**: Core Cloud API client - send text, image, document, audio, and template messages.
 - **`interactive.ts`**: Builders for interactive messages (button replies, list messages, quick replies).
 - **`webhook-sign.ts`**: Validates incoming Meta `X-Hub-Signature-256` HMAC signatures and parses delivery/read receipts.
 - **`ssrf-guard.ts`**: SSRF protection guard against media attachment URL exploits.
