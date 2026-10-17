@@ -1,4 +1,4 @@
-# AGENTS.md — apps/mobile/
+# AGENTS.md - apps/mobile/
 
 ---
 
@@ -18,38 +18,52 @@ apps/mobile/
       index.tsx        ← Redirects to role-specific home
       notifications.tsx
       chat/
-      admin/           ← 14 role dirs total
+      admin/           ← Flattened screen routes across all 14 role directories
       business-manager/
       channel-partner/
       closing-manager/
       director/
       finance/
       post-sales/
+      post-sales-manager/
       pre-sales/
       pre-sales-manager/
       sales/
       sales-executive/
       sales-manager/
       sourcing-manager/
-  components/          ← Shared RN components
-  constants/           ← App-wide constants (colors, sizes)
+  components/          ← Modularized React Native components
+    leads/             ← Dedicated directories (list/, profile/, timeline/, media/, site-visit/)
+    inventory/         ← Dedicated directories (towers/, documents/, UnitGrid)
+    brokers/           ← Dedicated directories (meetings/, profile/, tables/)
+    dashboard/         ← Role-tailored metric cards and charts
+    ui/                ← Buttons, inputs, headers, badges
+  constants/           ← App-wide colors, themes, navigation constants
   hooks/
-    useCallStatus.ts   ← Syncs auto-dialer call events to backend
+    useCallStatus.ts   ← Syncs auto-dialer call events and telemetry to backend
   lib/
     auth-client.ts     ← Better Auth expo client (createAuthClient + expoClient plugin)
     SocketContext.tsx  ← Socket context + useSocket() hook
     location-tracking.ts ← GPS tracking utilities for site visit verification
   modules/
-    auto-dialer/       ← Custom native Android module (local package)
+    auto-dialer/       ← Custom native Android telephony module (local package)
   plugins/             ← Custom Expo config plugins (withCmakeShortPath.js)
   assets/              ← Images, fonts, icons
-  google-services.json ← Firebase config — gitignored, required for push notifications
-  google-services.json.example ← Template for the above
+  google-services.json ← Firebase config - gitignored, required for push notifications
 ```
 
 ---
 
-## Styling — NativeWind
+## Flattened Route Conventions
+
+To maintain predictable navigation and fast deep linking via Expo Router 6:
+- All role workspaces in `(dashboard)/` use flattened screen routes (e.g. `(dashboard)/sales-executive/leads.tsx`, `(dashboard)/sourcing-manager/meetings.tsx`).
+- Subcomponents must NOT be placed directly inside `app/` as routes. Keep them in `components/<feature>/`.
+- Screens import canonical types from `@brokeros/types` and constants from `@brokeros/constants`.
+
+---
+
+## Styling - NativeWind
 
 - Use `className` prop with Tailwind v3 class names.
 - Do not mix NativeWind and `StyleSheet` in the same component unless absolutely necessary.
@@ -58,11 +72,14 @@ apps/mobile/
 
 ---
 
-## Android Only
+## Android Only & Native Telephony
 
-- This project has only Android configured (`android/` directory exists, no `ios/` directory).
-- `google-services.json` is present for Firebase (used indirectly by Expo Notifications on Android).
-- Build: `npx expo run:android`. OTA updates via EAS (`eas.json` present).
+- This project is configured strictly for **Android** (`android/` native directory).
+- **Auto-Dialer & Telephony**:
+  - Implemented as a native module in `modules/auto-dialer/`.
+  - Android background service (`CallUploadWorker.kt`) uploads audio recordings and metadata even if the UI thread is paused.
+  - Native permissions required: `READ_PHONE_STATE`, `CALL_PHONE`, `RECORD_AUDIO`, `POST_NOTIFICATIONS`.
+- Build: `npx expo run:android`. OTA updates via EAS (`eas.json`).
 
 ---
 
@@ -91,7 +108,7 @@ You **MUST** consult the appropriate skill before making changes, based on the t
 
 ---
 
-## Scripts
+## Scripts & Testing
 
 > **CRITICAL SCRIPTING RULE:** If you are creating a new utility, migration, or maintenance script, DO NOT put it inside `apps/mobile/`. Create it in the monorepo root at `scripts/` and execute it from the root using `pnpm run script scripts/your-script.ts`.
 
@@ -102,6 +119,6 @@ npx expo start           # Expo dev server (Metro bundler)
 npx expo run:android     # build + run on Android device/emulator
 npm run lint             # ESLint (expo lint)
 
-# Maestro Native E2E Tests (run from root):
+# Maestro Native E2E Tests (run from monorepo root):
 pnpm test:mobile:e2e     # Executes scripts/test-mobile-e2e.ts (checks Maestro + runs apps/mobile/e2e/)
 ```

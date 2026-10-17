@@ -1,4 +1,4 @@
-# AGENTS.md — apps/workers/
+# AGENTS.md - apps/workers/
 
 ---
 

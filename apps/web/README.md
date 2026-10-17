@@ -1,8 +1,8 @@
 <div align="center">
 
-# Frontend — BrokerOS
+# Frontend - BrokerOS
 
-**Next.js 16 web dashboard with role-based views and omnichannel marketing campaigns**
+**Next.js 16 web dashboard with role-based views, unified departmental inboxes, and omnichannel marketing**
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=next.js&logoColor=white)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)](https://react.dev/)
@@ -15,7 +15,9 @@
 
 ## Overview
 
-The frontend is a Next.js 16 App Router application that serves as the web dashboard for the CRM. It provides 12 role-specific views and a full omnichannel marketing platform (Email, SMS, AI Voice, WhatsApp campaigns, and Ads lead attribution) accessible to the Marketing role.
+The frontend is a Next.js 16 App Router application that serves as the enterprise web dashboard for BrokerOS. It provides 12 role-specific workspaces, a unified multi-channel departmental conversation inbox, enterprise security settings (MFA / 2FA TOTP), and a full marketing campaign management suite.
+
+---
 
 ## Directory Structure
 
@@ -25,87 +27,38 @@ apps/web/
 │   ├── layout.tsx              Root HTML shell, fonts, providers
 │   ├── globals.css             Global CSS + Tailwind v4 imports
 │   ├── page.tsx                Root redirect → /dashboard or /login
-│   ├── login/                  Public login page (no auth guard)
+│   ├── login/                  Public login page with TOTP 2FA challenge
 │   └── dashboard/
-│       ├── layout.tsx          THE MAIN SHELL — role-based sidebar, NotificationBell, ChatWidget
-│       ├── page.tsx            Dashboard home (redirects to role view)
+│       ├── layout.tsx          MAIN SHELL - role-based sidebar, NotificationBell, ChatWidget
+│       ├── page.tsx            Dashboard home (redirects to active role view)
+│       ├── inbox/              Unified Departmental Inbox (accessible to all 12 roles)
+│       │   ├── page.tsx        Redirects to primary channel
+│       │   ├── whatsapp/       WhatsApp conversation queue
+│       │   ├── sms/            SMS conversation queue
+│       │   └── email/          Email conversation queue
 │       ├── [12 role dirs]/     business-manager, channel-partner, closing-manager,
 │       │                       director, finance, post-sales, pre-sales,
 │       │                       pre-sales-manager, sales, sales-executive,
 │       │                       sales-manager, sourcing-manager
 │       └── marketing/
-│           ├── email/
-│           │   ├── campaigns/new/     4-step email campaign wizard
-│           │   ├── campaigns/[id]/    Campaign detail + analytics
-│           │   └── settings/          Email provider integrations
-│           ├── sms/
-│           │   ├── campaigns/new/     4-step SMS campaign wizard
-│           │   ├── campaigns/[id]/    Campaign detail + analytics
-│           │   └── settings/          SMS gateway integrations
-│           ├── voice/
-│           │   ├── campaigns/new/     5-step AI voice campaign wizard
-│           │   ├── campaigns/[id]/    Campaign detail + analytics
-│           │   └── settings/          AI voice platform integrations
-│           ├── whatsapp/
-│           │   ├── inbox/             Multi-agent shared team inbox
-│           │   ├── broadcasts/        WhatsApp template broadcasts
-│           │   ├── flows/             Interactive chatbot flow builder
-│           │   ├── automations/       Keyword and trigger-based automations
-│           │   ├── pipelines/         Deal pipelines and stages
-│           │   ├── contacts/          Contact directory, tags, and custom fields
-│           │   ├── templates/         Meta template catalog syncer
-│           │   └── settings/          Cloud API configuration and AI assistant
-│           └── ads/                   Meta, Instagram, Google, and YouTube ad management
+│           ├── email/          Campaigns, templates, analytics, settings
+│           ├── sms/            Campaigns, phone mockup, analytics, settings
+│           ├── voice/          AI voice campaigns, agent composer studio, settings
+│           ├── whatsapp/       Broadcasts, chatbot flows, automations, templates, settings
+│           └── ads/            Meta, Instagram, Google, and YouTube ad attribution
 │
-├── features/                   Domain feature UI
-│   ├── leads/                  Lead list, detail, follow-ups, call history
-│   ├── inventory/              Project/unit browser
-│   ├── brokers/                Broker management
-│   ├── approvals/              Approval request UI
+├── features/                   Domain feature UI (canonical barrels)
+│   ├── leads/                  Lead list, profile cards, timeline, follow-ups
+│   ├── inventory/              Project/unit browser, UnitGrid, UnitDetailsDrawer
+│   ├── brokers/                Broker management, meeting tracking, KYC
+│   ├── approvals/              Approval request tickets and negotiation threads
+│   ├── security/               AdminSecuritySettings (MFA TOTP configuration)
 │   └── marketing/
-│       ├── shared/
-│       │   ├── AudienceSelector.tsx   Shared CSV/lead audience picker
-│       │   └── CampaignWizardStepper.tsx  Shared step progress bar
-│       ├── components/         Shared marketing components (funnels, provider cards, etc.)
-│       ├── email/
-│       │   ├── components/     EmailCampaignListTable, EmailFunnelAnalytics,
-│       │   │                   EmailTemplatePicker, EmailProviderConfigCard, etc.
-│       │   └── wizard/
-│       │       ├── EmailStep1ProjectSender.tsx   Project + sender identity + provider
-│       │       ├── EmailStep2Audience.tsx         CSV upload or lead segment
-│       │       ├── EmailStep3TemplateEditor.tsx   Rich HTML template editor
-│       │       └── EmailStep4ReviewLaunch.tsx     Preview, schedule, launch
-│       ├── sms/
-│       │   ├── components/     SmsCampaignListTable, SmsFunnelAnalytics,
-│       │   │                   SmsMessageEditor, SmsPhoneMockup, etc.
-│       │   └── wizard/
-│       │       ├── SmsStep1ProjectGateway.tsx     Project + SMS gateway
-│       │       ├── SmsStep2Audience.tsx            CSV / lead audience
-│       │       ├── SmsStep3MessageMockup.tsx       Message + phone preview
-│       │       └── SmsStep4ReviewLaunch.tsx        Review + launch
-│       └── voice/
-│           ├── components/
-│           │   ├── InBrowserAudioPlayer.tsx        TTS preview player
-│           │   ├── VoiceCampaignListTable.tsx
-│           │   ├── VoiceCampaignFunnel.tsx
-│           │   ├── VoiceCallLogsTable.tsx
-│           │   ├── VoiceModelSelector.tsx           LLM model picker
-│           │   ├── VoicePickerModal.tsx             TTS voice persona browser
-│           │   ├── VoiceProviderConfigCard.tsx
-│           │   └── composer/                        Studio subcomponents
-│           │       ├── AgentPlatformSelector.tsx    Platform grid + workspace agents
-│           │       ├── StudioVapiSettings.tsx        Vapi STT, silence, ambience
-│           │       ├── StudioRetellSettings.tsx      Retell emotion, ambient, backchannel
-│           │       ├── StudioSarvamSettings.tsx      Sarvam Indic language + pace
-│           │       ├── LivePromptVariablePreview.tsx Real-time variable interpolation
-│           │       ├── VoiceScriptEditor.tsx         Script templates + prompt composer
-│           │       └── index.ts                      Barrel export
-│           └── wizard/
-│               ├── VoiceStep1ProjectSchedule.tsx   Project + schedule
-│               ├── VoiceStep2Audience.tsx           CSV / lead audience
-│               ├── VoiceStep3TelephonyCarrier.tsx   PSTN carrier (Vobiz/Exotel/Twilio/Telnyx)
-│               ├── VoiceStep4AgentComposer.tsx       Coordinator (~250 lines) — imports composer/
-│               └── VoiceStep5ReviewLaunch.tsx        Review + test call + launch
+│       ├── shared/             Audience selector, campaign stepper, preview modals
+│       ├── email/              Email wizard, drip flows, template editor, inboxes
+│       ├── sms/                SMS wizard, phone preview, short-links, inboxes
+│       ├── voice/              Voice wizard, prompt composer, audio player
+│       └── whatsapp/           Broadcast wizard, flow builder, contact drawer
 │
 ├── components/                 Shared components
 │   ├── analytics/              Recharts-based chart components
@@ -118,10 +71,14 @@ apps/web/
 │   └── ui/                     Primitive UI elements
 │
 ├── lib/
-│   ├── auth-client.ts          Better Auth client (createAuthClient)
+│   ├── auth-client.ts          Better Auth client (with twoFactorClient plugin)
+│   ├── api-client.ts           Type-safe ApiClient with error normalization
+│   ├── inbox.ts                Inbox communication utilities
+│   ├── inbox-scope.ts          Departmental inbox scope resolver
 │   └── utils.ts                Shared utility functions
 │
-└── middleware.ts               Route protection (cookie-based session check)
+├── proxy.ts                    Next.js 16 route protection and role-slug verification
+└── next.config.ts              Rewrites, image remote patterns, package transpilation
 ```
 
 ## Development
@@ -130,11 +87,9 @@ apps/web/
 
 - Node.js ≥ 22
 - pnpm ≥ 10
-- Running backend (for API calls)
+- Running backend on port 3333
 
 ### 1. Installation
-
-This project is part of a pnpm monorepo. Install dependencies from the root directory:
 
 ```bash
 cd ../../  # Go to BrokerOS root
@@ -152,9 +107,7 @@ cp .env.example .env
 
 #### A. API Configuration
 
-The frontend uses a **proxy pattern** via Next.js rewrites (see [`next.config.ts`](next.config.ts)). In local dev, all API calls from the browser go through Next.js to avoid CORS:
-
-| Variable | Default | Purpose |
+| Variable | Purpose | Default |
 |---|---|---|
 | `NEXT_PUBLIC_API_URL` | `/api/proxy` | Base URL used by all client-side API calls. Keep as `/api/proxy` in dev and production (unless frontend and API are on completely separate domains). |
 | `BACKEND_URL` | `http://127.0.0.1:3333` | Server-side URL Next.js uses to forward proxied requests. **Never exposed to the browser.** In Docker, this defaults to `http://backend:3333` (compose service name). |
@@ -186,68 +139,24 @@ All commands should be executed from the **monorepo root**:
 #### Development
 
 ```bash
-pnpm dev:web                                  # Dev server → http://localhost:3000
-# OR using workspace filter directly:
-pnpm --filter @brokeros/web dev
+# Run from repository root
+pnpm dev:web
+
+# Or from apps/web:
+pnpm dev
 ```
 
-#### Production
+---
+
+## Testing
 
 ```bash
-pnpm --filter @brokeros/web exec next build   # Full verified production build
-pnpm --filter @brokeros/web start             # Serve production build
-```
+# Linting
+pnpm --filter @brokeros/web lint
 
-#### Testing (Playwright E2E)
+# Production build verification
+pnpm --filter @brokeros/web exec next build
 
-The web dashboard includes comprehensive Playwright browser E2E test specs located in `apps/web/e2e/specs/`:
-- `01-auth.spec.ts`: Authentication, login branding, credential validation, and role redirection.
-- `02-lead-pipeline.spec.ts`: Lead board rendering, search filters, and detail modals.
-- `03-marketing-wizards.spec.ts`: Omnichannel campaign wizards (SMS, Voice, Email).
-- `04-inventory.spec.ts`: Property inventory matrix, towers, units, and CP/Brokerage isolation.
-- `05-commissions.spec.ts`: Commission settlement summaries and payouts.
-
-```bash
-# Run all web E2E tests (automatically launches Next.js dev server on port 3000 if not running):
+# Playwright E2E browser tests
 pnpm test:web:e2e
-
-# If Chromium headless shell is not yet installed:
-pnpm --filter @brokeros/web exec playwright install chromium
 ```
-
----
-
-## API Communication
-
-The frontend uses a proxy pattern to communicate with the backend:
-
-- **Client-side:** Requests go to `/api/proxy/*` which Next.js proxies to the backend.
-- **Server-side:** Uses the `BACKEND_URL` environment variable directly.
-- **Real-time:** Socket.IO client connects directly to the backend for chat and notifications.
-
----
-
-## Docker
-
-The frontend uses a highly optimized multi-stage Dockerfile powered by Turborepo:
-
-1. **Stage 1 (Prune):** Runs `turbo prune @brokeros/web` to isolate only the frontend code and its internal workspace dependencies (like `@brokeros/constants`).
-2. **Stage 2 (Installer):** Installs dependencies, bakes `NEXT_PUBLIC_*` env vars, and runs the Next.js standalone build.
-3. **Stage 3 (Runner):** A lightweight Alpine image that runs the compiled Next.js standalone server as a non-root user.
-
-**Crucial Note:** Because it relies on Turborepo, the Dockerfile **must be built from the monorepo root context**, not from inside `apps/web/`.
-
-```bash
-# Run via docker compose from the repo root (recommended):
-docker compose up --build frontend
-```
-
-The frontend runs on port **3000** by default.
-
----
-
-<div align="center">
-
-**[← Back to main README](../../README.md)**
-
-</div>

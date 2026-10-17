@@ -1,6 +1,6 @@
 <div align="center">
 
-# Backend — BrokerOS
+# Backend - BrokerOS
 
 **NestJS 11 REST API + Socket.IO real-time server + BullMQ workers**
 
@@ -24,17 +24,26 @@ The backend is a modular NestJS 11 application written in TypeScript ESM. It ser
 ```
 apps/api/src/
 ├── auth/              Authentication & authorization
-│   ├── auth.controller.ts     Auth endpoints (login, logout, session)
-│   ├── roles.guard.ts         RBAC guard — checks session.user.role
+│   ├── auth.controller.ts     Auth endpoints (login, logout, session, TOTP challenge)
+│   ├── roles.guard.ts         Global RBAC guard - checks session.user.role with supervisory bypass
 │   └── roles.decorator.ts     @Roles() decorator for endpoints
 │
 ├── leads/             Lead lifecycle management
-│   ├── core/                  Lead CRUD, assignment, scoring
-│   ├── bookings/              Booking creation, customer conversion, post-sales, payments
+│   ├── core/                  Lead CRUD, assignment, scoring, bulk CSV import
 │   ├── call-records/          Call logging + Groq AI transcription
 │   ├── follow-ups/            Scheduled follow-up management
 │   ├── notes/                 Lead notes
 │   └── site-visits/           GPS-verified site visits + selfie upload
+│
+├── bookings/          Top-level booking lifecycle
+│   ├── booking.service.ts     Booking confirmation, unit lock, customer conversion
+│   ├── booking-query.service.ts Scoped queries with soft-delete filtering
+│   └── lead-booking.controller.ts Loan cases, builder-buyer agreements, key handover
+│
+├── payments/          Top-level payment management
+│   ├── payments.service.ts    Installment payment schedules & transaction tracking
+│   ├── payments.controller.ts Customer payment collection & receipt upload
+│   └── payments-cron.service.ts Overdue demand reminder cron checks
 │
 ├── inventory/         Property inventory
 │   ├── projects/              Builder → Project management
@@ -44,10 +53,11 @@ apps/api/src/
 │
 ├── brokers/           Channel Partner broker management (CRUD, meetings, referrals, KYC)
 ├── approvals/         Multi-step approval workflows (ApprovalRequest + FinancialApproval)
-├── chat/              Socket.IO gateway — chat rooms + messages
+├── crm-telephony/     CRM PSTN softphone direct calling (WebRTC tokens, carrier bridge, call webhooks)
+├── chat/              Socket.IO gateway - chat rooms + messages
 ├── notifications/     Socket.IO gateway + Expo Push SDK
 │
-├── dashboard/         Role-specific analytics (largest module)
+├── dashboard/         Role-specific analytics (12 role controllers & services)
 │   ├── pre-sales/     Pre-sales exec daily performance
 │   ├── sales-exec/    Sales pipeline & conversion metrics
 │   ├── sales-manager/ Team oversight & approvals
@@ -63,15 +73,17 @@ apps/api/src/
 │   ├── marketing.module.ts    Root module
 │   ├── shared/                CSV template download controller
 │   │
-│   ├── email/                 Email Campaign Module (controllers, services, facade)
-│   ├── sms/                   SMS Campaign Module (controllers, services, facade)
-│   ├── voice/                 AI Voice Campaign Module (controllers, gateway, services, facade)
-│   ├── whatsapp/              WhatsApp Cloud API Module (broadcasts, automations, templates, webhooks)
+│   ├── email/                 Email campaigns, EmailInboxController, templates, analytics
+│   ├── sms/                   SMS campaigns, SmsInboxController, keyword flows, analytics
+│   ├── voice/                 AI voice campaigns, WebSocket media stream gateway, carrier bridge dispatcher
+│   ├── whatsapp/              WhatsApp Cloud API, conversations controller, automations, templates
 │   └── ads/                   Ad Platform Lead Ingest (Google, Meta, Instagram, YouTube webhooks)
 │
 └── lib/               Shared infrastructure
     ├── database/      PrismaModule wrapper around @brokeros/prisma
-    └── storage/       Vercel Blob upload/download helpers
+    ├── storage/       Vercel Blob upload/download helpers
+    ├── filters/       HttpExceptionFilter and error normalizers
+    └── auth.ts        Better Auth server configuration with twoFactor plugin
 ```
 
 ## Development
@@ -96,14 +108,15 @@ pnpm install
 ```bash
 cp apps/api/.env.example apps/api/.env
 ```
+
 Populate these in `apps/api/.env`:
 
 | Variable | Purpose | Default |
 |---|---|---|
-| `FRONTEND_URL` | Web app origin — allow Next.js session cookies | `http://localhost:3000` |
-| `MOBILE_URL` | Mobile app origin — allow Expo dev client session cookies | `http://192.168.x.x:8081` |
+| `FRONTEND_URL` | Web app origin - allow Next.js session cookies | `http://localhost:3000` |
+| `MOBILE_URL` | Mobile app origin - allow Expo dev client session cookies | `http://192.168.x.x:8081` |
 
-**For `MOBILE_URL` — you must use your machine's LAN IP**, not `localhost`:
+**For `MOBILE_URL` - you must use your machine's LAN IP**, not `localhost`:
 
 | OS | Command |
 |---|---|
@@ -116,52 +129,37 @@ URL format depends on how you run the mobile app:
 
 ### 3. Database Initialization
 
-Once your `.env` is configured, set up Prisma (now located in `@brokeros/prisma`):
+Database commands belong to the `@brokeros/prisma` package. Run from the root directory:
 
 ```bash
-pnpm --filter @brokeros/prisma db:generate           # Generate Prisma client
-pnpm --filter @brokeros/prisma db:migrate            # Run migrations to create tables
-pnpm --filter @brokeros/prisma db:seed               # Populate database with sample data
+pnpm db:generate   # Generate Prisma client
+pnpm db:migrate    # Apply migrations
+pnpm db:seed       # Seed demo users and projects
 ```
 
-### 4. Run & Test
-
-All commands should be executed from the **monorepo root**:
+### 4. Running the API
 
 ```bash
-# Start API dev server (from root)
-pnpm dev:api                                  # Dev server with watch mode → http://localhost:3333
-# OR using workspace filter directly:
-pnpm --filter @brokeros/api start:dev
+# Start in watch mode from root
+pnpm dev:api
 
-# Production build & start
-pnpm --filter @brokeros/api build             # Compile to dist/
-pnpm --filter @brokeros/api start:prod        # Run production build
-
-# Testing & Typechecking
-pnpm --filter @brokeros/api test              # Run all Jest unit tests (*.spec.ts)
-pnpm --filter @brokeros/api test:e2e          # Run end-to-end tests
+# Or from apps/api:
+pnpm start:dev
 ```
 
-## Docker
+---
 
-The backend uses a highly optimized multi-stage Dockerfile powered by Turborepo:
-
-1. **Stage 1 (Prune):** Runs `turbo prune @brokeros/api --docker` to isolate only the backend code and its workspace dependencies (`packages/`, `integrations/`).
-2. **Stage 2 (Installer):** Installs dependencies with frozen lockfile, generates the Prisma client, and compiles the NestJS distribution.
-3. **Stage 3 (Runner):** Lightweight Node 22 Alpine production image that automatically runs pending migrations (`prisma migrate deploy`), seeds demo data if the DB is unseeded (`tsx seed.ts --if-empty`), and launches the API.
-
-**Crucial Note:** Because it relies on Turborepo, the Dockerfile **must be built from the root context**, not from inside `apps/api/`.
+## Testing
 
 ```bash
-# Run via docker compose from the repo root (recommended):
-docker compose up --build backend
+# Unit tests (Jest)
+pnpm --filter @brokeros/api test
+
+# Headless E2E tests (Vitest)
+pnpm test:api:e2e
+
+# Specific E2E suite
+pnpm test:api:e2e rbac-partitioning
+pnpm test:api:e2e two-factor-auth
+pnpm test:api:e2e lead-lifecycle
 ```
-
-The backend runs on port **3333** by default.
-
-<div align="center">
-
-**[← Back to main README](../../README.md)**
-
-</div>
