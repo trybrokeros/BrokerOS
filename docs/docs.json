@@ -41,6 +41,24 @@
       "family": "Geist"
     }
   },
+  "seo": {
+    "organization": {
+      "name": "BrokerOS",
+      "url": "https://brokeros.com",
+      "logo": "https://brokeros.mintlify.site/favicon.ico",
+      "sameAs": [
+        "https://github.com/trybrokeros/brokeros",
+        "https://linkedin.com/company/brokeros"
+      ]
+    },
+    "metatags": {
+      "canonical": "https://brokeros.mintlify.site",
+      "og:site_name": "BrokerOS Documentation",
+      "og:type": "website",
+      "twitter:site": "@brokeros",
+      "twitter:card": "summary_large_image"
+    }
+  },
   "contextual": {
     "options": [
       "copy",

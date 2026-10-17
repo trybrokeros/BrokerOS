@@ -1,6 +1,6 @@
 # BrokerOS Enterprise Documentation
 
-Welcome to the official documentation repository for **BrokerOS** — the enterprise real estate CRM and AI marketing engine.
+Welcome to the official documentation repository for **BrokerOS** - the enterprise real estate CRM and AI marketing engine.
 
 ## Local Development Setup
 

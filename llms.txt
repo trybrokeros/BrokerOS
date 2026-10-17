@@ -1,0 +1,171 @@
+# BrokerOS Documentation
+
+> Enterprise Real Estate CRM, AI Voice Telephony and Omnichannel Marketing Automation Platform. Built specifically for real estate brokerages and Channel Partner (CP) networks.
+
+> ## Documentation Index
+> Fetch the complete documentation index at: https://brokeros.mintlify.site/llms.txt
+> Fetch full documentation context at: https://brokeros.mintlify.site/llms-full.txt
+> Use this file to discover all available pages, API contracts, and architectural invariants.
+
+> ## Agent Instructions
+> - Core Invariant: BrokerOS enforces a strict architectural boundary between Internal Brokerage (Project.isCpProject = false) and Channel Partner Network (Project.isCpProject = true). Never mix data, inventory allocations, or workflows across this boundary.
+> - Authentication: Better Auth session cookies or Bearer tokens. Role is strictly derived from session.user.role. Never accept or trust roles passed in request bodies or query parameters.
+> - Database writes: All multi-model operations must use Prisma transactions (prisma.$transaction). All list queries must filter soft-deleted records with deletedAt: null.
+> - Async workers: High-throughput operations (campaign dispatches, CSV imports, batch emails, carrier bridges) must be enqueued via BullMQ and processed by apps/workers/.
+> - External APIs: Never call 3rd-party providers directly from apps/api/. Route all provider interactions through integrations/ adapters.
+> - Raw Markdown: Every documentation page can be fetched directly as raw markdown by appending .md to the URL path (e.g., https://brokeros.mintlify.site/overview/introduction.md).
+
+## Overview and Quickstart
+
+- [Introduction to BrokerOS](https://brokeros.mintlify.site/overview/introduction.md): High-level platform architecture, two-business-world design, and core tech stack.
+- [How BrokerOS Works](https://brokeros.mintlify.site/overview/how-it-works.md): Detailed explanation of the Brokerage vs Channel Partner network separation.
+- [Who Uses BrokerOS](https://brokeros.mintlify.site/overview/who-uses-brokeros.md): User roles, permission hierarchies, and departmental boundaries.
+- [Local Setup Guide](https://brokeros.mintlify.site/overview/local-setup.md): Complete local development setup instructions using Docker Compose and pnpm.
+
+## Brokerage CRM
+
+### Lead Management
+- [Lead Lifecycle](https://brokeros.mintlify.site/brokerage/leads/lifecycle.md): Lead states, temperature indicators (HOT, WARM, COLD), and AI scoring.
+- [Sources and Ingestion](https://brokeros.mintlify.site/brokerage/leads/sources-and-ingestion.md): Ingestion via Meta Ads, Google Ads, manual entry, and CSV imports.
+- [Assignment and History](https://brokeros.mintlify.site/brokerage/leads/assignment-and-history.md): Automated round-robin assignment, manager override, and full audit trail.
+- [Follow-Ups](https://brokeros.mintlify.site/brokerage/leads/follow-ups.md): Scheduling, reminders, missed follow-up tracking, and daily execution logs.
+- [Exports and Reports](https://brokeros.mintlify.site/brokerage/leads/export-and-reports.md): CSV exporting, conversion funnels, and executive reporting.
+
+### Pre-Sales Telecalling
+- [Cold Calling Engine](https://brokeros.mintlify.site/brokerage/pre-sales/cold-calling.md): Click-to-call dialer, call queues, and contact attempts.
+- [In-App Softphone](https://brokeros.mintlify.site/brokerage/pre-sales/softphone.md): WebRTC browser softphone, call states, mute, and hangup handling.
+- [Daily Tasks](https://brokeros.mintlify.site/brokerage/pre-sales/daily-tasks.md): Pre-sales daily call targets set by managers and execution snapshots.
+- [Call Transcription and AI](https://brokeros.mintlify.site/brokerage/pre-sales/transcription.md): Speech-to-text transcription, AI sentiment analysis, and call summaries.
+
+### Sales and Site Visits
+- [Site Visits](https://brokeros.mintlify.site/brokerage/sales/site-visits.md): Scheduling and logging physical project walkthroughs.
+- [GPS Verification](https://brokeros.mintlify.site/brokerage/sales/gps-verification.md): Anti-fraud geolocation tagging with selfie coordinate verification.
+- [Negotiations](https://brokeros.mintlify.site/brokerage/sales/negotiations.md): Recording discount discussions and mandatory approval requests.
+- [Unit Holds](https://brokeros.mintlify.site/brokerage/sales/unit-holds.md): Time-limited inventory reservations before formal booking creation.
+
+### Bookings
+- [Booking Creation](https://brokeros.mintlify.site/brokerage/bookings/creation.md): Transitioning units to BOOKED status, down payments, and booking receipts.
+- [Customer Conversion](https://brokeros.mintlify.site/brokerage/bookings/customer-conversion.md): Promoting a lead to a permanent post-sales customer record.
+
+### Post-Sales
+- [Payment Schedules](https://brokeros.mintlify.site/brokerage/post-sales/payment-schedules.md): Milestone-linked billing, demand letters, and receipt reconciliation.
+- [Loan Processing](https://brokeros.mintlify.site/brokerage/post-sales/loan-cases.md): Tracking bank sanctions, disbursements, and mortgage documentation.
+- [Builder-Buyer Agreements](https://brokeros.mintlify.site/brokerage/post-sales/agreements.md): Generating and signing legally binding sale agreements.
+- [Possession Handover](https://brokeros.mintlify.site/brokerage/post-sales/possession-handover.md): Snag-list resolution, key handover, and final clearance certificates.
+
+### Inventory and Property
+- [Hierarchy Structure](https://brokeros.mintlify.site/brokerage/inventory/hierarchy.md): Multi-tier hierarchy: Projects, Phases, Towers, Floors, and Units.
+- [Interactive Unit Matrix](https://brokeros.mintlify.site/brokerage/inventory/unit-matrix.md): Visual grid showing real-time unit status (AVAILABLE, HOLD, BOOKED, SOLD).
+- [Pricing and Payment Plans](https://brokeros.mintlify.site/brokerage/inventory/pricing-and-plans.md): Base rate, floor rise, PLC charges, and payment milestone configurations.
+- [Media and Brochures](https://brokeros.mintlify.site/brokerage/inventory/media-and-docs.md): Floor plans, architectural renders, master layouts, and brochures.
+
+## Channel Partner (CP) Operations
+
+### The CP Network
+- [CP Overview](https://brokeros.mintlify.site/channel-partner/overview.md): Channel Partner business model, external broker operations, and project scoping.
+- [Broker Management](https://brokeros.mintlify.site/channel-partner/broker-management.md): Profiles, tier classification, and sourcing manager associations.
+- [KYC Verification](https://brokeros.mintlify.site/channel-partner/kyc-verification.md): RERA license validation, PAN, GST, and bank verification.
+- [Sourcing Managers](https://brokeros.mintlify.site/channel-partner/sourcing-managers.md): Managing broker relationships, project empanelment, and visit check-ins.
+- [Closing Managers](https://brokeros.mintlify.site/channel-partner/closing-managers.md): On-site negotiations and closing deals brought by external brokers.
+
+### Commissions and Settlements
+- [Brokerage Records](https://brokeros.mintlify.site/channel-partner/brokerage-records.md): Commission ledger per closed CP booking.
+- [Inbound Commissions](https://brokeros.mintlify.site/channel-partner/inbound-commissions.md): Tracking receivables owed by property developers to the brokerage firm.
+- [Settlements](https://brokeros.mintlify.site/channel-partner/settlements.md): Invoice generation, TDS deductions, approval workflow, and payout records.
+
+## Marketing Suite
+
+### SMS Engine
+- [SMS Overview](https://brokeros.mintlify.site/marketing/sms/overview.md): High-speed transactional and promotional SMS infrastructure.
+- [SMS Team Inbox](https://brokeros.mintlify.site/marketing/sms/team-inbox.md): Unified conversation view for 2-way client texting.
+- [SMS Campaign Wizard](https://brokeros.mintlify.site/marketing/sms/campaign-wizard.md): Step-by-step audience selection, variable templating, and dispatch.
+- [SMS Preflight and Sender Pools](https://brokeros.mintlify.site/marketing/sms/preflight-and-sender-pools.md): Sender ID rotation, opt-out validation, and DND filtering.
+- [SMS Template Registry](https://brokeros.mintlify.site/marketing/sms/template-registry.md): DLT-compliant templates with custom merge fields.
+- [SMS Short Links](https://brokeros.mintlify.site/marketing/sms/short-links.md): Custom domain link shortener with click-tracking analytics.
+
+### Email Engine
+- [Email Overview](https://brokeros.mintlify.site/marketing/email/overview.md): High-deliverability email marketing and transactional notifications.
+- [Email Team Inbox](https://brokeros.mintlify.site/marketing/email/team-inbox.md): Shared mailbox for client email conversations.
+- [Email Campaign Wizard](https://brokeros.mintlify.site/marketing/email/campaign-wizard.md): Audience segmenting, subject line A/B testing, and scheduling.
+- [Email Template Editor](https://brokeros.mintlify.site/marketing/email/template-editor.md): Drag-and-drop HTML builder and responsive layout engine.
+- [Domain Verification](https://brokeros.mintlify.site/marketing/email/domain-verification.md): SPF, DKIM, DMARC, and custom return-path configuration.
+- [Email Analytics](https://brokeros.mintlify.site/marketing/email/analytics.md): Open rates, click-through rates, bounce tracking, and spam complaints.
+
+### Lead Ads Ingestion
+- [Ads Overview](https://brokeros.mintlify.site/marketing/ads/overview.md): Unified ad management and instant webhook lead ingestion.
+- [Meta Lead Ads](https://brokeros.mintlify.site/marketing/ads/meta-lead-ads.md): Instant lead synchronization from Facebook Instant Forms.
+- [Instagram Lead Ads](https://brokeros.mintlify.site/marketing/ads/instagram-ads.md): Ingesting high-intent Instagram ad leads directly into CRM pipelines.
+- [Google Ads](https://brokeros.mintlify.site/marketing/ads/google-ads.md): Webhook ingestion for Google Search and Performance Max lead forms.
+- [YouTube Ads](https://brokeros.mintlify.site/marketing/ads/youtube-ads.md): Video action campaign lead form synchronization.
+- [Field Mapping](https://brokeros.mintlify.site/marketing/ads/field-mapping.md): Mapping custom ad question fields to BrokerOS lead properties.
+
+### WhatsApp Cloud API
+- [WhatsApp Overview](https://brokeros.mintlify.site/marketing/whatsapp/overview.md): Official Meta Cloud API integration for conversational real estate sales.
+- [WhatsApp Team Inbox](https://brokeros.mintlify.site/marketing/whatsapp/team-inbox.md): Real-time chat workspace with quick replies and internal notes.
+- [WhatsApp Broadcasts](https://brokeros.mintlify.site/marketing/whatsapp/broadcasts.md): Sending pre-approved Meta template messages to targeted lead lists.
+- [WhatsApp Chatbot Flows](https://brokeros.mintlify.site/marketing/whatsapp/chatbot-flows.md): Automated 24/7 lead qualification, brochure delivery, and visit booking bots.
+- [WhatsApp Drip Automations](https://brokeros.mintlify.site/marketing/whatsapp/drip-automations.md): Multi-day follow-up sequences based on buyer interest.
+- [WhatsApp Template Manager](https://brokeros.mintlify.site/marketing/whatsapp/template-manager.md): Managing, submitting, and tracking Meta template approvals.
+
+### AI Voice Campaigns
+- [Voice Overview](https://brokeros.mintlify.site/marketing/voice/overview.md): Autonomous AI voice calling engine for lead qualification and site visit reminders.
+- [Agent Studio Composer](https://brokeros.mintlify.site/marketing/voice/composer.md): Designing agent personality, system prompt, knowledge base, and transfer nodes.
+- [Voice Campaign Wizard](https://brokeros.mintlify.site/marketing/voice/campaign-wizard.md): Launching high-volume outbound calling campaigns with concurrency throttling.
+- [Dual-Mode Test Calling](https://brokeros.mintlify.site/marketing/voice/dual-mode-test-calling.md): Testing voice agents in-browser via WebRTC or directly to phone numbers.
+- [Carrier Telephony Bridge](https://brokeros.mintlify.site/marketing/voice/carrier-telephony.md): Dynamic routing between Vobiz, Exotel, Twilio, and Telnyx carriers.
+- [Media Streaming Gateway](https://brokeros.mintlify.site/marketing/voice/media-streaming-gateway.md): Ultra-low latency WebSocket bi-directional audio streaming.
+- [Voice Analytics and Logs](https://brokeros.mintlify.site/marketing/voice/analytics-and-logs.md): Detailed call recordings, transcripts, latency metrics, and outcomes.
+
+## Integrations
+
+### PSTN Telephony Carriers
+- [Carrier Overview](https://brokeros.mintlify.site/integrations/telephony/overview.md): Carrier bridge architecture for PSTN trunk dialing.
+- [Vobiz Integration](https://brokeros.mintlify.site/integrations/telephony/vobiz.md): Setup, webhook signatures, and outbound trunk configuration.
+- [Exotel Integration](https://brokeros.mintlify.site/integrations/telephony/exotel.md): Virtual number binding, call recording, and flow callbacks.
+- [Twilio Telephony](https://brokeros.mintlify.site/integrations/telephony/twilio.md): Elastic SIP trunking and programmable voice configuration.
+- [Telnyx Telephony](https://brokeros.mintlify.site/integrations/telephony/telnyx.md): Global SIP trunking, call control, and conference bridging.
+
+### AI Voice Platforms
+- [AI Voice Platforms Overview](https://brokeros.mintlify.site/integrations/voice/overview.md): Multi-engine AI voice adapter layer.
+- [Vapi Integration](https://brokeros.mintlify.site/integrations/voice/vapi.md): Assistant synchronization, function calling, and webhook processing.
+- [Retell AI Integration](https://brokeros.mintlify.site/integrations/voice/retell.md): Custom LLM websocket endpoints and real-time interruption handling.
+- [Sarvam AI Integration](https://brokeros.mintlify.site/integrations/voice/sarvam.md): High-accuracy Indic language voice models (Hindi, Tamil, Telugu, etc.).
+- [Bolna Integration](https://brokeros.mintlify.site/integrations/voice/bolna.md): Regional telephony workflows and agent synchronization.
+- [ElevenLabs Integration](https://brokeros.mintlify.site/integrations/voice/elevenlabs.md): Ultra-realistic voice synthesis and custom voice cloning.
+- [LiveKit Integration](https://brokeros.mintlify.site/integrations/voice/livekit.md): WebRTC transport, rooms, and agent dispatch.
+- [OpenAI Realtime Integration](https://brokeros.mintlify.site/integrations/voice/openai-realtime.md): Direct WebSocket speech-to-speech AI agent integration.
+
+## Developer Architecture and Core Systems
+
+- [Architecture Overview](https://brokeros.mintlify.site/developer/architecture.md): Monorepo structure, Turborepo pipelines, NestJS modular design, and Next.js frontend.
+- [Database and Prisma](https://brokeros.mintlify.site/developer/database.md): PostgreSQL schema models, migrations, soft deletes, and transaction safety.
+- [Worker Architecture](https://brokeros.mintlify.site/developer/workers.md): BullMQ worker processors, concurrency limits, job queues, and dead-letter handling.
+- [Realtime and WebSockets](https://brokeros.mintlify.site/developer/realtime.md): Socket.IO events, live CRM notifications, softphone signals, and audio streams.
+- [Authentication and Security](https://brokeros.mintlify.site/developer/auth.md): Better Auth integration, session verification, RBAC role enforcement, and password policies.
+
+## Mobile Application
+
+- [Mobile Overview](https://brokeros.mintlify.site/mobile/overview.md): Expo 54 and React Native cross-platform application for field sales executives.
+- [Mobile Architecture](https://brokeros.mintlify.site/mobile/architecture.md): State management, offline cache, and deep linking routes.
+- [Setup and Tools](https://brokeros.mintlify.site/mobile/setup-and-tools.md): Local simulator setup, EAS build pipelines, and debugging.
+- [Role Workspaces](https://brokeros.mintlify.site/mobile/role-workspaces.md): Role-specific views for Sourcing Managers, Closing Managers, and Telecallers.
+
+## REST API Reference
+
+- [API Overview](https://brokeros.mintlify.site/api-reference/overview.md): REST conventions, pagination, standard error envelope, and authentication headers.
+- [Authentication API](https://brokeros.mintlify.site/api-reference/authentication.md): Sign in, session validation, token refresh, and logout endpoints.
+- [Leads API](https://brokeros.mintlify.site/api-reference/leads.md): Create, read, update, filter, score, and reassign leads.
+- [Site Visits API](https://brokeros.mintlify.site/api-reference/site-visits.md): Schedule site visits and submit GPS anti-fraud verification payloads.
+- [Follow-Ups API](https://brokeros.mintlify.site/api-reference/follow-ups.md): Manage lead follow-up reminders, task status, and execution notes.
+- [Negotiations API](https://brokeros.mintlify.site/api-reference/negotiations.md): Submit price discount requests and retrieve manager approval states.
+- [Bookings API](https://brokeros.mintlify.site/api-reference/bookings.md): Create unit bookings, capture payment receipts, and convert leads to customers.
+- [Inventory API](https://brokeros.mintlify.site/api-reference/inventory.md): Query project hierarchy, tower availability, and update unit statuses.
+- [Brokers API](https://brokeros.mintlify.site/api-reference/brokers.md): Manage Channel Partner broker records, KYC status, and sourcing managers.
+- [Approvals API](https://brokeros.mintlify.site/api-reference/approvals.md): Manager approval workflows for discounts, commission overrides, and refunds.
+- [Marketing Voice API](https://brokeros.mintlify.site/api-reference/marketing-voice.md): Trigger outbound AI voice calls, fetch call recordings, and view transcripts.
+- [Marketing WhatsApp API](https://brokeros.mintlify.site/api-reference/marketing-whatsapp.md): Send template broadcasts, manage webhook callbacks, and chat sessions.
+- [Marketing SMS API](https://brokeros.mintlify.site/api-reference/marketing-sms.md): Dispatch SMS messages and query gateway delivery status.
+- [Marketing Email API](https://brokeros.mintlify.site/api-reference/marketing-email.md): Queue transactional and marketing email dispatches.
+- [CRM Telephony API](https://brokeros.mintlify.site/api-reference/crm-telephony.md): Browser softphone call initialization, agent state, and call wrap-up logs.
+- [Users API](https://brokeros.mintlify.site/api-reference/users.md): User management, team assignments, and role permission audits.
+- [Webhooks API](https://brokeros.mintlify.site/api-reference/webhooks.md): Register and handle external inbound webhooks for ad networks and carriers.
