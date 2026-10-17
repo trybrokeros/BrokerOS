@@ -8,8 +8,8 @@ Telegraph style. Root rules only. Read scoped `AGENTS.md` inside `apps/api/`, `a
 
 BrokerOS is an Enterprise Real Estate CRM for a brokerage business. Two completely separate business lines run under one roof:
 
-- **Brokerage** — Internal sales team sells properties to clients. Projects flagged `isCpProject = false`.
-- **Channel Partner (CP)** — External broker network. Projects flagged `isCpProject = true`.
+- **Brokerage**: Internal sales team sells properties to clients. Projects flagged `isCpProject = false`.
+- **Channel Partner (CP)**: External broker network. Projects flagged `isCpProject = true`.
 
 Same database. Same inventory. Separated by exactly one flag: `Project.isCpProject`. Never mix data across this boundary.
 
@@ -19,11 +19,11 @@ Stack: NestJS 11 backend · PostgreSQL + Prisma 7 · Next.js 16 frontend (App Ro
 
 ## Start
 
-- Repo root: `BrokerOS/` — **pnpm monorepo** with Turborepo.
+- Repo root: `BrokerOS/` - **pnpm monorepo** with Turborepo.
 - Structure: `apps/` (deployable), `packages/` (shared), `integrations/` (external adapters).
 - Apps: `apps/api/` (NestJS API), `apps/web/` (Next.js), `apps/mobile/` (Expo RN), `apps/workers/` (BullMQ async).
-- Packages: `packages/types/` (@brokeros/types), `packages/validators/` (@brokeros/validators), `packages/prisma/` (@brokeros/prisma), `packages/storage/` (@brokeros/storage), `packages/constants/` (@brokeros/constants).
-- Integrations: `integrations/voice/` (@brokeros/int-voice), `integrations/mail/`, `integrations/sms/`, `integrations/whatsapp/` (@brokeros/int-whatsapp), `integrations/ads/` — external provider adapters.
+- Packages: `packages/types/` (@brokeros/types), `packages/validators/` (@brokeros/validators), `packages/prisma/` (@brokeros/prisma), `packages/storage/` (@brokeros/storage), `packages/constants/` (@brokeros/constants), `packages/messaging/` (@brokeros/messaging).
+- Integrations: `integrations/voice/` (@brokeros/int-voice), `integrations/mail/`, `integrations/sms/`, `integrations/whatsapp/` (@brokeros/int-whatsapp), `integrations/ads/` - external provider adapters.
 
 - **CRITICAL**: Before you write any code or start any task, you **MUST** read the scoped `AGENTS.md` in the corresponding subtree:
   - For ANY request related to the API, use `view_file` to read `apps/api/AGENTS.md`
@@ -34,7 +34,7 @@ Stack: NestJS 11 backend · PostgreSQL + Prisma 7 · Next.js 16 frontend (App Ro
 - Before proposing any custom system, check if an existing service/module/hook already handles it.
 
 - **Environment Law:** Never hardcode secrets. We use a split architecture:
-  - **Root `/.env`** is for heavy infrastructure: Database URLs, Better Auth secrets, Groq AI keys, Vercel Blob tokens and telephony, AI voice API keys when using marketing deparment.
+  - **Root `/.env`** is for heavy infrastructure: Database URLs, Better Auth secrets, Groq AI keys, Vercel Blob tokens and telephony, AI voice API keys when using marketing department.
   - **App-level `.env`s** (`apps/web`, `apps/mobile`, `apps/api`) are ONLY for local routing URLs and specific client keys (like Google Maps).
 - Use repo-root-relative paths in all references: `apps/api/src/leads/leads.service.ts`, not absolute paths.
 
@@ -44,12 +44,12 @@ Stack: NestJS 11 backend · PostgreSQL + Prisma 7 · Next.js 16 frontend (App Ro
 
 We are migrating shared business logic out of the apps and into the `packages/` directory using Turborepo workspaces.
 
-- **`@brokeros/constants`**: Pure TS constants, enums, UI colors, and pure utility functions. Includes domain modules: `campaign.ts`, `email.ts`, `sms.ts`, `voice/` (telephony, agents, voices, scripts, pricing, normalizer). Decomposed into sub-modules — never add a monolithic flat file.
-- **`@brokeros/types`**: Shared TypeScript interfaces and DTO definitions. Includes domain modules: `common.ts`, `email.ts`, `sms.ts`, `voice/` (telephony, agent, options, webhook, analytics, streaming).
-- **`@brokeros/validators`**: Shared Zod schemas for form validation and API payloads.
+- **`@brokeros/constants`**: Pure TS constants, enums, UI colors, and pure utility functions. Includes domain modules: `crm/` (`lead.ts`, `inventory.ts`, `booking.ts`, `broker.ts`, `approvals.ts`), `roles.ts` (14 system roles + supervisory bypass), `utils/phone.ts` (E.164 normalization, Meta sanitization), `export.ts` (CSV formatters, HTML reports), `campaign.ts`, `email.ts`, `sms.ts`, `voice/` (telephony, agents, voices, scripts, pricing, normalizer). Decomposed into sub-modules - never add a monolithic flat file.
+- **`@brokeros/types`**: Shared TypeScript interfaces and DTO definitions. Includes domain modules: `crm/` (`lead.ts`, `booking.ts`, `inventory.ts`, `broker.ts`, `approvals.ts`, `dashboard.ts`, `roles.ts`), `common.ts`, `export.ts`, `email.ts`, `sms.ts`, `voice/` (telephony, agent, options, webhook, analytics, streaming).
+- **`@brokeros/validators`**: Shared Zod schemas for form validation and API payloads (`PhoneSchema`, `CreateLeadSchema`, `CreateCampaignSchema`, `SiteVisitVerificationSchema`).
 - **`@brokeros/prisma`**: The central Prisma ORM client, schema, and migrations.
-- **`@brokeros/storage`**: Centralized Vercel Blob storage wrappers.
-- **`@brokeros/messaging`**: Centralized, deep cross-channel message dispatch engine (SMS, Email, WhatsApp) providing atomic reservation, credential resolution, and provider dispatch.
+- **`@brokeros/storage`**: Centralized Vercel Blob storage wrappers (`uploadFileToBlob`, `fetchBlobBuffer`).
+- **`@brokeros/messaging`**: Centralized, deep cross-channel message dispatch engine (SMS, Email, WhatsApp) providing atomic reservation, credential resolution, and provider dispatch across API and workers.
 
 **CRITICAL RULES FOR AGENTS:**
 
@@ -62,11 +62,11 @@ We are migrating shared business logic out of the apps and into the `packages/` 
 
 ## Integrations
 
-External service adapters live in `integrations/` — one directory per channel. Each integration is a self-contained TypeScript package.
+External service adapters live in `integrations/` - one directory per channel. Each integration is a self-contained TypeScript package.
 
 - **`integrations/voice/`** (`@brokeros/int-voice`): AI voice agent adapters (`vapi`, `retell`, `sarvam`, `bolna`, `elevenlabs`, `livekit`, `openai-realtime`, `pipecat`) and PSTN carrier adapters (`vobiz`, `exotel`, `twilio`, `telnyx`) via `bridge/carrier-bridge-dispatcher.ts`.
-- **`integrations/mail/`**: Email provider adapters (`sendgrid`, `brevo`, `mailchimp`, `aws-ses`).
-- **`integrations/sms/`**: SMS gateway adapters (`twilio`, `gupshup`, `sinch`, `aws-sns`).
+- **`integrations/mail/`**: Email provider adapters (`sendgrid`, `brevo`, `mailchimp`, `aws-ses`, `mailgun`, `gmail`, `outlook`, `constant-contact`).
+- **`integrations/sms/`**: SMS gateway adapters (`twilio`, `gupshup`, `sinch`, `aws-sns`, `bird`, `infobip`, `plivo`, `telnyx`, `vonage`).
 - **`integrations/whatsapp/`** (`@brokeros/int-whatsapp`): Meta WhatsApp Cloud API adapter for templates, interactive messages, and webhook handling.
 - **`integrations/ads/`**: Ad platform lead webhook ingest adapters (`@brokeros/int-ads-google`, `@brokeros/int-ads-meta`).
 
@@ -78,7 +78,7 @@ External service adapters live in `integrations/` — one directory per channel.
 
 ---
 
-## Auth Law
+## Auth & Security Law
 
 - **Better Auth is the only auth system.** Do not implement custom JWT minting, custom session management, or custom password hashing.
 - Backend: `@thallesp/nestjs-better-auth`. Sessions validated via the `better-auth` server instance in `apps/api/src/auth/`.
@@ -86,6 +86,14 @@ External service adapters live in `integrations/` — one directory per channel.
 - Mobile: `@better-auth/expo` with `expo-secure-store` for token persistence.
 - Role is read from `session.user.role`. Never accept role from request body or query string.
 - Do not add any new passport strategy. Existing `passport-jwt` is legacy-only.
+- **Global AuthGuard**: Registered as an `APP_GUARD` in `apps/api/src/app.module.ts`. All endpoints require authentication unless explicitly marked `@Public()`.
+- **Global RolesGuard & Least Privilege RBAC**: Registered in `apps/api/src/app.module.ts`. Endpoints declare authorized roles via `@Roles(...)`.
+- **Supervisory Bypass Policy**: Users with role `ADMIN` or `DIRECTOR` hold universal supervisory oversight across both business lines and automatically pass all role checks across every module.
+- **Multi-Factor Authentication (MFA / 2FA)**: RFC 6238 TOTP two-factor authentication via Better Auth `twoFactor` plugin in backend and `twoFactorClient` on web. Recovery codes hashed in `TwoFactor` table.
+- **Rate Limiting**: Enforced via `ThrottlerModule` (60 req/min global, 5 req/min on login endpoints).
+- **Transport Security & Headers**: Helmet middleware in API `main.ts` + strict CSP/HSTS headers in `apps/web/next.config.ts`.
+- **Webhook Integrity**: Mandatory HMAC-SHA256 signature verification for Meta/WhatsApp, verification keys for Google Ads, and tokens for AI voice webhooks.
+- **IDOR & Boundary Protection**: Soft-delete pattern (`deletedAt: null`) required on all listings. Subordinate lead views restricted to managers or assigned representatives.
 
 ---
 
@@ -94,7 +102,7 @@ External service adapters live in `integrations/` — one directory per channel.
 - **Prisma only.** No raw SQL strings in application code. Use the Prisma query API.
 - Prisma client generated to `packages/prisma/generated/client`. Import from there via `@brokeros/prisma`.
 - After any `schema.prisma` change: `pnpm --filter @brokeros/prisma db:generate` → `pnpm --filter @brokeros/prisma db:migrate`.
-- Schema file: `packages/prisma/schema.prisma` — single source of truth. Seed: `packages/prisma/seed.ts`.
+- Schema file: `packages/prisma/schema.prisma` - single source of truth. Seed: `packages/prisma/seed.ts`.
 - Multi-model writes must use Prisma transactions (`prisma.$transaction`).
 - For syntax and query patterns, read the root skill: `.agents/skills/prisma-client-api/SKILL.md`.
 - Never delete or edit applied migration files.
@@ -104,34 +112,36 @@ External service adapters live in `integrations/` — one directory per channel.
 
 ## Domain Glossary
 
-| Term                      | Definition                                                                                                                    |
-| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| **Brokerage**             | Internal sales operation. All projects: `isCpProject = false`                                                                 |
-| **CP / Channel Partner**  | External broker network operation. All projects: `isCpProject = true`                                                         |
-| **Broker**                | External real-estate agent. NOT a system user. Managed as `Broker` DB record by a Sourcing Manager                            |
-| **Lead**                  | A potential buyer. Fields: `status`, `temperature` (HOT/WARM/COLD), `score` (AI int), `brokerId` (CP world), `assignedUserId` |
-| **Site Visit**            | Physical visit to a project. GPS-verified via `SiteVisitVerification` (selfie + coordinates)                                  |
-| **Negotiation**           | Discount discussion record. Required before creating a discounted booking                                                     |
-| **Booking**               | Confirmed sale. Linked to a `Unit` (now SOLD), `Customer`, optionally a `Broker`                                              |
-| **Customer**              | Created from Lead when booking is created. Holds post-sales identity                                                          |
-| **BrokerageRecord**       | Commission record per CP booking. Leads to `BrokerageSettlement` for actual payment                                           |
-| **InboundCommission**     | Commission FROM the builder TO the brokerage firm for selling their unit. Tracked by Post-Sales                               |
-| **ProjectAssignment**     | Scoping table. Links a SM or CM to a specific CP project                                                                      |
-| **ManagerTask**           | Daily cold call target set by PRE_SALES_MANAGER or SALES_MANAGER per exec                                                     |
-| **DailyPerformanceLog**   | Daily snapshot per exec: calls done, target, follow-ups done, missed follow-up IDs                                            |
-| **isCpProject**           | The single boolean that separates the two entire business worlds                                                              |
-| **MarketingCampaign**     | A broadcast campaign — Email, SMS, or AI Voice — targeting a set of leads from a project                                      |
-| **VoiceAgentIntegration** | A connected AI voice platform (Vapi, Retell, Sarvam, Bolna, etc.) configured by admin                                         |
-| **CsvLeadRow**            | A single row from an uploaded CSV file used as audience for a campaign                                                        |
-| **CarrierBridge**         | The PSTN telephony layer that physically dials numbers (Vobiz, Exotel, Twilio, Telnyx)                                        |
+| Term | Definition |
+| --- | --- |
+| **Brokerage** | Internal sales operation. All projects: `isCpProject = false` |
+| **CP / Channel Partner** | External broker network operation. All projects: `isCpProject = true` |
+| **Broker** | External real-estate agent. NOT a system user. Managed as `Broker` DB record by a Sourcing Manager |
+| **Lead** | A potential buyer. Fields: `status`, `temperature` (HOT/WARM/COLD), `score` (AI int), `brokerId` (CP world), `assignedUserId` |
+| **Site Visit** | Physical visit to a project. GPS-verified via `SiteVisitVerification` (selfie + coordinates) |
+| **Negotiation** | Discount discussion record. Required before creating a discounted booking |
+| **Booking** | Confirmed sale. Linked to a `Unit` (now SOLD), `Customer`, optionally a `Broker` |
+| **Customer** | Created from Lead when booking is created. Holds post-sales identity |
+| **BrokerageRecord** | Commission record per CP booking. Leads to `BrokerageSettlement` for actual payment |
+| **InboundCommission** | Commission FROM the builder TO the brokerage firm for selling their unit. Tracked by Post-Sales |
+| **ProjectAssignment** | Scoping table. Links a SM or CM to a specific CP project |
+| **ManagerTask** | Daily cold call target set by PRE_SALES_MANAGER or SALES_MANAGER per exec |
+| **DailyPerformanceLog** | Daily snapshot per exec: calls done, target, follow-ups done, missed follow-up IDs |
+| **isCpProject** | The single boolean that separates the two entire business worlds |
+| **MarketingCampaign** | A broadcast campaign - Email, SMS, or AI Voice - targeting a set of leads from a project |
+| **VoiceAgentIntegration** | A connected AI voice platform (Vapi, Retell, Sarvam, Bolna, etc.) configured by admin |
+| **Departmental Inbox** | Unified multi-channel conversation inbox (`/dashboard/inbox`) for Email, SMS, and WhatsApp scoped by role |
+| **CsvLeadRow** | A single row from an uploaded CSV file used as audience for a campaign |
+| **CarrierBridge** | The PSTN telephony layer that physically dials numbers (Vobiz, Exotel, Twilio, Telnyx) |
 
 ---
 
 ## Workers Law
 
 - **BullMQ only.** All async jobs are enqueued via BullMQ and processed by `apps/workers/`.
-- Workers: `marketing-email.processor.ts`, `marketing-sms.processor.ts`, `marketing-voice.processor.ts`, `marketing-whatsapp.processor.ts`.
+- Processors: `marketing-email.processor.ts`, `marketing-sms.processor.ts`, `marketing-voice.processor.ts`, `marketing-whatsapp.processor.ts`, `scheduled-messages.processor.ts`.
 - Marketing voice processor: integrates `normalizeVoiceLeadVariables` from `@brokeros/constants` and `tryCarrierBridgeDispatch` from `@brokeros/int-voice`.
+- Scheduled messages processor: integrates `@brokeros/messaging` to poll, lock, and atomically dispatch scheduled outbound messages.
 - Never do heavy I/O (external API calls, file processing, CSV parsing) inside the NestJS request cycle. Enqueue a BullMQ job instead.
 
 ---
@@ -175,20 +185,28 @@ As BrokerOS grows to include background workers, 3rd-party integrations, and new
 
 - API modules (`apps/api/src/`): `auth`, `leads`, `bookings`, `payments`, `inventory`, `brokers`, `approvals`, `crm-telephony`, `chat`, `notifications`, `dashboard`, `marketing` (whatsapp, voice, email, sms, ads sub-modules).
 - Marketing API sub-modules (`apps/api/src/marketing/`):
-  - `whatsapp/` — inbox conversations, messages, contacts, flows, automations, pipelines, templates, AI assistant, broadcasts, webhooks, realtime gateway.
-  - `voice/` — campaigns, integrations, prompt editor, audio service, test calling, webhooks, carrier bridge dispatcher, WebSocket media stream gateway.
-  - `email/` — campaigns, integrations, audience, analytics, tracking, webhooks, facade.
-  - `sms/` — campaigns, integrations, audience, analytics, tracking, webhooks, facade.
-  - `ads/` — Meta, Instagram, Google, and YouTube lead webhook ingestion and campaign sync services.
-- Web routes (`apps/web/app/`): `login` (public), `dashboard` (role-protected shell + role-specific workspaces), `dashboard/marketing/` (whatsapp/voice/email/sms/ads).
+  - `whatsapp/` - inbox conversations, messages, contacts, flows, automations, pipelines, templates, AI assistant, broadcasts, webhooks, realtime gateway.
+  - `voice/` - campaigns, integrations, prompt editor, audio service, test calling, webhooks, carrier bridge dispatcher, WebSocket media stream gateway.
+  - `email/` - campaigns, integrations, audience, analytics, tracking, webhooks, email inbox controller & service, facade.
+  - `sms/` - campaigns, integrations, audience, analytics, tracking, webhooks, sms inbox controller & service, facade.
+  - `ads/` - Meta, Instagram, Google, and YouTube lead webhook ingestion and campaign sync services.
+- Web routes (`apps/web/app/`):
+  - `login` (public authentication + TOTP challenge)
+  - `dashboard` (role-protected shell via `proxy.ts` + role-specific workspaces)
+  - `dashboard/inbox` (unified departmental inbox for email, sms, whatsapp supporting all roles)
+  - `dashboard/marketing/` (whatsapp/voice/email/sms/ads)
 - Web marketing features (`apps/web/features/marketing/`):
-  - `whatsapp/` — team inbox, chatbot flows, automations, broadcasts, contacts, pipelines, templates, settings.
-  - `voice/` — campaign creator, agent composer studio, prompt editor, voice picker modal, analytics.
-  - `email/` — campaign creator, HTML template editor, audience selector, analytics.
-  - `sms/` — campaign creator, phone mockup preview, short-link generator, analytics.
-  - `ads/` — Meta & Google ad account connector, campaign sync, KPI overview.
-- Mobile route groups (`apps/mobile/app/`): `(auth)` (login/signup), `(dashboard)` (role-specific screen views + native auto-dialer module).
-- Workers (`apps/workers/src/`): BullMQ processors for async jobs — `marketing-email.processor.ts`, `marketing-sms.processor.ts`, `marketing-voice.processor.ts`, `marketing-whatsapp.processor.ts`.
+  - `whatsapp/` - team inbox, chatbot flows, automations, broadcasts, contacts, pipelines, templates, settings.
+  - `voice/` - campaign creator, agent composer studio, prompt editor, voice picker modal, analytics.
+  - `email/` - campaign creator, HTML template editor, audience selector, departmental & team inboxes, analytics.
+  - `sms/` - campaign creator, phone mockup preview, short-link generator, departmental & team inboxes, analytics.
+  - `ads/` - Meta & Google ad account connector, campaign sync, KPI overview.
+- Web security features (`apps/web/features/security/`):
+  - `AdminSecuritySettings.tsx` - MFA / 2FA TOTP configuration, secret key generation, recovery backup codes.
+- Mobile route groups (`apps/mobile/app/`):
+  - `(auth)` (login/signup)
+  - `(dashboard)` (flattened screen routes for 14 role workspaces + native auto-dialer module).
+- Workers (`apps/workers/src/`): BullMQ processors for async jobs - `marketing-email.processor.ts`, `marketing-sms.processor.ts`, `marketing-voice.processor.ts`, `marketing-whatsapp.processor.ts`, `scheduled-messages.processor.ts`.
 - Shared packages: `packages/prisma/` (Schema & DB Client), `packages/storage/` (Blob wrappers), `packages/messaging/` (Dispatch engine), `packages/types/` (TS interfaces with domain sub-modules), `packages/validators/` (Zod schemas), `packages/constants/` (Pure constants with domain sub-modules).
 - Integrations: `integrations/voice/` (AI agents + PSTN carriers), `integrations/mail/` (email providers), `integrations/sms/` (SMS gateways), `integrations/whatsapp/` (WhatsApp Cloud API), `integrations/ads/` (Google & Meta Ads lead webhooks).
 - Skills: `.agents/skills/` (root), `apps/api/.agents/skills/`, `apps/web/.agents/skills/`, `apps/mobile/.agents/skills/`.

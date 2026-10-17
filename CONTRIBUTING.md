@@ -1,6 +1,6 @@
 # Contributing to BrokerOS
 
-Thank you for your interest in contributing! This guide will help you get started.
+Thank you for your interest in contributing! This guide will help you get started with our enterprise architecture and development standards.
 
 ---
 
@@ -15,12 +15,13 @@ Thank you for your interest in contributing! This guide will help you get starte
 - [Commit Messages](#commit-messages)
 - [Reporting Bugs](#reporting-bugs)
 - [Suggesting Features](#suggesting-features)
+- [Security Vulnerabilities](#security-vulnerabilities)
 
 ---
 
 ## Code of Conduct
 
-This project follows the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Please report unacceptable behavior to the maintainers.
+This project follows standard open source conduct expectations. By participating, you are expected to uphold a professional, respectful, and inclusive environment.
 
 ---
 
@@ -46,14 +47,14 @@ This project follows the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.
 - Node.js ≥ 22
 - pnpm ≥ 10
 - PostgreSQL 16+ & Redis 7+ (or Docker)
-- Android Studio (for mobile work only)
+- Android Studio (for native mobile work only)
 
-### 🤖 AI Agent Setup
+### AI Agent Setup
 
-If you are using the **AI IDE / CLI**, you can skip running commands manually. Use the built-in agent skills:
+If you are using an **AI IDE (like Antigravity / Cursor)** or CLI, you can skip running commands manually. Use the built-in agent skills:
 
 - Type **`/setup-codebase`** in the chat to have the AI automatically install dependencies, copy `.env` files, run migrations, and start all services.
-- Type **`/codebase-tour`** to have the AI generate a deep-dive, customized architectural map of the system to help you understand where to make your PR changes.
+- Type **`/codebase-tour`** to have the AI generate a deep-dive, customized architectural map of the system to help you understand where to make your changes.
 
 ### Quick Start with Docker
 
@@ -78,7 +79,7 @@ docker compose up --build
 # demo accounts on initial boot if the database is empty (--if-empty flag).
 # To manually re-seed at any time:
 docker exec -it crm-backend pnpm db:seed
-# 🔑 View all demo users & passwords created: docs/role-password.md
+# View demo credentials in docs/role-password.md
 
 # Endpoints:
 # Frontend:  http://localhost:3000
@@ -89,7 +90,7 @@ docker exec -it crm-backend pnpm db:seed
 
 ### Manual Setup
 
-If you're working locally without Docker, follow these steps. With Turborepo and pnpm workspaces, you can install everything from the root!
+If you're working locally without Docker, follow these steps. With Turborepo and pnpm workspaces, you can install everything from the root:
 
 **1. Install all dependencies & set up environment variables (Run at root):**
 
@@ -115,24 +116,22 @@ cp apps/mobile/.env.example apps/mobile/.env
 # Generate and seed the database using Prisma (run from root)
 pnpm db:generate
 pnpm db:migrate
-pnpm db:seed                 # Populate database with sample data (🔑 View credentials: docs/role-password.md)
-
-# Start the API server (run from root)
-pnpm dev:api                 # → http://localhost:3333
+pnpm db:seed                 # Populate database with sample data
+pnpm dev:api                 # Start API server → http://localhost:3333
 ```
 
 **3. Frontend (Web):**
 
 ```bash
 # Start the Next.js web dashboard (run from root)
-pnpm dev:web                 # → http://localhost:3000
+pnpm dev:web                 # Start Web dashboard → http://localhost:3000
 ```
 
 **4. Background Workers:**
 
 ```bash
 # Start BullMQ asynchronous queue processors (run from root)
-pnpm dev:workers             # → http://localhost:3334/health
+pnpm dev:workers             # Start Workers → http://localhost:3334/health
 ```
 
 **5. Mobile (Android Only):**
@@ -144,30 +143,6 @@ pnpm dev:mobile
 cd apps/mobile && npx expo run:android
 ```
 
-> 💡 **Where do I get the API keys?**
->
-> **Authentication (`BETTER_AUTH_SECRET`)**
-> Better Auth requires a strong, randomly generated 32-character secret to sign sessions.
-> Run this command in your terminal to generate one:
-> `openssl rand -hex 32`
-> Set in `.env`: `BETTER_AUTH_SECRET="your-generated-hash-here"`
->
-> **Vercel Blob (File Uploads)**
-> Go to [Vercel Storage](https://vercel.com/storage/blob) to get your token.
-> Set in `.env`: `BLOB_READ_WRITE_TOKEN="your_vercel_blob_token"`
->
-> **Groq (AI Call Processing)**
-> Go to [Groq Console](https://console.groq.com/keys) to get a free API key.
-> Set in `.env`: `GROQ_API_KEY="gsk_your_key_here"`
->
-> **Want to run tests or build a specific app?** Check their dedicated readmes:
->
-> - 🟢 **[Backend API Guide](apps/api/README.md)**
-> - 🔵 **[Frontend Web Guide](apps/web/README.md)**
-> - 📱 **[Mobile App Guide](apps/mobile/README.md)**
-> - ⚡ **[Background Workers Guide](apps/workers/README.md)**
-> - 🔗 **[Integrations Guide](integrations/README.md)**
-
 ---
 
 ## Project Structure
@@ -176,26 +151,31 @@ cd apps/mobile && npx expo run:android
 BrokerOS/
 ├── apps/
 │   ├── api/       NestJS 11 REST API + Socket.IO server (TypeScript ESM)
-│   │              Modules: auth, leads, inventory, brokers, approvals,
-│   │              chat, notifications, dashboard, marketing (email, sms, voice, whatsapp, ads)
+│   │              Modules: auth, leads, bookings, payments, inventory, brokers,
+│   │              approvals, crm-telephony, chat, notifications, dashboard,
+│   │              marketing (email, sms, voice, whatsapp, ads)
 │   ├── web/       Next.js 16 App Router web dashboard (React 19 + Tailwind CSS v4)
-│   │              Features: leads, inventory, brokers, approvals,
-│   │              marketing (email, sms, voice, whatsapp, ads comparison & attribution)
+│   │              Features: leads, inventory, brokers, approvals, security (MFA 2FA),
+│   │              unified inbox (/dashboard/inbox for email, sms, whatsapp),
+│   │              marketing (email, sms, voice, whatsapp, ads)
 │   ├── mobile/    Expo 54 React Native Android app for field teams (native auto-dialer)
+│   │              Workspaces: 14 role workspaces with flattened screen routes
 │   └── workers/   BullMQ async background processors (powered by Redis 7)
-│                  (marketing-email, marketing-sms, marketing-voice, marketing-whatsapp)
+│                  (marketing-email, marketing-sms, marketing-voice, marketing-whatsapp,
+│                   scheduled-messages)
 ├── packages/
 │   ├── prisma/      Prisma ORM schema, migrations, and client (@brokeros/prisma)
 │   ├── storage/     Centralized Vercel Blob cloud storage wrappers (@brokeros/storage)
+│   ├── messaging/   Cross-channel message dispatch engine with atomic lock (@brokeros/messaging)
 │   ├── types/       Shared TS interfaces with domain sub-modules (@brokeros/types)
 │   ├── validators/  Shared Zod validation schemas (@brokeros/validators)
 │   └── constants/   Shared constants, enums, UI palettes, and voice normalizers (@brokeros/constants)
 ├── integrations/
-│   ├── voice/       @brokeros/int-voice — 8 AI voice agents + 4 PSTN telephony carriers
-│   ├── mail/        Email provider adapters (8 providers: SendGrid, SES, Brevo, Mailgun, Mailchimp, Gmail, Outlook, Constant Contact)
-│   ├── sms/         SMS gateway adapters (9 gateways: Twilio, Gupshup, Sinch, Plivo, Telnyx, Vonage, Bird, Infobip, AWS SNS)
-│   ├── whatsapp/    @brokeros/int-whatsapp — Meta WhatsApp Cloud API client & interactive builders
-│   └── ads/         Lead ingestion & sync adapters (@brokeros/int-ads-google, @brokeros/int-ads-meta)
+│   ├── voice/       @brokeros/int-voice - 8 AI voice agents + 4 PSTN telephony carriers
+│   ├── mail/        Email provider adapters (SES, SendGrid, Brevo, Mailchimp, Mailgun, Gmail, Outlook, Constant Contact)
+│   ├── sms/         SMS gateway adapters (Twilio, Gupshup, Sinch, AWS SNS, Bird, Infobip, Plivo, Telnyx, Vonage)
+│   ├── whatsapp/    @brokeros/int-whatsapp - Meta WhatsApp Cloud API client & interactive builders
+│   └── ads/         Lead ingestion adapters (@brokeros/int-ads-google, @brokeros/int-ads-meta)
 └── scripts/         Root deployment, database seeding, and synchronization utility scripts
 ```
 
@@ -208,30 +188,34 @@ This is a **pnpm monorepo** managed by Turborepo. You can run commands globally 
 ### Key Conventions
 
 1. **Always read the scoped `AGENTS.md`** before touching a subtree:
-   - `apps/api/AGENTS.md` — for backend changes
-   - `apps/web/AGENTS.md` — for frontend changes
-   - `apps/mobile/AGENTS.md` — for mobile changes
-   - `apps/workers/AGENTS.md` — for background job processors
-   - `integrations/AGENTS.md` — for third-party service adapters
+   - `apps/api/AGENTS.md` - for backend changes
+   - `apps/web/AGENTS.md` - for frontend changes
+   - `apps/mobile/AGENTS.md` - for mobile changes
+   - `apps/workers/AGENTS.md` - for background job processors
+   - `integrations/AGENTS.md` - for third-party service adapters
 
-2. **Shared constants/types** go in `packages/constants/` or `packages/types/`, not in app-level files. See `AGENTS.md` root for the migration policy.
+2. **Shared constants/types** go in `packages/constants/` or `packages/types/`, not in app-level files.
 
 3. **External API calls** must go through `integrations/` adapters, not directly in NestJS services.
 
-4. **Database** — use Prisma only. No raw SQL. Multi-model writes use `$transaction`.
+4. **Database** - use Prisma only. No raw SQL. Multi-model writes use `$transaction`. Soft deletes require `deletedAt: null`.
 
-5. **Auth** — use Better Auth only. No custom JWT or session logic.
+5. **Auth & Security** - use Better Auth only. Sessions are validated on the server. Global `AuthGuard` and `RolesGuard` enforce access control. Supervisory bypass applies to `ADMIN` and `DIRECTOR` roles.
 
-6. **Workers** — any heavy I/O (CSV parsing, external API blasting) must be enqueued to BullMQ, not done inline in the request cycle.
+6. **Workers** - any heavy I/O (CSV parsing, external batch dispatch) must be enqueued to BullMQ, not executed inline in the request cycle.
 
 ---
 
 ## Pull Request Process
 
-1. **Ensure your code works:**
-   - Run type checks and linters from the root: `pnpm lint` and `pnpm build`
-   - Test backend specifically: `pnpm --filter @brokeros/api test`
-   - Verify Next.js build: `pnpm --filter @brokeros/web exec next build`
+1. **Ensure your code passes tests and linting:**
+   - Type checks and linters from root: `pnpm lint` and `pnpm build`
+   - Headless API E2E tests: `pnpm test:api:e2e`
+   - Background worker E2E tests: `pnpm test:workers:e2e`
+   - Shared packages & integrations tests: `pnpm test:packages`
+   - Run all headless suites: `pnpm test:all:e2e`
+   - Browser Web E2E tests (Playwright): `pnpm test:web:e2e`
+   - Mobile E2E tests (Maestro): `pnpm test:mobile:e2e`
 
 2. **Write a clear PR description:**
    - What does this PR do?
@@ -239,21 +223,7 @@ This is a **pnpm monorepo** managed by Turborepo. You can run commands globally 
    - How was it tested?
    - Screenshots for UI changes
 
-3. **Keep PRs focused** — One logical change per PR
-
-4. **Request review** from maintainers
-
-### PR Title Format
-
-Use a clear, descriptive title:
-
-```
-feat(leads): add bulk CSV import for leads
-fix(auth): session not persisting after page refresh
-docs(api): update API endpoint documentation
-chore(deps): upgrade Prisma to 7.x
-feat(marketing): add voice campaign retry logic
-```
+3. **Keep PRs focused** - One logical feature, bug fix, or refactor per PR.
 
 ---
 
@@ -269,29 +239,19 @@ Use [Conventional Commits](https://www.conventionalcommits.org/):
 
 ### Types
 
-| Type       | Description                                     |
-| ---------- | ----------------------------------------------- |
-| `feat`     | New feature                                     |
-| `fix`      | Bug fix                                         |
-| `docs`     | Documentation only                              |
-| `style`    | Formatting, missing semicolons (no code change) |
-| `refactor` | Code restructuring (no feature or fix)          |
-| `test`     | Adding or fixing tests                          |
-| `chore`    | Build process, dependency updates               |
+| Type | Description |
+| --- | --- |
+| `feat` | New feature |
+| `fix` | Bug fix |
+| `docs` | Documentation only |
+| `style` | Formatting, missing semicolons (no code change) |
+| `refactor` | Code restructuring (no feature or fix) |
+| `test` | Adding or fixing tests |
+| `chore` | Build process, dependency updates |
 
 ### Scopes
 
-Use the app/package or module name: `api`, `web`, `mobile`, `workers`, `types`, `validators`, `constants`, `integrations`, `leads`, `inventory`, `brokers`, `auth`, `dashboard`, `marketing`, `email`, `sms`, `voice`, `whatsapp`, `ads`, `docs`
-
-### Examples
-
-```
-feat(marketing): add 5-step voice campaign wizard
-fix(voice): fix carrier bridge fallback on Vobiz timeout
-refactor(api): decompose voice.service.ts into sub-services
-feat(constants): add voice normalizer for lead merge tags
-chore(workers): wire tryCarrierBridgeDispatch in marketing-voice processor
-```
+Use the app, package, or domain module name: `api`, `web`, `mobile`, `workers`, `types`, `validators`, `constants`, `messaging`, `storage`, `prisma`, `integrations`, `leads`, `bookings`, `payments`, `inventory`, `brokers`, `auth`, `dashboard`, `marketing`, `email`, `sms`, `voice`, `whatsapp`, `ads`, `security`, `docs`.
 
 ---
 
@@ -299,12 +259,12 @@ chore(workers): wire tryCarrierBridgeDispatch in marketing-voice processor
 
 Open an issue with:
 
-1. **Title:** Clear, concise description
-2. **Environment:** OS, Node.js version, browser (if frontend)
-3. **Steps to reproduce:** Numbered steps to trigger the bug
-4. **Expected behavior:** What should happen
-5. **Actual behavior:** What actually happens
-6. **Screenshots/logs:** If applicable
+1. **Title**: Clear, concise description
+2. **Environment**: OS, Node.js version, browser / device
+3. **Steps to reproduce**: Numbered steps to trigger the bug
+4. **Expected behavior**: What should happen
+5. **Actual behavior**: What actually happens
+6. **Screenshots / logs**: If applicable
 
 ---
 
@@ -312,12 +272,11 @@ Open an issue with:
 
 Open an issue with:
 
-1. **Problem:** What problem does this solve?
-2. **Proposed solution:** How should it work?
-3. **Alternatives considered:** Other approaches you thought about
-4. **Which role(s) benefit:** Which of the 12 roles would use this?
-5. **Which business line:** Brokerage, Channel Partner, or both?
-6. **Which channel (if marketing):** Email, SMS, AI Voice, WhatsApp, or Ads?
+1. **Problem**: What problem does this solve?
+2. **Proposed solution**: How should it work?
+3. **Target role(s)**: Which of the system roles would use this?
+4. **Business line**: Brokerage (`isCpProject = false`), Channel Partner (`isCpProject = true`), or both?
+5. **Channel (if marketing)**: Email, SMS, AI Voice, WhatsApp, or Ads?
 
 ---
 
