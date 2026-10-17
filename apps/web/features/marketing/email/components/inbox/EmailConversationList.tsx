@@ -199,7 +199,8 @@ export const EmailConversationList: React.FC<EmailConversationListProps> = ({
                   {/* CRM Context Badges */}
                   <div className="flex items-center gap-1.5 flex-wrap mb-1">
                     {(!conv.lastMessageText || conv.lastMessageText === 'Conversation started' || conv.lastMessageText === 'No messages yet') && (
-                      <span className="px-1.5 py-0.2 rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[9px] font-bold">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 text-[10px] font-medium tracking-tight">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
                         New • Uncontacted
                       </span>
                     )}
@@ -207,12 +208,12 @@ export const EmailConversationList: React.FC<EmailConversationListProps> = ({
                       <>
                         {conv.lead.temperature && (
                           <span
-                            className={`px-1.5 py-0.2 rounded-md text-[9px] font-bold ${
+                            className={`inline-flex items-center px-2 py-0.5 rounded-full border text-[10px] font-medium tracking-tight ${
                               conv.lead.temperature === 'HOT'
-                                ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 border border-rose-200 dark:border-rose-800'
+                                ? 'bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/20'
                                 : conv.lead.temperature === 'WARM'
-                                  ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200 dark:border-amber-800'
-                                  : 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200 dark:border-blue-800'
+                                  ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20'
+                                  : 'bg-slate-500/10 text-slate-700 dark:text-slate-300 border-slate-500/20'
                             }`}
                           >
                             {conv.lead.temperature}
@@ -221,19 +222,19 @@ export const EmailConversationList: React.FC<EmailConversationListProps> = ({
                       </>
                     )}
                     {conv.broker && (
-                      <span className="px-1.5 py-0.2 rounded-md bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 border border-purple-200 dark:border-purple-800 text-[9px] font-bold">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-700 dark:text-violet-300 border border-violet-500/20 text-[10px] font-medium tracking-tight">
                         Broker {conv.broker.companyName ? `• ${conv.broker.companyName}` : ''}
                       </span>
                     )}
                     {conv.customer && (
-                      <span className="px-1.5 py-0.2 rounded-md bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300 border border-sky-200 dark:border-sky-800 text-[9px] font-bold">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 border border-cyan-500/20 text-[10px] font-medium tracking-tight">
                         Customer
                       </span>
                     )}
                     {conv.nextScheduledAt && (
                       <span
                         title={`Scheduled email queued for ${formatScheduleChipDate(conv.nextScheduledAt)}`}
-                        className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-blue-500/15 text-blue-700 dark:text-blue-400 border border-blue-500/30 text-[9px] font-bold"
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border border-indigo-500/20 text-[10px] font-medium tracking-tight"
                       >
                         <Clock className="w-2.5 h-2.5 animate-pulse" />
                         <span>Scheduled: {formatScheduleChipDate(conv.nextScheduledAt)}</span>

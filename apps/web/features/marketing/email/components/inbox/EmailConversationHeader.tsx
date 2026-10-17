@@ -93,15 +93,20 @@ export const EmailConversationHeader: React.FC<EmailConversationHeaderProps> = (
         </div>
 
         {/* Status Dropdown */}
-        <select
-          value={conversation.status}
-          onChange={(e) => onUpdateStatus(e.target.value as any)}
-          className="px-2.5 py-1.5 bg-bg-base border border-border-default rounded-xl text-xs font-medium text-text-secondary focus:outline-hidden focus:border-brand-500 cursor-pointer"
-        >
-          <option value="open">🟢 Open</option>
-          <option value="pending">🟡 Pending</option>
-          <option value="closed">⚪ Closed</option>
-        </select>
+        <div className="relative inline-flex items-center gap-2 px-2.5 py-1.5 bg-bg-base border border-border-default rounded-xl focus-within:border-brand-500">
+          <span aria-hidden="true" className={`w-1.5 h-1.5 rounded-full ${conversation.status === 'open' ? 'bg-emerald-500' : conversation.status === 'pending' ? 'bg-amber-500' : 'bg-slate-400'}`} />
+          <select
+            aria-label="Conversation status"
+            value={conversation.status}
+            onChange={(e) => onUpdateStatus(e.target.value as 'open' | 'pending' | 'closed')}
+            className="appearance-none bg-transparent pr-4 text-xs font-medium capitalize text-text-secondary focus:outline-hidden cursor-pointer"
+          >
+            <option value="open">Open</option>
+            <option value="pending">Pending</option>
+            <option value="closed">Closed</option>
+          </select>
+          <span aria-hidden="true" className="pointer-events-none absolute right-2 text-[10px] text-text-tertiary">⌄</span>
+        </div>
 
         {/* Assigned Agent Indicator */}
         <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-bg-subtle rounded-xl border border-border-default text-xs text-text-secondary">
