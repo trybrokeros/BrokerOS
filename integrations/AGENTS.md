@@ -1,4 +1,4 @@
-# AGENTS.md — integrations/
+# AGENTS.md - integrations/
 
 ---
 
@@ -12,7 +12,7 @@ TypeScript · Self-contained workspace packages (`@brokeros/int-*`) · ESM (`"ty
 
 `integrations/` contains all third-party external service adapters for BrokerOS. These packages isolate external API protocols, transport logic, error normalization, and payload formatting from the rest of the monorepo.
 
-`apps/api` and `apps/workers` MUST always consume external services via these packages — never by making direct HTTP requests or inlining 3rd-party SDKs inside controllers or services.
+`apps/api` and `apps/workers` MUST always consume external services via these packages - never by making direct HTTP requests or inlining 3rd-party SDKs inside controllers or services.
 
 ---
 
