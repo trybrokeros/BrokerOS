@@ -1,4 +1,5 @@
 import { createAuthClient } from "better-auth/react";
+import { twoFactorClient } from "better-auth/client/plugins";
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL || "/api/proxy";
 const getBaseURL = () => {
@@ -11,4 +12,5 @@ const getBaseURL = () => {
 
 export const authClient = createAuthClient({
   baseURL: getBaseURL() + "/api/auth",
+  plugins: [twoFactorClient()],
 });
