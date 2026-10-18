@@ -25,6 +25,7 @@ export class GoogleLeadsService {
         this.logger.warn(
           'Google Ads webhook verification failed: Invalid or missing google_key',
         );
+        return { success: false, error: 'Invalid or missing google_key' };
       }
 
       // Parse payload
