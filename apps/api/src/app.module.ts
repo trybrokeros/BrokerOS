@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { PrismaModule } from './lib/database/prisma.module.js';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 
 import { AuthModule as BetterAuthModule } from '@thallesp/nestjs-better-auth';
 import { auth } from './lib/auth.js';
@@ -19,8 +20,10 @@ import { ChatModule } from './chat/chat.module.js';
 import { MarketingModule } from './marketing/marketing.module.js';
 import { CrmTelephonyModule } from './crm-telephony/crm-telephony.module.js';
 
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_FILTER } from '@nestjs/core';
 import { AuthGuard } from '@thallesp/nestjs-better-auth';
+import { RolesGuard } from './auth/roles.guard.js';
+import { GlobalExceptionFilter } from './lib/filters/global-exception.filter.js';
 
 import { ScheduleModule } from '@nestjs/schedule';
 
@@ -28,6 +31,19 @@ import { ScheduleModule } from '@nestjs/schedule';
   imports: [
     PrismaModule,
     ScheduleModule.forRoot(),
+
+    // ── Rate Limiting ─────────────────────────────────────────────────────────
+    // Global default: 60 requests per minute per IP across all routes.
+    // Sensitive routes (login) override this with tighter limits via @Throttle().
+    // Storage: in-memory (single instance). For horizontal scaling, swap to
+    // ThrottlerStorageRedisService pointing at your existing Redis instance.
+    ThrottlerModule.forRoot([
+      {
+        name: 'global',
+        ttl: 60_000,  // 1 minute window (ms)
+        limit: 60,    // 60 requests per window
+      },
+    ]),
     BetterAuthModule.forRoot({
       auth,
       bodyParser: {
@@ -52,9 +68,25 @@ import { ScheduleModule } from '@nestjs/schedule';
   providers: [
     AppService,
     SignInHook,
+    // 1st guard: validates Better Auth session
     {
       provide: APP_GUARD,
       useClass: AuthGuard,
+    },
+    // 2nd guard: enforces rate limits (runs after auth)
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+    // 3rd guard: enforces least-privilege role scoping whenever @Roles(...) is specified
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    },
+    // Global filter: intercepts unhandled exceptions, logs them server-side, and masks stack traces in production
+    {
+      provide: APP_FILTER,
+      useClass: GlobalExceptionFilter,
     },
   ],
 })
