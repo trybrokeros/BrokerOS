@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useLeadHref } from '@/lib/lead-navigation';
 import type { WhatsAppContact } from '../../types';
 import { ContactFormModal } from './ContactFormModal';
 import { ImportContactsModal } from './ImportContactsModal';
@@ -35,6 +36,7 @@ export const WhatsAppContactsTable: React.FC<WhatsAppContactsTableProps> = ({
   accountId,
 }) => {
   const router = useRouter();
+  const getLeadHref = useLeadHref();
   const [contacts, setContacts] = useState<WhatsAppContact[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -215,7 +217,7 @@ export const WhatsAppContactsTable: React.FC<WhatsAppContactsTableProps> = ({
                     <td className="px-6 py-4">
                       {contact.lead ? (
                         <Link
-                          href={`/dashboard/leads/${contact.lead.id}`}
+                          href={getLeadHref(contact.lead.id)}
                           onClick={(e) => e.stopPropagation()}
                           className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-brand-50 dark:bg-brand-950/40 text-brand-600 border border-brand-200 dark:border-brand-800 font-medium hover:underline text-[11px]"
                         >

@@ -15,6 +15,7 @@ import {
   Video,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { useLeadHref } from '@/lib/lead-navigation';
 import type { YouTubeAcquiredLead } from '../types';
 
 interface YouTubeAcquiredLeadsTableProps {
@@ -26,6 +27,7 @@ export function YouTubeAcquiredLeadsTable({
   leads,
   currency = 'INR',
 }: YouTubeAcquiredLeadsTableProps) {
+  const getLeadHref = useLeadHref();
   const [searchTerm, setSearchTerm] = useState('');
 
   const filtered = leads.filter((item) => {
@@ -151,7 +153,7 @@ export function YouTubeAcquiredLeadsTable({
                     <td className="py-3 px-4">
                       <div>
                         <Link
-                          href={`/dashboard/leads/${l.id}`}
+                          href={getLeadHref(l.id)}
                           className="font-extrabold text-slate-900 hover:text-[var(--brand-600)] transition-colors flex items-center gap-1"
                         >
                           {l.name}
@@ -235,7 +237,7 @@ export function YouTubeAcquiredLeadsTable({
 
                     {/* Action */}
                     <td className="py-3 px-4 text-center">
-                      <Link href={`/dashboard/leads/${l.id}`}>
+                      <Link href={getLeadHref(l.id)}>
                         <Button variant="ghost" size="sm" className="h-7 px-2 text-[11px] font-bold rounded-lg text-slate-600 hover:text-slate-900">
                           View Lead
                         </Button>

@@ -15,6 +15,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useLeadHref } from '@/lib/lead-navigation';
 import type { WhatsAppConversation } from '../../types';
 
 interface ContactDrawerProps {
@@ -28,15 +29,24 @@ export const ContactDrawer: React.FC<ContactDrawerProps> = ({
   isOpen,
   onClose,
 }) => {
+  const getLeadHref = useLeadHref();
   if (!isOpen || !conversation) return null;
 
   const contact = conversation.contact;
   const displayName = contact?.name || conversation.contactName || conversation.contactPhone;
 
   return (
-    <div className="w-80 border-l border-border-default bg-bg-surface flex flex-col h-full shrink-0 shadow-lg animate-in slide-in-from-right-4 duration-150">
-      {/* Drawer Header */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-border-default">
+    <>
+      {/* Mobile/Tablet Backdrop Overlay (hidden on xl desktop where 3 columns sit side-by-side) */}
+      <div
+        onClick={onClose}
+        aria-hidden="true"
+        className="fixed inset-0 bg-black/20 backdrop-blur-2xs z-20 xl:hidden animate-in fade-in duration-200"
+      />
+
+      <div className="absolute inset-y-0 right-0 z-30 w-full sm:w-80 md:w-88 border-l border-border-default bg-bg-surface flex flex-col h-full shrink-0 shadow-2xl xl:relative xl:shadow-none xl:z-auto xl:w-72 2xl:w-80 animate-in slide-in-from-right-4 duration-200">
+        {/* Drawer Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border-default">
         <h3 className="font-semibold text-text-primary text-sm">Contact Profile</h3>
         <button
           onClick={onClose}
@@ -68,7 +78,7 @@ export const ContactDrawer: React.FC<ContactDrawerProps> = ({
                 <span>Connected Lead</span>
               </div>
               <Link
-                href={`/dashboard/leads/${contact.lead.id}`}
+                href={getLeadHref(contact.lead.id)}
                 className="text-xs text-brand-600 hover:underline flex items-center gap-1"
               >
                 <span>View</span>
@@ -161,5 +171,6 @@ export const ContactDrawer: React.FC<ContactDrawerProps> = ({
         </div>
       </div>
     </div>
+  </>
   );
 };

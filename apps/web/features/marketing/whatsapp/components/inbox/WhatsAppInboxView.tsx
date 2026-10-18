@@ -227,7 +227,7 @@ export const WhatsAppInboxView: React.FC<WhatsAppInboxViewProps> = ({
   };
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] bg-bg-surface border border-border-default rounded-2xl overflow-hidden shadow-sm">
+    <div className="relative flex h-[calc(100vh-4rem)] bg-bg-surface border border-border-default rounded-2xl overflow-hidden shadow-sm">
       {/* 1. Left Panel: Conversations List */}
       <ConversationList
         conversations={conversations}
@@ -254,6 +254,7 @@ export const WhatsAppInboxView: React.FC<WhatsAppInboxViewProps> = ({
               onUpdateStatus={(status) => updateStatus(activeConversation.id, status)}
               onAssignAgent={(agentId) => assignAgent(activeConversation.id, agentId)}
               onToggleContactDrawer={() => setIsDrawerOpen(!isDrawerOpen)}
+              isDrawerOpen={isDrawerOpen}
             />
 
             {(() => {

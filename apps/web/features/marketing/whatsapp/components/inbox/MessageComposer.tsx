@@ -278,12 +278,12 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
 
       {/* Action Bar Above Input */}
       <div className="flex items-center justify-between gap-2 mb-2 px-1">
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 flex-wrap">
           {/* Quick Replies Button */}
           <button
             type="button"
             onClick={() => setIsQuickReplyModalOpen(true)}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium text-text-secondary hover:text-text-primary hover:bg-bg-subtle transition-colors"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold text-text-secondary hover:text-text-primary bg-bg-base hover:bg-bg-subtle border border-border-default transition-all shadow-2xs cursor-pointer active:scale-95"
             title="Insert quick canned response"
           >
             <Zap className="w-3.5 h-3.5 text-amber-500" />
@@ -294,7 +294,7 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
           <button
             type="button"
             onClick={() => setIsTemplateModalOpen(true)}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium text-text-secondary hover:text-text-primary hover:bg-bg-subtle transition-colors"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold text-text-secondary hover:text-text-primary bg-bg-base hover:bg-bg-subtle border border-border-default transition-all shadow-2xs cursor-pointer active:scale-95"
             title="Send official HSM WhatsApp template"
           >
             <FileText className="w-3.5 h-3.5 text-emerald-500" />
@@ -305,7 +305,7 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium text-text-secondary hover:text-text-primary hover:bg-bg-subtle transition-colors"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold text-text-secondary hover:text-text-primary bg-bg-base hover:bg-bg-subtle border border-border-default transition-all shadow-2xs cursor-pointer active:scale-95"
             title="Attach image, brochure, or document"
           >
             <Paperclip className="w-3.5 h-3.5 text-blue-500" />
@@ -317,7 +317,7 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
             type="button"
             onClick={() => setIsScheduleModalOpen(true)}
             disabled={!text.trim() || disabled}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold text-text-secondary hover:text-text-primary hover:bg-bg-subtle transition-colors disabled:opacity-40"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold text-text-secondary hover:text-text-primary bg-bg-base hover:bg-bg-subtle border border-border-default transition-all shadow-2xs cursor-pointer disabled:opacity-40 active:scale-95"
             title="Schedule message for later..."
           >
             <CalendarClock className="w-3.5 h-3.5 text-emerald-500" />
@@ -337,12 +337,12 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
           type="button"
           onClick={handleAiDraft}
           disabled={aiDrafting || disabled}
-          className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/20 transition-all shadow-2xs disabled:opacity-50"
+          className="flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-gradient-to-r from-purple-500/15 via-purple-500/10 to-purple-600/15 hover:from-purple-500/25 hover:to-purple-600/25 text-purple-700 dark:text-purple-300 border border-purple-500/30 transition-all shadow-2xs disabled:opacity-50 cursor-pointer active:scale-95"
         >
           {aiDrafting ? (
             <Loader2 className="w-3.5 h-3.5 animate-spin" />
           ) : (
-            <Sparkles className="w-3.5 h-3.5" />
+            <Sparkles className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
           )}
           <span>{aiDrafting ? 'Drafting...' : 'Draft with AI'}</span>
         </button>
@@ -376,7 +376,7 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
       )}
 
       {/* Textarea Input + Send Button */}
-      <div className="flex items-end gap-2 bg-bg-base border border-border-default rounded-2xl p-1.5 focus-within:border-brand-500 focus-within:ring-1 focus-within:ring-brand-500/20 transition-all">
+      <div className="flex items-end gap-2 bg-bg-base border border-border-default rounded-2xl p-2 focus-within:border-emerald-500 focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all shadow-2xs">
         <textarea
           ref={textareaRef}
           rows={1}
@@ -393,16 +393,16 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
               ? 'Select a conversation to start messaging...'
               : 'Type a message... (Type / for quick replies, Enter to send)'
           }
-          className="flex-1 bg-transparent resize-none border-none outline-hidden px-3 py-2 text-sm text-text-primary placeholder:text-text-muted max-h-32 leading-relaxed"
+          className="flex-1 bg-transparent resize-none border-none outline-hidden px-3 py-2 text-sm text-text-primary placeholder:text-text-muted max-h-32 leading-relaxed font-medium"
         />
 
         {/* Split Send / Schedule Button */}
-        <div className="flex items-center shrink-0">
+        <div className="flex items-center shrink-0 shadow-xs rounded-xl overflow-hidden">
           <button
             type="button"
             onClick={handleSend}
             disabled={!text.trim() || sending || disabled}
-            className="p-2.5 rounded-l-xl bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-40 disabled:hover:bg-emerald-600 transition-colors shadow-sm"
+            className="p-2.5 bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] text-white font-bold disabled:opacity-40 transition-all shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] cursor-pointer"
             title="Send WhatsApp Message (Enter)"
           >
             {sending ? (
@@ -415,7 +415,7 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
             type="button"
             onClick={() => setIsScheduleModalOpen(true)}
             disabled={!text.trim() || sending || disabled}
-            className="p-2.5 rounded-r-xl bg-emerald-600 hover:bg-emerald-700 text-white border-l border-emerald-500/40 disabled:opacity-40 transition-colors shadow-sm"
+            className="p-2.5 bg-emerald-600 hover:bg-emerald-500 active:scale-[0.98] text-white font-bold border-l border-emerald-500/40 disabled:opacity-40 transition-all shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] cursor-pointer"
             title="Schedule for later..."
           >
             <CalendarClock className="w-4 h-4" />
