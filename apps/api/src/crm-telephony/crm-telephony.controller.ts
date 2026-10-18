@@ -16,6 +16,8 @@ import {
   VerifyCrmTelephonyDto,
 } from './dto/crm-telephony.dto.js';
 
+import { Roles } from '../auth/roles.decorator.js';
+
 @Controller(['api/crm/telephony', 'telephony'])
 export class CrmTelephonyController {
   constructor(private readonly telephonyService: CrmTelephonyService) { }
@@ -32,6 +34,7 @@ export class CrmTelephonyController {
    * Connects / updates the single active company-wide telephony carrier.
    */
   @Post('connect')
+  @Roles('ADMIN', 'DIRECTOR')
   async connect(@Body() dto: ConnectCrmTelephonyDto) {
     return this.telephonyService.connectProvider(dto);
   }
@@ -40,6 +43,7 @@ export class CrmTelephonyController {
    * Disconnects the active telephony provider.
    */
   @Delete('disconnect/:id')
+  @Roles('ADMIN', 'DIRECTOR')
   async disconnect(@Param('id') id: string) {
     return this.telephonyService.disconnectProvider(id);
   }
@@ -48,6 +52,7 @@ export class CrmTelephonyController {
    * Triggers an outbound carrier verification call to admin's phone.
    */
   @Post('verify')
+  @Roles('ADMIN', 'DIRECTOR')
   async verify(@Body() dto: VerifyCrmTelephonyDto) {
     return this.telephonyService.verifyProvider(dto);
   }
