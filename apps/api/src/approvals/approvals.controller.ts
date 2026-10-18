@@ -19,10 +19,11 @@ import {
   CreateApprovalRequestDto,
   AddApprovalMessageDto,
 } from './dto/approvals.dto.js';
+import { Roles } from '../auth/roles.decorator.js';
 
 @Controller('api/approvals')
 export class ApprovalsController {
-  constructor(private readonly approvalsService: ApprovalsService) {}
+  constructor(private readonly approvalsService: ApprovalsService) { }
 
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
@@ -70,11 +71,13 @@ export class ApprovalsController {
   }
 
   @Patch(':id/close')
+  @Roles('ADMIN', 'DIRECTOR', 'BUSINESS_MANAGER', 'SALES_MANAGER', 'PRE_SALES_MANAGER', 'POST_SALES_MANAGER', 'CHANNEL_PARTNER')
   async closeRequest(@Param('id') id: string) {
     return this.approvalsService.closeRequest(id);
   }
 
   @Post(':id/redo')
+  @Roles('ADMIN', 'DIRECTOR', 'BUSINESS_MANAGER', 'SALES_MANAGER', 'PRE_SALES_MANAGER', 'POST_SALES_MANAGER', 'CHANNEL_PARTNER')
   async redoRequestDecision(@Param('id') id: string, @Req() req) {
     const userId = req.user?.id || req.user?.userId;
     if (!userId) throw new UnauthorizedException('User not authenticated');
