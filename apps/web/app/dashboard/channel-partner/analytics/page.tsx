@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { authClient } from "@/lib/auth-client";
-import { AlertCircle, Loader2, TrendingUp } from "lucide-react";
+import { AlertCircle, Loader2, Building, Layers } from "lucide-react";
 import { Overview } from "./_components/Overview";
 import { BookingFunnel } from "./_components/BookingFunnel";
 import { RevenueCharts } from "./_components/RevenueCharts";
@@ -41,70 +41,132 @@ export default function CPAnalyticsPage() {
     load();
   }, [range]);
 
-  const ranges = ["weekly", "monthly", "yearly", "all-time"];
+  const ranges = [
+    { id: "weekly", label: "Weekly" },
+    { id: "monthly", label: "Monthly" },
+    { id: "yearly", label: "Yearly" },
+    { id: "all-time", label: "All Time" },
+  ];
 
   const reportPayload = data
     ? {
-      departmentName: "Channel Partner Enterprise Operations & Network Analytics",
-      departmentCode: "CHANNEL_PARTNER",
-      timeRange: range,
-      generatedAt: new Date().toLocaleString(),
-      summaryCards: [
-        { label: "Total Booked Revenue", value: `₹${(data.topWidgets?.totalRevenue || 0).toLocaleString()}`, subtitle: "Gross token value" },
-        { label: "Total Bookings", value: data.topWidgets?.totalBookings ?? 0, subtitle: "Deals closed" },
-        { label: "Units Sold", value: data.topWidgets?.totalUnitsSold ?? 0, subtitle: "Handover complete" },
-        { label: "Units Reserved", value: data.topWidgets?.totalUnitsReserved ?? 0, subtitle: "Under token" },
-        { label: "Handover Pending", value: data.topWidgets?.totalHandoverPending ?? 0, subtitle: "In pipeline" },
-      ],
-      funnelStages: [
-        { name: "Active Brokers", count: data.topWidgets?.totalBrokers ?? 0, color: "#6366f1" },
-        { name: "Site Visits", count: data.topWidgets?.totalSiteVisits ?? 0, color: "#a855f7" },
-        { name: "Reserved Units", count: data.topWidgets?.totalUnitsReserved ?? 0, color: "#f59e0b" },
-        { name: "Confirmed Bookings", count: data.topWidgets?.totalBookings ?? 0, color: "#10b981" },
-        { name: "Units Handed Over", count: data.topWidgets?.totalUnitsSold ?? 0, color: "#059669" },
-      ],
-      financialMetrics: [
-        { label: "Total CP Development Revenue", value: `₹${(data.topWidgets?.totalRevenue || 0).toLocaleString()}` },
-        { label: "Booking Token Revenue", value: `₹${(data.topWidgets?.totalBookingRevenue || 0).toLocaleString()}` },
-      ],
-      activityMetrics: [
-        { label: "Total Confirmed Bookings", value: data.topWidgets?.totalBookings ?? 0 },
-        { label: "Units Sold", value: data.topWidgets?.totalUnitsSold ?? 0 },
-        { label: "Units Reserved", value: data.topWidgets?.totalUnitsReserved ?? 0 },
-        { label: "Handovers Pending", value: data.topWidgets?.totalHandoverPending ?? 0 },
-      ],
-    }
+        departmentName: "Channel Partner Enterprise Operations & Network Analytics",
+        departmentCode: "CHANNEL_PARTNER",
+        timeRange: range,
+        generatedAt: new Date().toLocaleString(),
+        summaryCards: [
+          {
+            label: "Total Booked Revenue",
+            value: `₹${(data.topWidgets?.totalRevenue || 0).toLocaleString()}`,
+            subtitle: "Gross token value",
+          },
+          {
+            label: "Total Bookings",
+            value: data.topWidgets?.totalBookings ?? 0,
+            subtitle: "Deals closed",
+          },
+          {
+            label: "Units Sold",
+            value: data.topWidgets?.totalUnitsSold ?? 0,
+            subtitle: "Handover complete",
+          },
+          {
+            label: "Units Reserved",
+            value: data.topWidgets?.totalUnitsReserved ?? 0,
+            subtitle: "Under token",
+          },
+          {
+            label: "Handover Pending",
+            value: data.topWidgets?.totalHandoverPending ?? 0,
+            subtitle: "In pipeline",
+          },
+        ],
+        funnelStages: [
+          {
+            name: "Active Brokers",
+            count: data.topWidgets?.totalBrokers ?? 0,
+            color: "#6366f1",
+          },
+          {
+            name: "Site Visits",
+            count: data.topWidgets?.totalSiteVisits ?? 0,
+            color: "#a855f7",
+          },
+          {
+            name: "Reserved Units",
+            count: data.topWidgets?.totalUnitsReserved ?? 0,
+            color: "#f59e0b",
+          },
+          {
+            name: "Confirmed Bookings",
+            count: data.topWidgets?.totalBookings ?? 0,
+            color: "#10b981",
+          },
+          {
+            name: "Units Handed Over",
+            count: data.topWidgets?.totalUnitsSold ?? 0,
+            color: "#059669",
+          },
+        ],
+        financialMetrics: [
+          {
+            label: "Total CP Development Revenue",
+            value: `₹${(data.topWidgets?.totalRevenue || 0).toLocaleString()}`,
+          },
+          {
+            label: "Booking Token Revenue",
+            value: `₹${(data.topWidgets?.totalBookingRevenue || 0).toLocaleString()}`,
+          },
+        ],
+        activityMetrics: [
+          {
+            label: "Total Confirmed Bookings",
+            value: data.topWidgets?.totalBookings ?? 0,
+          },
+          { label: "Units Sold", value: data.topWidgets?.totalUnitsSold ?? 0 },
+          {
+            label: "Units Reserved",
+            value: data.topWidgets?.totalUnitsReserved ?? 0,
+          },
+          {
+            label: "Handovers Pending",
+            value: data.topWidgets?.totalHandoverPending ?? 0,
+          },
+        ],
+      }
     : null;
 
   return (
-    <div className="p-4 md:p-8 max-w-[1600px] mx-auto space-y-8 animate-enter">
+    <div className="p-4 sm:p-8 max-w-[1600px] mx-auto space-y-8 animate-in fade-in duration-300">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-extrabold text-[var(--text-primary)] tracking-tight flex items-center gap-2.5 m-0">
-            <div className="w-8 h-8 rounded-xl bg-purple-50 flex items-center justify-center text-[var(--brand-700)]">
-              <TrendingUp size={18} />
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-2xl bg-indigo-50 border border-indigo-200/80 flex items-center justify-center text-indigo-600 shadow-2xs">
+              <Layers size={18} className="stroke-[2.2]" />
             </div>
-            <span>Channel Partner Enterprise Analytics</span>
-          </h1>
-          <p className="text-xs text-[var(--text-muted)] font-medium mt-0.5 m-0">
-            Comprehensive business intelligence across broker networks, sourcing/closing teams & development inventory
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight m-0">
+              Channel Partner Enterprise Intelligence
+            </h1>
+          </div>
+          <p className="text-xs text-slate-500 font-medium mt-1 m-0">
+            Comprehensive business intelligence across broker networks, sourcing/closing divisions & development inventory.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
-          <div className="flex bg-slate-100 p-1 rounded-full border border-slate-200/60 w-fit">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex bg-slate-100 p-1 rounded-full border border-slate-200/80 shadow-2xs">
             {ranges.map((r) => (
               <button
-                key={r}
-                onClick={() => setRange(r)}
-                className={`px-3.5 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                  range === r
-                    ? "bg-white text-[var(--text-primary)] shadow-xs"
-                    : "text-slate-500 hover:text-slate-800"
+                key={r.id}
+                onClick={() => setRange(r.id)}
+                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                  range === r.id
+                    ? "bg-white text-slate-900 shadow-xs font-extrabold"
+                    : "text-slate-500 hover:text-slate-900"
                 }`}
               >
-                {r.charAt(0).toUpperCase() + r.slice(1).replace("-", " ")}
+                {r.label}
               </button>
             ))}
           </div>
@@ -118,17 +180,17 @@ export default function CPAnalyticsPage() {
 
       {status === "loading" && (
         <div className="min-h-[40vh] flex flex-col items-center justify-center gap-3">
-          <Loader2 className="w-8 h-8 text-[var(--brand-600)] animate-spin" />
-          <p className="text-xs font-semibold text-[var(--text-muted)]">
-            Aggregating channel partner analytics…
+          <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+          <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
+            Aggregating Channel Partner Enterprise Intelligence…
           </p>
         </div>
       )}
 
       {status === "error" && (
-        <div className="p-6 rounded-3xl bg-rose-50 border border-rose-200 text-center">
+        <div className="p-6 rounded-3xl bg-rose-50 border border-rose-200/90 text-center shadow-sm">
           <AlertCircle className="w-8 h-8 text-rose-500 mx-auto mb-2" />
-          <h2 className="text-sm font-bold text-rose-700 mb-0.5">
+          <h2 className="text-sm font-extrabold text-rose-900 mb-0.5">
             Failed to Load CP Analytics
           </h2>
           <p className="text-xs text-rose-600 font-medium m-0">
