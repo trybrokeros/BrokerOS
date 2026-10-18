@@ -5,192 +5,194 @@ import {
   DollarSign,
   Radio,
   Database,
+  PhoneCall,
+  MessageSquare,
+  Bot,
+  Inbox,
+  Building2,
+  Users,
+  Smartphone,
+  Layers,
+  Sparkles,
 } from "lucide-react";
-
-export type RoleScenario = {
-  id: string;
-  roleTitle: string;
-  badge: string;
-  badgeColor: string;
-  headline: string;
-  summary: string;
-  statPrimary: { label: string; value: string; change: string };
-  statSecondary: { label: string; value: string };
-  mockUi: {
-    title: string;
-    tag: string;
-    items: { label: string; value: string; highlight?: boolean; status?: "success" | "warning" | "info" }[];
-    actionLabel: string;
-    secondaryActionLabel?: string;
-  };
-};
 
 export const EASE_OUT_EXPO = [0.16, 1, 0.3, 1] as const;
 
-export const SCENARIOS: RoleScenario[] = [
+export type CockpitTabId =
+  | "executive"
+  | "omnichannel"
+  | "inbox"
+  | "field-sales"
+  | "cp-network"
+  | "inventory";
+
+export interface CockpitTabConfig {
+  id: CockpitTabId;
+  label: string;
+  badge: string;
+  badgeColor: string;
+  headline: string;
+  subheadline: string;
+  stat1: { label: string; value: string; change: string; positive?: boolean };
+  stat2: { label: string; value: string; change: string; positive?: boolean };
+  stat3: { label: string; value: string; change: string; positive?: boolean };
+}
+
+export const COCKPIT_TABS: CockpitTabConfig[] = [
   {
-    id: "pre-sales",
-    roleTitle: "Pre-Sales Executive",
-    badge: "Lead Acceleration",
-    badgeColor: "bg-purple-100 text-purple-800 border-purple-200",
-    headline: "High-velocity lead qualification with manager daily targets",
-    summary:
-      "Daily cold-call quota tracking, instant lead assignment from portal webhooks, and AI temperature scoring (HOT/WARM/COLD) to maximize sales pipeline velocity.",
-    statPrimary: { label: "Daily Call Target", value: "42 / 50", change: "+84% achieved" },
-    statSecondary: { label: "Lead Conversion Rate", value: "23.8%" },
-    mockUi: {
-      title: "Lead #LD-9024 — Rahul Sharma",
-      tag: "HOT LEAD · AI SCORE 94",
-      items: [
-        { label: "Project Interest", value: "Skyline Imperial (3 BHK)" },
-        { label: "Budget Range", value: "₹2.20 Cr – ₹2.50 Cr", highlight: true },
-        { label: "Assigned Executive", value: "Priya V. (Pre-Sales)" },
-        { label: "Follow-up Scheduled", value: "Today, 4:30 PM", status: "warning" },
-        { label: "Lead Source", value: "Meta Ads · Instant Webhook" },
-      ],
-      actionLabel: "Log Call & Mark Site Visit",
-      secondaryActionLabel: "Reassign Lead",
-    },
+    id: "executive",
+    label: "Executive Cockpit",
+    badge: "14-Role Universal Oversight",
+    badgeColor: "bg-indigo-50 text-indigo-700 border-indigo-200/80",
+    headline: "Unified revenue velocity & quota attainment across both business lines",
+    subheadline:
+      "Universal supervisory bypass for Directors and Admins. Monitor company-wide sales pace, quarterly target absorption, hot deal pipeline, and department conversion bottlenecks in real time.",
+    stat1: { label: "Quarterly GMV", value: "₹148.5 Cr", change: "+31.4% YoY", positive: true },
+    stat2: { label: "Target Quota Pace", value: "84.2%", change: "+6.8% vs plan", positive: true },
+    stat3: { label: "Avg Cycle Length", value: "12.8 Days", change: "-2.4 days faster", positive: true },
   },
   {
-    id: "sales",
-    roleTitle: "Sales Manager",
-    badge: "Direct Sales (isCpProject = false)",
-    badgeColor: "bg-sky-100 text-sky-800 border-sky-200",
-    headline: "GPS-verified site visits and governed price negotiations",
-    summary:
-      "Field selfie check-ins with geo-coordinates, real-time unit inventory locks, and formal discount negotiation approval flows before booking creation.",
-    statPrimary: { label: "Site Visits This Week", value: "38", change: "+14% vs last week" },
-    statSecondary: { label: "Inventory Reserved", value: "14 Units" },
-    mockUi: {
-      title: "Site Visit #SV-1048 — Tower B, Unit 1402",
-      tag: "GPS VERIFIED · 19.0760° N, 72.8777° E",
-      items: [
-        { label: "Unit Configuration", value: "3 BHK Luxury (1,840 sq.ft)" },
-        { label: "Base Price", value: "₹2,65,00,000" },
-        { label: "Approved Discount", value: "₹4,50,000 (Sales Mgr Approved)", highlight: true },
-        { label: "Verification Status", value: "GPS Coordinates & Selfie Matched", status: "success" },
-        { label: "Customer State", value: "Ready for Booking Advance" },
-      ],
-      actionLabel: "Generate Booking Agreement",
-      secondaryActionLabel: "View Unit Floorplan",
-    },
+    id: "omnichannel",
+    label: "AI Voice & Marketing",
+    badge: "Omnichannel Suite",
+    badgeColor: "bg-purple-50 text-purple-700 border-purple-200/80",
+    headline: "Autonomous AI voice agents, Meta WhatsApp Cloud API & broadcast engines",
+    subheadline:
+      "Dial thousands of leads with sub-second latency via carrier-bridged AI voice agents (Vapi, Retell, Twilio). Deliver rich Meta-verified WhatsApp interactive campaigns with 98%+ open rates.",
+    stat1: { label: "AI Voice Minutes", value: "14,280 min", change: "99.2% connection", positive: true },
+    stat2: { label: "WhatsApp Open Rate", value: "98.4%", change: "+42% vs email", positive: true },
+    stat3: { label: "Instant Lead Sync", value: "< 240 ms", change: "Meta / Google Ads", positive: true },
   },
   {
-    id: "channel-partner",
-    roleTitle: "Sourcing Manager",
-    badge: "CP Network (isCpProject = true)",
-    badgeColor: "bg-amber-100 text-amber-800 border-amber-200",
-    headline: "Channel partner onboarding and tiered commission tracking",
-    summary:
-      "Separate external broker network operations with project assignments, automatic brokerage tier settlement calculations, and zero data leakage into internal sales.",
-    statPrimary: { label: "Active CP Brokers", value: "184", change: "+12 new this month" },
-    statSecondary: { label: "CP Sales Volume", value: "₹48.2 Cr" },
-    mockUi: {
-      title: "Broker: Apex Realty Partners (RERA #A519000)",
-      tag: "TIER 1 PARTNER · 2.50% SLAB",
-      items: [
-        { label: "Project Assignment", value: "Grandview Estates (CP Dedicated)" },
-        { label: "Latest Booking Value", value: "₹1,90,00,000 (Unit C-404)" },
-        { label: "Commission Payable", value: "₹4,75,000 (2.50%)", highlight: true },
-        { label: "Settlement Status", value: "Finance Verification Complete", status: "success" },
-        { label: "Sourcing Manager", value: "Vikram Malhotra" },
-      ],
-      actionLabel: "Approve Brokerage Settlement",
-      secondaryActionLabel: "View Broker Ledger",
-    },
+    id: "inbox",
+    label: "Department Inbox",
+    badge: "Zero-Leakage Multi-Channel",
+    badgeColor: "bg-emerald-50 text-emerald-700 border-emerald-200/80",
+    headline: "One synchronized inbox for WhatsApp, SMS, and Email scoped by role",
+    subheadline:
+      "All buyer and broker interactions across WhatsApp, SMS, and Email flow into a unified timeline. Dynamically filtered by department so Pre-Sales, Sales, and Sourcing reps never cross boundaries.",
+    stat1: { label: "Open Conversations", value: "184 active", change: "100% assigned", positive: true },
+    stat2: { label: "Avg First Response", value: "3.2 min", change: "-58% reduction", positive: true },
+    stat3: { label: "Cross-Channel Sync", value: "3 Channels", change: "WA + SMS + Mail", positive: true },
   },
   {
-    id: "finance",
-    roleTitle: "Finance & Post-Sales",
-    badge: "Ledger & Settlements",
-    badgeColor: "bg-emerald-100 text-emerald-800 border-emerald-200",
-    headline: "Automated builder inbound commission and milestone releases",
-    summary:
-      "Track inbound commissions from builders, compute TDS and GST deductions, and manage multi-stage construction milestone collection disbursements.",
-    statPrimary: { label: "Inbound Receivables", value: "₹3.84 Cr", change: "92% collected" },
-    statSecondary: { label: "Broker Payouts Due", value: "₹28.5 L" },
-    mockUi: {
-      title: "Settlement Batch #SET-8821",
-      tag: "INBOUND BUILDER INVOICE",
-      items: [
-        { label: "Builder Account", value: "Prestige Group Enterprises" },
-        { label: "Milestone Stage", value: "Plinth Completion (Stage 2)" },
-        { label: "Gross Commission", value: "₹14,50,000", highlight: true },
-        { label: "TDS / GST Status", value: "18% GST Compliant · 5% TDS", status: "info" },
-        { label: "Customer Account", value: "Converted to Active Customer" },
-      ],
-      actionLabel: "Mark Inbound Received",
-      secondaryActionLabel: "Download Tax Invoice",
-    },
+    id: "field-sales",
+    label: "Sales & Site Visits",
+    badge: "Internal Sales (isCpProject = false)",
+    badgeColor: "bg-sky-50 text-sky-700 border-sky-200/80",
+    headline: "GPS-verified field check-ins and governed price negotiation workflows",
+    subheadline:
+      "Eliminate phantom site visits with tamper-proof GPS coordinates and mandatory field selfies. Hold units in real time and enforce manager sign-off on discounts prior to booking lock.",
+    stat1: { label: "Site Visits Verified", value: "54 this week", change: "100% GPS matched", positive: true },
+    stat2: { label: "Approved Discounts", value: "₹42.5 L", change: "Manager governed", positive: true },
+    stat3: { label: "Inventory Reserved", value: "16 Units", change: "Live sync lock", positive: true },
   },
   {
-    id: "director",
-    roleTitle: "Director Suite",
-    badge: "Executive Cockpit",
-    badgeColor: "bg-indigo-100 text-indigo-800 border-indigo-200",
-    headline: "Real-time executive oversight across 12 departments",
-    summary:
-      "Holistic revenue velocity, conversion bottlenecks, inventory absorption heatmaps, and executive approval escalations in a single view.",
-    statPrimary: { label: "Quarterly Revenue", value: "₹148.5 Cr", change: "+31% YoY growth" },
-    statSecondary: { label: "Total Units Sold", value: "118 Units" },
-    mockUi: {
-      title: "BrokerOS Executive Master Metrics",
-      tag: "FULL ENTERPRISE SCOPE",
-      items: [
-        { label: "Internal Brokerage GMV", value: "₹96.2 Cr (65%)" },
-        { label: "Channel Partner GMV", value: "₹52.3 Cr (35%)", highlight: true },
-        { label: "Avg Sales Cycle", value: "14.2 Days (Pre-Sales to Booking)" },
-        { label: "System Health", value: "80+ Guarded Endpoints · 100% RBAC", status: "success" },
-        { label: "Active Team Members", value: "48 Users across 12 Roles" },
-      ],
-      actionLabel: "Export Board Presentation",
-      secondaryActionLabel: "Audit Security Logs",
-    },
+    id: "cp-network",
+    label: "Channel Partner Network",
+    badge: "External Brokerage (isCpProject = true)",
+    badgeColor: "bg-amber-50 text-amber-800 border-amber-200/80",
+    headline: "Dedicated external broker allocations & multi-tiered payout calculations",
+    subheadline:
+      "Strict data boundary preventing external brokers from viewing internal direct sales inventory. Automated tier slabs (2.0% - 3.5%), TDS/GST deductions, and finance settlement approvals.",
+    stat1: { label: "Active CP Brokers", value: "342 registered", change: "+24 this month", positive: true },
+    stat2: { label: "CP GMV Contribution", value: "₹52.3 Cr", change: "35% of total", positive: true },
+    stat3: { label: "Avg Settlement Turn", value: "48 Hours", change: "Automated batch", positive: true },
+  },
+  {
+    id: "inventory",
+    label: "Unit Inventory & Stock",
+    badge: "Real-Time Unit Guard",
+    badgeColor: "bg-rose-50 text-rose-700 border-rose-200/80",
+    headline: "Live unit par-level inventory, tower mapping, and double-booking guards",
+    subheadline:
+      "Wharf-inspired inventory visualizer displaying available, held, and sold units against par thresholds. Atomic PostgreSQL transaction locks prevent concurrent booking conflicts.",
+    stat1: { label: "Total Active Units", value: "480 units", change: "Across 4 towers", positive: true },
+    stat2: { label: "Absorption Rate", value: "68.4%", change: "+12% this quarter", positive: true },
+    stat3: { label: "Double-Booking Risk", value: "0.00%", change: "Prisma locks", positive: true },
+  },
+];
+
+export const MARKETING_CHANNELS = [
+  {
+    icon: PhoneCall,
+    badge: "Autonomous Telephony",
+    title: "AI Voice Agents & Carrier Bridge",
+    description:
+      "Deploy natural, latency-free conversational AI agents (Vapi, Retell, Sarvam, Bolna) coupled with PSTN carrier bridging (Twilio, Exotel, Vobiz, Telnyx). Auto-qualify cold leads, score intent, and trigger instant callbacks.",
+    stats: "Sub-400ms latency · Full call recording & sentiment scoring",
+    accent: "text-purple-600 bg-purple-50 border-purple-200",
+  },
+  {
+    icon: MessageSquare,
+    badge: "Official Meta Cloud API",
+    title: "WhatsApp Cloud API Suite",
+    description:
+      "Verified green-badge messaging with pre-approved interactive templates, catalog carousels, automated bot triage flows, and bulk broadcast scheduling directly linked to CRM lead status.",
+    stats: "98.4% open rate · Rich media & quick-reply buttons",
+    accent: "text-emerald-600 bg-emerald-50 border-emerald-200",
+  },
+  {
+    icon: Inbox,
+    badge: "Department Scoped",
+    title: "Unified Departmental Inbox",
+    description:
+      "A consolidated communication hub for all 14 roles. WhatsApp chats, SMS threads, and customer emails exist on a single timeline, scoped dynamically so internal sales never see CP conversations.",
+    stats: "Multi-channel timeline · Instant sentiment analysis",
+    accent: "text-sky-600 bg-sky-50 border-sky-200",
+  },
+  {
+    icon: Smartphone,
+    badge: "Mobile Field Suite",
+    title: "Native Auto-Dialer & Offline App",
+    description:
+      "Built with Expo 54 for field sales reps. Daily cold-call queue targets, click-to-dial integration, automatic call duration logging, and offline GPS site-visit check-ins with selfie uploads.",
+    stats: "Background queue · GPS coordinates & camera verification",
+    accent: "text-amber-600 bg-amber-50 border-amber-200",
   },
 ];
 
 export const CORE_PILLARS = [
   {
     icon: ShieldCheck,
-    title: "100% Strict RBAC",
+    title: "Better Auth + RFC 6238 MFA TOTP",
     description:
-      "Every API endpoint guarded with session-validated roles via Better Auth. Zero client-side role trust; all access verified server-side.",
+      "Zero custom JWT minting or insecure password storage. Server-validated sessions, two-factor authenticator support, and hashed backup recovery codes.",
     accent: "text-purple-600 bg-purple-50",
   },
   {
     icon: Compass,
-    title: "Dual Business Line Isolation",
+    title: "Single-Flag Clean Partition (`isCpProject`)",
     description:
-      "Internal sales (`isCpProject = false`) and external broker network (`isCpProject = true`) share one database with guaranteed data boundary isolation.",
+      "Internal sales (`isCpProject = false`) and external broker network (`isCpProject = true`) coexist in one database with zero data leakage across boundaries.",
     accent: "text-indigo-600 bg-indigo-50",
   },
   {
     icon: MapPin,
     title: "GPS-Verified Site Visits",
     description:
-      "Live geo-coordinate capture with timestamped field selfie verification prevents phantom visits and validates sales executive activity.",
+      "Field check-in coordinates validated against project boundaries with mandatory geotagged selfies, eliminating phantom visits and validating travel.",
     accent: "text-sky-600 bg-sky-50",
   },
   {
     icon: DollarSign,
-    title: "Automated Commission Engine",
+    title: "Dual Commission & Settlement Engine",
     description:
-      "End-to-end tracking of builder inbound commissions and tiered CP broker payouts with automated TDS/GST calculation.",
+      "Tracks inbound builder receivables for direct sales and computes automated multi-tier payout slabs with TDS and GST for external CP brokers.",
     accent: "text-emerald-600 bg-emerald-50",
   },
   {
     icon: Radio,
-    title: "Socket.IO Real-Time Sync",
+    title: "Real-Time WebSockets & BullMQ",
     description:
-      "Instant push notifications, team chat, inventory lock alerts, and lead assignment updates without page reloads.",
+      "Instant inventory lock notifications, live chat messages, and background asynchronous jobs handled by dedicated BullMQ workers.",
     accent: "text-amber-600 bg-amber-50",
   },
   {
     icon: Database,
-    title: "PostgreSQL & Prisma 7",
+    title: "PostgreSQL & Prisma 7 Transactions",
     description:
-      "Robust relational architecture with atomic multi-model database transactions, soft deletes, and BullMQ async background workers.",
+      "Atomic transactional booking guarantees, strict soft-delete auditing (`deletedAt: null`), and full referential integrity across all models.",
     accent: "text-rose-600 bg-rose-50",
   },
 ];
