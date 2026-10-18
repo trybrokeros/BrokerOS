@@ -12,8 +12,10 @@ import {
   ConnectVoiceTelephonyDto,
   ConnectVoiceAgentDto,
 } from '../dto/voice.dto.js';
+import { Roles } from '../../../auth/roles.decorator.js';
 
 @Controller('api/marketing/voice/integrations')
+@Roles('ADMIN', 'DIRECTOR', 'MARKETING', 'BUSINESS_MANAGER')
 export class VoiceIntegrationsController {
   constructor(private readonly integrationsService: VoiceIntegrationsService) {}
 

@@ -16,8 +16,10 @@ import {
   ConnectWhatsAppAccountDto,
   UpdateWhatsAppAccountDto,
 } from '../dto/whatsapp.dto.js';
+import { Roles } from '../../../auth/roles.decorator.js';
 
 @Controller('api/marketing/whatsapp/config')
+@Roles('ADMIN', 'DIRECTOR', 'MARKETING', 'BUSINESS_MANAGER')
 export class WhatsAppConfigController {
   constructor(private readonly configService: WhatsAppConfigService) {}
 

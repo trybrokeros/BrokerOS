@@ -10,6 +10,7 @@ import {
   HttpStatus,
   HttpCode,
   Res,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { Public } from '@thallesp/nestjs-better-auth';
 import type { Response } from 'express';
@@ -212,6 +213,19 @@ export class VoiceWebhooksController {
 
     // 4. Voice Agent Platform Webhook Events (Vapi, Retell, ElevenLabs, Sarvam)
     const platform = providerName.toUpperCase() as VoiceAgentPlatform;
+
+    // Webhook authorization verification (if configured in environment)
+    const voiceSecret = process.env.VOICE_WEBHOOK_SECRET;
+    if (voiceSecret) {
+      const incomingSecret =
+        headers['x-voice-secret'] ||
+        headers['x-vapi-secret'] ||
+        headers['authorization'];
+      const normalized = incomingSecret?.replace(/^Bearer\s+/i, '');
+      if (!incomingSecret || normalized !== voiceSecret) {
+        throw new UnauthorizedException('Invalid voice webhook secret');
+      }
+    }
 
     try {
       const provider = getVoiceAgentProvider(platform);
