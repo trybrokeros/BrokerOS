@@ -16,10 +16,6 @@
     "skipLibCheck": true,
     "strictNullChecks": true,
     "forceConsistentCasingInFileNames": true,
-    "noImplicitAny": false,
-    "paths": {
-      "@brokeros/int-whatsapp": ["../../integrations/whatsapp/dist/index.d.ts"],
-      "@brokeros/messaging": ["../../packages/messaging/dist/index.d.ts"]
-    }
+    "noImplicitAny": false
   }
 }
