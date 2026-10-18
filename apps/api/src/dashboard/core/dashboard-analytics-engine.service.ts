@@ -202,7 +202,6 @@ export class DashboardAnalyticsEngineService {
             where: {
               assignedUserId: userId,
               status: 'NEW',
-              createdAt: { gte: monthStart, lte: monthEnd },
               deletedAt: null,
             },
           }),
@@ -290,13 +289,10 @@ export class DashboardAnalyticsEngineService {
       period: 'month',
       ttlSeconds: 300,
       compute: async () => {
-        const { start: monthStart, end: monthEnd } = getMonthRange();
-
         const pipelineCounts = await this.prisma.lead.groupBy({
           by: ['status'],
           where: {
             assignedUserId: userId,
-            createdAt: { gte: monthStart, lte: monthEnd },
             deletedAt: null,
           },
           _count: { status: true },
@@ -320,6 +316,18 @@ export class DashboardAnalyticsEngineService {
         pipelineCounts.forEach((p) => {
           pipelineMap[p.status] = p._count.status;
         });
+
+        // Universal aliases for frontend compatibility
+        pipelineMap['new'] = pipelineMap['NEW'];
+        pipelineMap['contacted'] = pipelineMap['CONTACTED'];
+        pipelineMap['interested'] = pipelineMap['INTERESTED'];
+        pipelineMap['qualified'] = pipelineMap['QUALIFIED'];
+        pipelineMap['siteVisit'] =
+          (pipelineMap['SITE_VISIT_SCHEDULED'] || 0) +
+          (pipelineMap['SITE_VISIT_COMPLETED'] || 0);
+        pipelineMap['negotiation'] = pipelineMap['NEGOTIATION'] || 0;
+        pipelineMap['booked'] = pipelineMap['BOOKING'] || 0;
+        pipelineMap['lost'] = pipelineMap['LOST'] || 0;
 
         return pipelineMap;
       },
