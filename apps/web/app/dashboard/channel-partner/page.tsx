@@ -49,29 +49,13 @@ export default function ChannelPartnerDashboard() {
 
   /* Period selector */
   const periodSelector = (
-    <div style={{
-      display: "flex",
-      alignItems: "center",
-      gap: 8,
-      background: "var(--bg-surface)",
-      border: "1px solid var(--border-default)",
-      padding: "8px 14px",
-      borderRadius: "var(--radius-lg)",
-      boxShadow: "var(--shadow-xs)",
-    }}>
-      <Calendar size={14} style={{ color: "var(--text-muted)" }} />
+    <div className="flex items-center gap-2 bg-white/90 backdrop-blur-md border border-slate-200/90 px-3.5 py-1.5 rounded-2xl shadow-xs transition-all hover:border-slate-300">
+      <Calendar size={14} className="text-slate-400" />
       <select
         value={period}
-        onChange={e => setPeriod(e.target.value as Period)}
-        style={{
-          background: "transparent",
-          border: "none",
-          fontSize: "var(--text-sm)",
-          fontWeight: 700,
-          color: "var(--text-secondary)",
-          cursor: "pointer",
-          outline: "none",
-        }}
+        onChange={(e) => setPeriod(e.target.value as Period)}
+        aria-label="Filter Channel Partner dashboard by period"
+        className="bg-transparent border-none text-xs font-black text-slate-800 cursor-pointer outline-none tracking-tight pr-1"
       >
         <option value="weekly">This Week</option>
         <option value="monthly">This Month</option>
