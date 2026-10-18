@@ -225,34 +225,49 @@ export const SmsMessageComposer: React.FC<SmsMessageComposerProps> = ({
   };
 
   return (
-    <div className="p-3 bg-bg-surface border-t border-border-default space-y-2">
-      {/* Thread Continuity Identity Banner */}
-      <div className="flex items-center justify-between gap-2 px-1 text-[11px] text-text-tertiary">
-        <div className="flex items-center gap-1.5 min-w-0">
-          <Server className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-          <span className="truncate">
-            Sending from:{' '}
-            <strong className="text-text-primary font-mono font-medium">
-              {assignedSenderPhone || 'Provider Gateway'}
-            </strong>{' '}
-            via{' '}
-            <span className="font-mono text-amber-600 dark:text-amber-400 font-bold uppercase">
-              {assignedProvider.replace('_', ' ')}
-            </span>
+    <div className="p-3.5 bg-bg-surface border-t border-border-default space-y-2.5 shadow-2xs">
+      {/* Thread Continuity Identity & Telemetry Banner */}
+      <div className="flex items-center justify-between gap-3 px-1 text-xs text-text-tertiary flex-wrap">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.7)] shrink-0" />
+          <span className="truncate text-text-secondary text-[11px]">
+            From: <strong className="text-text-primary font-mono font-bold">{assignedSenderPhone || 'Provider Gateway'}</strong>
+          </span>
+          <span className="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/25 font-mono text-[9px] font-bold uppercase tracking-wider shrink-0">
+            {assignedProvider.replace('_', ' ')}
           </span>
         </div>
 
         {/* Real-time Character & Segment Counter Pill */}
-        <div className="flex items-center gap-1.5 font-mono text-[10px] text-text-tertiary bg-bg-base px-2 py-0.5 rounded-md border border-border-subtle shrink-0">
-          <span className="font-bold text-text-primary">{charCount}</span>
-          <span>chars</span>
-          <span>•</span>
-          <span className="font-bold text-amber-600 dark:text-amber-400">
-            {segments} seg{segments > 1 ? 's' : ''}
+        <div className="flex items-center gap-1.5 font-mono text-[10px] text-text-tertiary bg-bg-base px-2.5 py-1 rounded-lg border border-border-default shadow-2xs shrink-0">
+          <span className="font-extrabold text-text-primary">{charCount}</span>
+          <span className="text-text-muted">chars</span>
+          <span className="text-border-default">•</span>
+          <span
+            className={`font-black ${
+              segments > 1
+                ? 'text-amber-600 dark:text-amber-400'
+                : 'text-emerald-600 dark:text-emerald-400'
+            }`}
+          >
+            {segments} {segments > 1 ? 'segments' : 'segment'}
           </span>
-          <span className="text-[9px] opacity-75">
-            ({remainingInSegment} left{isUnicode ? ' • UCS-2' : ' • GSM-7'})
+          <span className="text-border-default">•</span>
+          <span
+            className={`px-1 rounded text-[9px] font-bold ${
+              isUnicode
+                ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300'
+                : 'bg-bg-subtle text-text-tertiary'
+            }`}
+            title={
+              isUnicode
+                ? 'Unicode character detected: 70 chars/segment limit applies'
+                : 'Standard GSM 7-bit alphabet: 160 chars/segment limit'
+            }
+          >
+            {isUnicode ? 'UCS-2 (Emoji/Accents)' : 'GSM-7'}
           </span>
+          <span className="text-[9px] text-text-muted">({remainingInSegment} left)</span>
         </div>
       </div>
 
@@ -263,7 +278,7 @@ export const SmsMessageComposer: React.FC<SmsMessageComposerProps> = ({
           <button
             type="button"
             onClick={() => setIsQuickReplyModalOpen(true)}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold text-text-secondary hover:text-text-primary hover:bg-bg-subtle transition-colors"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold text-text-secondary hover:text-text-primary bg-bg-base hover:bg-bg-subtle border border-border-default transition-all shadow-2xs cursor-pointer active:scale-95"
             title="Open Canned Quick Replies (or type / in message)"
           >
             <Zap className="w-3.5 h-3.5 text-amber-500" />
@@ -274,7 +289,7 @@ export const SmsMessageComposer: React.FC<SmsMessageComposerProps> = ({
           <button
             type="button"
             onClick={() => setIsTemplateModalOpen(true)}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold text-text-secondary hover:text-text-primary hover:bg-bg-subtle transition-colors"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold text-text-secondary hover:text-text-primary bg-bg-base hover:bg-bg-subtle border border-border-default transition-all shadow-2xs cursor-pointer active:scale-95"
             title="Insert Curated DLT Real-Estate SMS Template"
           >
             <FileText className="w-3.5 h-3.5 text-emerald-500" />
@@ -286,7 +301,7 @@ export const SmsMessageComposer: React.FC<SmsMessageComposerProps> = ({
             type="button"
             onClick={() => setIsScheduleModalOpen(true)}
             disabled={disabled}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold text-text-secondary hover:text-text-primary hover:bg-bg-subtle transition-colors"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold text-text-secondary hover:text-text-primary bg-bg-base hover:bg-bg-subtle border border-border-default transition-all shadow-2xs cursor-pointer disabled:opacity-40 active:scale-95"
             title="Schedule SMS for future delivery"
           >
             <CalendarClock className="w-3.5 h-3.5 text-amber-500" />
@@ -297,7 +312,7 @@ export const SmsMessageComposer: React.FC<SmsMessageComposerProps> = ({
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold text-text-secondary hover:text-text-primary hover:bg-bg-subtle transition-colors"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold text-text-secondary hover:text-text-primary bg-bg-base hover:bg-bg-subtle border border-border-default transition-all shadow-2xs cursor-pointer active:scale-95"
             title="Attach image, brochure, or document (MMS)"
           >
             <Paperclip className="w-3.5 h-3.5 text-blue-500" />
@@ -317,7 +332,7 @@ export const SmsMessageComposer: React.FC<SmsMessageComposerProps> = ({
           type="button"
           onClick={handleAiDraft}
           disabled={draftingAi || disabled}
-          className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/20 transition-all shadow-2xs disabled:opacity-50"
+          className="flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-gradient-to-r from-purple-500/15 via-purple-500/10 to-purple-600/15 hover:from-purple-500/25 hover:to-purple-600/25 text-purple-700 dark:text-purple-300 border border-purple-500/30 transition-all shadow-2xs disabled:opacity-50 cursor-pointer active:scale-95"
         >
           {draftingAi ? (
             <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -380,7 +395,7 @@ export const SmsMessageComposer: React.FC<SmsMessageComposerProps> = ({
       )}
 
       {/* Textarea Input + Send Button */}
-      <div className="flex items-end gap-2 bg-bg-base border border-border-default rounded-2xl p-1.5 focus-within:border-amber-500 focus-within:ring-1 focus-within:ring-amber-500/20 transition-all">
+      <div className="flex items-end gap-2 bg-bg-base border border-border-default rounded-2xl p-2 focus-within:border-amber-500 focus-within:ring-2 focus-within:ring-amber-500/20 transition-all shadow-2xs">
         <textarea
           ref={textareaRef}
           rows={2}
@@ -401,12 +416,12 @@ export const SmsMessageComposer: React.FC<SmsMessageComposerProps> = ({
         />
 
         {/* Split Send / Schedule Button */}
-        <div className="flex items-center shrink-0">
+        <div className="flex items-center shrink-0 shadow-xs rounded-xl overflow-hidden">
           <button
             type="button"
             onClick={handleSend}
             disabled={!text.trim() || sending || disabled}
-            className="p-2.5 rounded-l-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold disabled:opacity-40 transition-colors shadow-sm"
+            className="p-2.5 bg-amber-500 hover:bg-amber-400 active:scale-[0.98] text-slate-950 font-black disabled:opacity-40 transition-all shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] cursor-pointer"
             title="Send SMS Reply (Enter)"
           >
             {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
@@ -415,7 +430,7 @@ export const SmsMessageComposer: React.FC<SmsMessageComposerProps> = ({
             type="button"
             onClick={() => setIsScheduleModalOpen(true)}
             disabled={!text.trim() || sending || disabled}
-            className="p-2.5 rounded-r-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold border-l border-amber-600/30 disabled:opacity-40 transition-colors shadow-sm"
+            className="p-2.5 bg-amber-500 hover:bg-amber-400 active:scale-[0.98] text-slate-950 font-bold border-l border-amber-600/30 disabled:opacity-40 transition-all shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] cursor-pointer"
             title="Schedule for later..."
           >
             <CalendarClock className="w-4 h-4" />

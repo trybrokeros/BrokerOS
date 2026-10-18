@@ -25,6 +25,8 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import Link from "next/link";
+import { useLeadHref } from "@/lib/lead-navigation";
 import { toast } from "sonner";
 import { mapVoiceSentimentToTemperature } from "@brokeros/constants";
 import type { VoiceRecipientItem } from "@/features/marketing/types";
@@ -44,6 +46,7 @@ export function VoiceCallLogsTable({
   onPromote,
   onRefresh,
 }: VoiceCallLogsTableProps) {
+  const getLeadHref = useLeadHref();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSentiment, setSelectedSentiment] = useState<string>("ALL");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -443,9 +446,15 @@ export function VoiceCallLogsTable({
                             {recipient.name || "Prospect"}
                           </p>
                           {recipient.leadId && (
-                            <Badge className="text-[9px] bg-emerald-50 text-emerald-700 border-emerald-200 font-bold">
-                              CRM Lead
-                            </Badge>
+                            <Link
+                              href={getLeadHref(recipient.leadId)}
+                              onClick={(e) => e.stopPropagation()}
+                              className="inline-flex items-center gap-1 text-[9px] bg-emerald-50 text-emerald-700 hover:text-emerald-900 border border-emerald-200 font-bold px-1.5 py-0.5 rounded transition-colors"
+                              title="Open CRM Lead Profile"
+                            >
+                              <span>CRM Lead</span>
+                              <ExternalLink className="w-2.5 h-2.5 opacity-70" />
+                            </Link>
                           )}
                         </div>
                         <p className="text-[11px] text-[var(--text-tertiary)] font-mono">

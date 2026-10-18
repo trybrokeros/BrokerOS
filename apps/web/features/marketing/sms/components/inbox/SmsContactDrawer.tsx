@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { useLeadHref } from '@/lib/lead-navigation';
 import type { SmsConversation } from '../../types/inbox';
 import { SMS_PROVIDERS } from '@brokeros/constants';
 
@@ -38,6 +39,7 @@ export const SmsContactDrawer: React.FC<SmsContactDrawerProps> = ({
   onClose,
   onLeadUpdated,
 }) => {
+  const getLeadHref = useLeadHref();
   const [updatingTemp, setUpdatingTemp] = useState(false);
 
   if (!isOpen || !conversation) return null;
@@ -83,9 +85,17 @@ export const SmsContactDrawer: React.FC<SmsContactDrawerProps> = ({
   };
 
   return (
-    <div className="w-80 border-l border-border-default bg-bg-surface flex flex-col h-full shrink-0 shadow-lg animate-in slide-in-from-right-4 duration-150">
-      {/* Drawer Header */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-border-default">
+    <>
+      {/* Mobile/Tablet Backdrop Overlay (hidden on xl desktop where 3 columns sit side-by-side) */}
+      <div
+        onClick={onClose}
+        aria-hidden="true"
+        className="fixed inset-0 bg-black/20 backdrop-blur-2xs z-20 xl:hidden animate-in fade-in duration-200"
+      />
+
+      <div className="absolute inset-y-0 right-0 z-30 w-full sm:w-80 md:w-88 border-l border-border-default bg-bg-surface flex flex-col h-full shrink-0 shadow-2xl xl:relative xl:shadow-none xl:z-auto xl:w-72 2xl:w-80 animate-in slide-in-from-right-4 duration-200">
+        {/* Drawer Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border-default">
         <h3 className="font-semibold text-text-primary text-sm">Contact Profile</h3>
         <button
           onClick={onClose}
@@ -118,7 +128,7 @@ export const SmsContactDrawer: React.FC<SmsContactDrawerProps> = ({
                 <span>Connected Lead</span>
               </div>
               <Link
-                href={`/dashboard/leads/${lead.id}`}
+                href={getLeadHref(lead.id)}
                 className="text-xs text-amber-600 hover:underline flex items-center gap-1 font-semibold"
               >
                 <span>View CRM</span>
@@ -297,5 +307,6 @@ export const SmsContactDrawer: React.FC<SmsContactDrawerProps> = ({
         </div>
       </div>
     </div>
+  </>
   );
 };

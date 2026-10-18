@@ -14,6 +14,7 @@ import { SmsConversationList } from './SmsConversationList';
 import { SmsConversationHeader } from './SmsConversationHeader';
 import { SmsConversationThread } from './SmsConversationThread';
 import { SmsMessageComposer } from './SmsMessageComposer';
+import { SmsContactDrawer } from './SmsContactDrawer';
 import { ScheduledMessagesDock } from '../../../components/ScheduledMessagesDock';
 import { ScheduleMessageModal } from '../../../components/ScheduleMessageModal';
 import type { SmsConversation, SmsMessage } from '../../types/inbox';
@@ -38,6 +39,7 @@ export const SmsInboxView: React.FC<SmsInboxViewProps> = ({
   showManagerFilter = false,
 }) => {
   const [activeConversation, setActiveConversation] = useState<SmsConversation | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedAgentId, setSelectedAgentId] = useState<string>('');
   const [agents, setAgents] = useState<Array<{ id: string; name: string }>>([]);
 
@@ -206,7 +208,7 @@ export const SmsInboxView: React.FC<SmsInboxViewProps> = ({
   };
 
   return (
-    <div className="flex h-[calc(100vh-8.5rem)] bg-bg-surface border border-border-default rounded-2xl overflow-hidden shadow-sm">
+    <div className="relative flex h-[calc(100vh-8.5rem)] bg-bg-surface border border-border-default rounded-2xl overflow-hidden shadow-sm">
       {/* 1. Left Panel: Conversations List */}
       <SmsConversationList
         conversations={conversations}
@@ -231,6 +233,8 @@ export const SmsInboxView: React.FC<SmsInboxViewProps> = ({
               conversation={activeConversation}
               onUpdateStatus={handleStatusChange}
               onAssignAgent={handleAgentAssignment}
+              onToggleContactDrawer={() => setIsDrawerOpen(!isDrawerOpen)}
+              isDrawerOpen={isDrawerOpen}
             />
 
             <SmsConversationThread
@@ -301,6 +305,21 @@ export const SmsInboxView: React.FC<SmsInboxViewProps> = ({
           </div>
         )}
       </div>
+
+      {/* 3. Contact Details Drawer */}
+      <SmsContactDrawer
+        conversation={activeConversation}
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        onLeadUpdated={(updatedLead) => {
+          if (activeConversation) {
+            setActiveConversation({
+              ...activeConversation,
+              lead: updatedLead,
+            });
+          }
+        }}
+      />
     </div>
   );
 };

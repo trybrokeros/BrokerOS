@@ -14,6 +14,7 @@ import {
   Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { useLeadHref } from "@/lib/lead-navigation";
 import type { GoogleAcquiredLeadItem } from "../types";
 
 interface GoogleAcquiredLeadsTableProps {
@@ -25,6 +26,7 @@ export function GoogleAcquiredLeadsTable({
   leads,
   currency = "INR",
 }: GoogleAcquiredLeadsTableProps) {
+  const getLeadHref = useLeadHref();
   const [searchTerm, setSearchTerm] = useState("");
 
   const filtered = leads.filter((item) => {
@@ -230,7 +232,7 @@ export function GoogleAcquiredLeadsTable({
 
                   {/* Action */}
                   <td className="py-3.5 px-4 text-right whitespace-nowrap">
-                    <Link href={`/dashboard/leads/${lead.id}`}>
+                    <Link href={getLeadHref(lead.id)}>
                       <Button variant="outline" size="sm" className="gap-1 text-xs font-bold">
                         <span>View Lead</span>
                         <ExternalLink className="w-3 h-3" />

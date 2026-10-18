@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Search, MessageSquare, Filter, Plus, Clock } from 'lucide-react';
 import type { WhatsAppConversation } from '../../types';
 import { StartNewChatModal } from './StartNewChatModal';
+import { CrmContextBadges } from '../../../components/CrmContextBadges';
 
 interface ConversationListProps {
   conversations: WhatsAppConversation[];
@@ -72,7 +73,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full bg-bg-surface border-r border-border-default w-full md:w-80 lg:w-96 shrink-0">
+    <div className="flex flex-col h-full bg-bg-surface border-r border-border-default w-full md:w-72 lg:w-80 xl:w-72 2xl:w-80 shrink-0">
       {/* Search & Header */}
       <div className="p-3.5 border-b border-border-default space-y-2.5">
         {/* Manager Team Oversight Filter Dropdown */}
@@ -192,80 +193,47 @@ export const ConversationList: React.FC<ConversationListProps> = ({
                   </div>
 
                   {/* CRM Context Badges */}
-                  <div className="flex items-center gap-1.5 flex-wrap mb-1">
-                    {(!conv.lastMessageText || conv.lastMessageText === 'No messages yet') && (
-                      <span className="px-1.5 py-0.2 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 text-[9px] font-bold">
-                        New • Uncontacted
-                      </span>
-                    )}
-                    {conv.lead && (
-                      <>
-                        {conv.lead.temperature && (
-                          <span
-                            className={`px-1.5 py-0.2 rounded-md text-[9px] font-bold ${
-                              conv.lead.temperature === 'HOT'
-                                ? 'bg-rose-50 text-rose-700 border border-rose-200'
-                                : conv.lead.temperature === 'WARM'
-                                  ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                                  : 'bg-blue-50 text-blue-700 border border-blue-200'
-                            }`}
-                          >
-                            {conv.lead.temperature}
-                          </span>
-                        )}
-                        {conv.lead.interestedProject?.name && (
-                          <span className="text-[10px] text-text-tertiary truncate max-w-[120px]">
-                            {conv.lead.interestedProject.name}
-                          </span>
-                        )}
-                      </>
-                    )}
-                    {conv.broker && (
-                      <span className="px-1.5 py-0.2 rounded-md bg-purple-50 text-purple-700 border border-purple-200 text-[9px] font-bold">
-                        Broker {conv.broker.companyName ? `• ${conv.broker.companyName}` : ''}
-                      </span>
-                    )}
-                    {conv.customer && (
-                      <span className="px-1.5 py-0.2 rounded-md bg-sky-50 text-sky-700 border border-sky-200 text-[9px] font-bold">
-                        Customer
-                      </span>
-                    )}
-                    {conv.nextScheduledAt && (
-                      <span
-                        title={`Scheduled WhatsApp message queued for ${formatScheduleChipDate(conv.nextScheduledAt)}`}
-                        className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 text-[9px] font-bold"
-                      >
-                        <Clock className="w-2.5 h-2.5 animate-pulse" />
-                        <span>Scheduled: {formatScheduleChipDate(conv.nextScheduledAt)}</span>
-                      </span>
-                    )}
+                  <div className="mb-1">
+                    <CrmContextBadges
+                      data={{
+                        lastMessageText: conv.lastMessageText,
+                        lead: conv.lead || (conv.contact?.lead ? {
+                          id: conv.contact.lead.id,
+                          temperature: conv.contact.lead.temperature,
+                          interestedProject: (conv.contact.lead as any).interestedProject,
+                        } : undefined),
+                        broker: conv.broker,
+                        customer: conv.customer,
+                        nextScheduledAt: conv.nextScheduledAt,
+                      }}
+                    />
                   </div>
 
                   <p className="text-xs text-text-secondary truncate leading-normal">
-                    {formatMessagePreview(conv.lastMessageText, 38)}
+                    {formatMessagePreview(conv.lastMessageText, 42)}
                   </p>
 
-                  <div className="flex items-center justify-between mt-1.5">
-                    {/* Status Dot */}
+                  <div className="flex items-center justify-between mt-2 pt-1 border-t border-border-subtle/40">
+                    {/* Status Beacon Indicator */}
                     <div className="flex items-center gap-1.5">
                       <span
                         className={`w-2 h-2 rounded-full ${
                           conv.status === 'open'
-                            ? 'bg-emerald-500'
+                            ? 'bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.7)]'
                             : conv.status === 'pending'
-                              ? 'bg-amber-500'
-                              : 'bg-zinc-400'
+                              ? 'bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.7)]'
+                              : 'bg-slate-400'
                         }`}
                       />
-                      <span className="text-[10px] capitalize text-text-tertiary font-medium">
+                      <span className="text-[10px] capitalize text-text-tertiary font-semibold tracking-tight">
                         {conv.status}
                       </span>
                     </div>
 
                     {/* Unread Pill */}
                     {conv.unreadCount > 0 && (
-                      <span className="px-1.5 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-bold">
-                        {conv.unreadCount}
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-black shadow-xs">
+                        {conv.unreadCount} new
                       </span>
                     )}
                   </div>
