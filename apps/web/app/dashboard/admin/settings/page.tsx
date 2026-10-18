@@ -6,6 +6,7 @@ import { AdminTelephonySettings } from "@/features/telephony/components/admin/Ad
 import { WhatsAppConfigCard } from "@/features/marketing/whatsapp";
 import { AdminSmsSettings } from "@/features/marketing/sms/components/admin/AdminSmsSettings";
 import { AdminEmailSettings } from "@/features/marketing/email/components/admin/AdminEmailSettings";
+import { AdminSecuritySettings } from "@/features/security/components/AdminSecuritySettings";
 import { PhoneCall, Building2, ShieldCheck, Radio, MessageSquare, Mail } from "lucide-react";
 
 type SettingsTab = "telephony" | "whatsapp" | "sms" | "email" | "general" | "security";
@@ -121,17 +122,7 @@ export default function AdminSettingsPage() {
         </div>
       )}
 
-      {activeTab === "security" && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-6">
-          <h3 className="text-base font-bold text-slate-900 mb-1">Role-Based Access</h3>
-          <p className="text-xs text-slate-500 mb-4">
-            Security policies and Better Auth session controls for internal department users.
-          </p>
-          <div className="p-4 rounded-xl bg-purple-50/70 border border-purple-200/80 text-xs text-purple-900">
-            Better Auth RBAC is enforcing strict role-isolated permissions across all 12 departments.
-          </div>
-        </div>
-      )}
+      {activeTab === "security" && <AdminSecuritySettings />}
     </DashboardPageWrapper>
   );
 }
