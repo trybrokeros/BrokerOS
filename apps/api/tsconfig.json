@@ -20,10 +20,6 @@
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": false,
     "strictBindCallApply": false,
-    "noFallthroughCasesInSwitch": false,
-    "paths": {
-      "@brokeros/messaging": ["../../packages/messaging/dist/index.d.ts"],
-      "@brokeros/storage": ["../../packages/storage/src/index.ts"]
-    }
+    "noFallthroughCasesInSwitch": false
   }
 }
