@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
-import { Loader2, TrendingUp, Users } from "lucide-react";
+import { Loader2, Users2, AlertCircle, TrendingUp } from "lucide-react";
 
 import { FinancialOverview } from "../../sales-executive/analytics/components/FinancialOverview";
 import { ConversionFunnelChart } from "../../sales-executive/analytics/components/ConversionFunnelChart";
@@ -53,75 +53,124 @@ export default function SalesManagerAnalyticsPage() {
 
   const reportPayload = analyticsData
     ? {
-      departmentName: "Sales Manager Team Analytics & Forecasting",
-      departmentCode: "SALES_MANAGER",
-      timeRange,
-      generatedAt: new Date().toLocaleString(),
-      summaryCards: [
-        { label: "Team Total Revenue", value: `₹${(analyticsData.financial?.totalRevenue || 0).toLocaleString()}`, subtitle: "Booked Gross Sales" },
-        { label: "Team Deals Closed", value: analyticsData.financial?.dealsClosed ?? 0, subtitle: "Confirmed bookings" },
-        { label: "Average Deal Size", value: `₹${(analyticsData.financial?.averageDealSize || 0).toLocaleString()}`, subtitle: "Per booking average" },
-        { label: "Pipeline Value", value: `₹${(analyticsData.financial?.pipelineValue || 0).toLocaleString()}`, subtitle: "Open negotiation value" },
-      ],
-      funnelStages: analyticsData.funnel
-        ? [
-          { name: "Team Leads", count: analyticsData.funnel.leads ?? 0, color: "#6366f1" },
-          { name: "Site Visits", count: analyticsData.funnel.siteVisits ?? 0, color: "#a855f7" },
-          { name: "Negotiations", count: analyticsData.funnel.negotiations ?? 0, color: "#f59e0b" },
-          { name: "Bookings", count: analyticsData.funnel.bookings ?? 0, color: "#10b981" },
-        ]
-        : undefined,
-      financialMetrics: [
-        { label: "Aggregate Team Revenue", value: `₹${(analyticsData.financial?.totalRevenue || 0).toLocaleString()}` },
-        { label: "Total Bookings Count", value: analyticsData.financial?.dealsClosed ?? 0 },
-        { label: "Mean Ticket Size", value: `₹${(analyticsData.financial?.averageDealSize || 0).toLocaleString()}` },
-        { label: "In-Flight Pipeline Value", value: `₹${(analyticsData.financial?.pipelineValue || 0).toLocaleString()}` },
-      ],
-    }
+        departmentName: "Sales Manager Team Analytics & Forecasting",
+        departmentCode: "SALES_MANAGER",
+        timeRange,
+        generatedAt: new Date().toLocaleString(),
+        summaryCards: [
+          {
+            label: "Team Total Revenue",
+            value: `₹${(analyticsData.financial?.totalRevenue || 0).toLocaleString()}`,
+            subtitle: "Booked Gross Sales",
+          },
+          {
+            label: "Team Deals Closed",
+            value: analyticsData.financial?.dealsClosed ?? 0,
+            subtitle: "Confirmed bookings",
+          },
+          {
+            label: "Average Deal Size",
+            value: `₹${(analyticsData.financial?.averageDealSize || 0).toLocaleString()}`,
+            subtitle: "Per booking average",
+          },
+          {
+            label: "Pipeline Value",
+            value: `₹${(analyticsData.financial?.pipelineValue || 0).toLocaleString()}`,
+            subtitle: "Open negotiation value",
+          },
+        ],
+        funnelStages: analyticsData.funnel
+          ? [
+              {
+                name: "Team Leads",
+                count: analyticsData.funnel.leads ?? 0,
+                color: "#6366f1",
+              },
+              {
+                name: "Site Visits",
+                count: analyticsData.funnel.siteVisits ?? 0,
+                color: "#a855f7",
+              },
+              {
+                name: "Negotiations",
+                count: analyticsData.funnel.negotiations ?? 0,
+                color: "#f59e0b",
+              },
+              {
+                name: "Bookings",
+                count: analyticsData.funnel.bookings ?? 0,
+                color: "#10b981",
+              },
+            ]
+          : undefined,
+        financialMetrics: [
+          {
+            label: "Aggregate Team Revenue",
+            value: `₹${(analyticsData.financial?.totalRevenue || 0).toLocaleString()}`,
+          },
+          {
+            label: "Total Bookings Count",
+            value: analyticsData.financial?.dealsClosed ?? 0,
+          },
+          {
+            label: "Mean Ticket Size",
+            value: `₹${(analyticsData.financial?.averageDealSize || 0).toLocaleString()}`,
+          },
+          {
+            label: "In-Flight Pipeline Value",
+            value: `₹${(analyticsData.financial?.pipelineValue || 0).toLocaleString()}`,
+          },
+        ],
+      }
     : null;
 
   if (error) {
     return (
-      <div className="p-4 md:p-8 max-w-[1600px] mx-auto">
-        <div className="bg-rose-50 text-rose-700 p-6 rounded-3xl border border-rose-200 text-xs font-bold">
-          {error}
+      <div className="p-4 sm:p-8 max-w-[1600px] mx-auto">
+        <div className="bg-rose-50 border border-rose-200/90 rounded-3xl p-6 flex items-center gap-4 text-xs font-bold text-rose-800 shadow-sm">
+          <AlertCircle size={22} className="text-rose-600 shrink-0" />
+          <span>{error}</span>
         </div>
       </div>
     );
   }
 
+  const ranges = [
+    { id: "weekly", label: "Weekly" },
+    { id: "monthly", label: "Monthly" },
+    { id: "yearly", label: "Yearly" },
+    { id: "all-time", label: "All Time" },
+  ];
+
   return (
-    <div className="p-4 md:p-8 max-w-[1600px] mx-auto space-y-8 animate-enter">
+    <div className="p-4 sm:p-8 max-w-[1600px] mx-auto space-y-8 animate-in fade-in duration-300">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-extrabold text-[var(--text-primary)] tracking-tight flex items-center gap-2.5 m-0">
-            <div className="w-8 h-8 rounded-xl bg-purple-50 flex items-center justify-center text-[var(--brand-700)]">
-              <Users size={18} />
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-2xl bg-indigo-50 border border-indigo-200/80 flex items-center justify-center text-indigo-600 shadow-2xs">
+              <Users2 size={18} className="stroke-[2.2]" />
             </div>
-            <span>Team Sales Analytics & Forecasting</span>
-          </h1>
-          <p className="text-xs text-[var(--text-muted)] font-medium mt-0.5 m-0">
-            Audit aggregate sales revenue, team deal velocity & project tower inventory status
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight m-0">
+              Team Sales Analytics & Forecasting
+            </h1>
+          </div>
+          <p className="text-xs text-slate-500 font-medium mt-1 m-0">
+            Audit aggregate team sales revenue, deal velocity & assigned project inventory status.
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
-          {/* Time Range Selector */}
-          <div className="flex bg-slate-100 p-1 rounded-full border border-slate-200/60">
-            {[
-              { id: "weekly", label: "Weekly" },
-              { id: "monthly", label: "Monthly" },
-              { id: "yearly", label: "Yearly" },
-              { id: "all-time", label: "All Time" },
-            ].map((r) => (
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex bg-slate-100 p-1 rounded-full border border-slate-200/80 shadow-2xs">
+            {ranges.map((r) => (
               <button
                 key={r.id}
                 onClick={() => setTimeRange(r.id)}
-                className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${timeRange === r.id
-                  ? "bg-white text-[var(--text-primary)] shadow-xs"
-                  : "text-slate-500 hover:text-slate-800"
-                  }`}
+                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                  timeRange === r.id
+                    ? "bg-white text-slate-900 shadow-xs font-extrabold"
+                    : "text-slate-500 hover:text-slate-900"
+                }`}
               >
                 {r.label}
               </button>
@@ -137,31 +186,36 @@ export default function SalesManagerAnalyticsPage() {
 
       {loading ? (
         <div className="min-h-[40vh] flex flex-col items-center justify-center gap-3">
-          <Loader2 className="w-8 h-8 text-[var(--brand-600)] animate-spin" />
-          <p className="text-xs font-semibold text-[var(--text-muted)]">
-            Synthesizing team sales metrics…
+          <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+          <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
+            Synthesizing Team Sales Intelligence…
           </p>
         </div>
       ) : analyticsData ? (
         <div className="space-y-8">
+          {/* Financial Overview Cards */}
           <FinancialOverview financialData={analyticsData.financial} />
 
+          {/* Detailed Pipeline & Revenue Grid */}
           <DetailedMetricsGrid metrics={analyticsData.detailedMetrics} />
 
+          {/* Conversion Funnel & Leaderboard Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-            <div className="lg:col-span-1">
+            <div className="lg:col-span-1 h-full">
               <ConversionFunnelChart funnelData={analyticsData.funnel} />
             </div>
             <div className="lg:col-span-2">
               {analyticsData.leaderboard && (
-                <div className="bg-white rounded-3xl border border-slate-200/80 shadow-2xs overflow-hidden">
-                  <div className="p-4 border-b border-slate-100">
-                    <h3 className="text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider m-0">
-                      Team Sales Leaderboard
-                    </h3>
-                    <p className="text-[11px] text-[var(--text-muted)] font-medium mt-0.5 m-0">
-                      Ranked performance across Sales Executives
-                    </p>
+                <div className="bg-white rounded-3xl border border-slate-200/90 shadow-[0_1px_0_rgba(255,255,255,0.95)_inset,0_14px_34px_-18px_rgba(15,23,42,0.08)] overflow-hidden">
+                  <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+                    <div>
+                      <h3 className="text-xs font-extrabold uppercase tracking-widest text-slate-800 m-0">
+                        Sales Executive Leaderboard
+                      </h3>
+                      <p className="text-xs text-slate-500 font-medium mt-0.5 m-0">
+                        Ranked closing performance across direct reports
+                      </p>
+                    </div>
                   </div>
                   <Leaderboard
                     title="Executive Performance"
@@ -179,8 +233,9 @@ export default function SalesManagerAnalyticsPage() {
             </div>
           </div>
 
+          {/* Assigned Project Inventory Status */}
           <div className="space-y-3">
-            <h3 className="text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider m-0 px-1">
+            <h3 className="text-xs font-extrabold uppercase tracking-widest text-slate-800 m-0 px-1">
               Assigned Project Inventory Velocity
             </h3>
             <TowerHeatmap inventoryData={analyticsData.inventory} />
