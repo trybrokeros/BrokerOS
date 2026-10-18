@@ -1,12 +1,18 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
 import { User, Phone, MapPin } from "lucide-react";
+import { useLeadHref } from "@/lib/lead-navigation";
 
 interface BookingCustomerCardProps {
   customer: any;
 }
 
 export function BookingCustomerCard({ customer }: BookingCustomerCardProps) {
+  const getLeadHref = useLeadHref();
+  const leadHref = customer?.leadId ? getLeadHref(customer.leadId) : null;
+
   return (
     <div className="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-2xs">
       <div className="bg-slate-50/80 border-b border-slate-100 px-4 py-2.5 flex items-center gap-2">
@@ -19,12 +25,18 @@ export function BookingCustomerCard({ customer }: BookingCustomerCardProps) {
       </div>
       <div className="p-4 space-y-3">
         <div>
-          <Link
-            href={`/dashboard/sales-manager/leads/${customer?.leadId}`}
-            className="text-sm font-extrabold text-[var(--text-primary)] hover:text-[var(--brand-700)] hover:underline no-underline"
-          >
-            {customer?.firstName} {customer?.lastName}
-          </Link>
+          {leadHref ? (
+            <Link
+              href={leadHref}
+              className="text-sm font-extrabold text-[var(--text-primary)] hover:text-[var(--brand-700)] hover:underline no-underline"
+            >
+              {customer?.firstName} {customer?.lastName}
+            </Link>
+          ) : (
+            <span className="text-sm font-extrabold text-[var(--text-primary)]">
+              {customer?.firstName} {customer?.lastName}
+            </span>
+          )}
           <div className="flex items-center gap-1.5 mt-1 text-xs text-[var(--text-secondary)] font-semibold tabular-nums">
             <Phone size={12} className="text-slate-400" />
             <span>{customer?.phone}</span>
