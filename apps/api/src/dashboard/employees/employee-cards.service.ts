@@ -17,7 +17,16 @@ export class EmployeeCardsService {
   async getEmployeeCards(managerId: string) {
     const { start: monthStart, end: monthEnd } = getMonthRange();
 
-    const subordinates = await this.prisma.user.findMany({
+    const manager = await this.prisma.user.findUnique({
+      where: { id: managerId },
+      include: { role: true },
+    });
+    const isSupervisory =
+      manager?.role?.code === 'ADMIN' ||
+      manager?.role?.code === 'DIRECTOR' ||
+      manager?.role?.code === 'BUSINESS_MANAGER';
+
+    let subordinates = await this.prisma.user.findMany({
       where: { managerId, status: 'ACTIVE', deletedAt: null },
       select: {
         id: true,
@@ -29,24 +38,41 @@ export class EmployeeCardsService {
       },
     });
 
+    if (isSupervisory || subordinates.length === 0) {
+      const psRole = await this.prisma.role.findFirst({
+        where: { code: 'PRE_SALES' },
+      });
+      if (psRole) {
+        subordinates = await this.prisma.user.findMany({
+          where: { roleId: psRole.id, status: 'ACTIVE', deletedAt: null },
+          select: {
+            id: true,
+            name: true,
+            username: true,
+            image: true,
+            employeeCode: true,
+            isOnCall: true,
+          },
+        });
+      }
+    }
+
     const cards = await Promise.all(
       subordinates.map(async (sub) => {
         const [totalLeads, contactedLeads, followUpsDone, siteVisits] =
           await Promise.all([
-            // Total leads assigned this month
+            // Total leads assigned
             this.prisma.lead.count({
               where: {
                 assignedUserId: sub.id,
-                createdAt: { gte: monthStart, lte: monthEnd },
                 deletedAt: null,
               },
             }),
-            // Leads with CONTACTED status this month
+            // Leads with CONTACTED status
             this.prisma.lead.count({
               where: {
                 assignedUserId: sub.id,
                 status: 'CONTACTED',
-                createdAt: { gte: monthStart, lte: monthEnd },
                 deletedAt: null,
               },
             }),
@@ -98,7 +124,16 @@ export class EmployeeCardsService {
   async getSalesManagerEmployeeCards(managerId: string) {
     const { start: monthStart, end: monthEnd } = getMonthRange();
 
-    const subordinates = await this.prisma.user.findMany({
+    const manager = await this.prisma.user.findUnique({
+      where: { id: managerId },
+      include: { role: true },
+    });
+    const isSupervisory =
+      manager?.role?.code === 'ADMIN' ||
+      manager?.role?.code === 'DIRECTOR' ||
+      manager?.role?.code === 'BUSINESS_MANAGER';
+
+    let subordinates = await this.prisma.user.findMany({
       where: { managerId, status: 'ACTIVE', deletedAt: null },
       select: {
         id: true,
@@ -109,6 +144,25 @@ export class EmployeeCardsService {
         isOnCall: true,
       },
     });
+
+    if (isSupervisory || subordinates.length === 0) {
+      const seRole = await this.prisma.role.findFirst({
+        where: { code: 'SALES_EXECUTIVE' },
+      });
+      if (seRole) {
+        subordinates = await this.prisma.user.findMany({
+          where: { roleId: seRole.id, status: 'ACTIVE', deletedAt: null },
+          select: {
+            id: true,
+            name: true,
+            username: true,
+            image: true,
+            employeeCode: true,
+            isOnCall: true,
+          },
+        });
+      }
+    }
 
     const cards = await Promise.all(
       subordinates.map(async (sub) => {
@@ -373,13 +427,22 @@ export class EmployeeCardsService {
     managerId: string,
     employeeId: string,
   ) {
+    const manager = await this.prisma.user.findUnique({
+      where: { id: managerId },
+      include: { role: true },
+    });
+    const isSupervisory =
+      manager?.role?.code === 'ADMIN' ||
+      manager?.role?.code === 'DIRECTOR' ||
+      manager?.role?.code === 'BUSINESS_MANAGER';
+
     const employee = await this.prisma.user.findUnique({
       where: { id: employeeId },
       select: { managerId: true },
     });
 
     if (!employee) throw new NotFoundException('Employee not found');
-    if (employee.managerId !== managerId) {
+    if (!isSupervisory && employee.managerId !== managerId) {
       throw new ForbiddenException('This employee does not report to you');
     }
   }

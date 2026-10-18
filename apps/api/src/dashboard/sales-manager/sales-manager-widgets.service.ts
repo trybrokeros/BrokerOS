@@ -71,6 +71,17 @@ export class SalesManagerWidgetsService {
       }
     });
 
+    // Universal aliases for frontend compatibility
+    pipelineMap['siteVisit'] =
+      (pipelineMap['SITE_VISIT_SCHEDULED'] || 0) +
+      (pipelineMap['SITE_VISIT_COMPLETED'] || 0);
+    pipelineMap['negotiation'] = pipelineMap['NEGOTIATION'] || 0;
+    pipelineMap['booked'] = pipelineMap['BOOKING'] || 0;
+    pipelineMap['lost'] = pipelineMap['LOST'] || 0;
+    pipelineMap['cancelled'] = pipelineMap['LOST'] || 0;
+    pipelineMap['new'] = pipelineMap['NEW'] || 0;
+    pipelineMap['contacted'] = pipelineMap['CONTACTED'] || 0;
+
     return {
       widgets: {
         siteVisitsScheduled: siteVisitsScheduledThisMonth,

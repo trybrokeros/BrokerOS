@@ -6,15 +6,44 @@ import { getTodayRange, getStartDate } from '../core/dashboard.utils.js';
 export class ManagerDashboardService {
   constructor(private prisma: PrismaService) {}
 
+  private async resolvePreSalesTeam(managerId: string) {
+    const manager = await this.prisma.user.findUnique({
+      where: { id: managerId },
+      include: { role: true },
+    });
+    const isSupervisory =
+      manager?.role?.code === 'ADMIN' ||
+      manager?.role?.code === 'DIRECTOR' ||
+      manager?.role?.code === 'BUSINESS_MANAGER';
+
+    let subs = await this.prisma.user.findMany({
+      where: { managerId, status: 'ACTIVE', deletedAt: null },
+      select: { id: true, name: true, username: true },
+    });
+
+    if (isSupervisory || subs.length === 0) {
+      const psRole = await this.prisma.role.findFirst({
+        where: { code: 'PRE_SALES' },
+      });
+      if (psRole) {
+        const allAgents = await this.prisma.user.findMany({
+          where: { roleId: psRole.id, status: 'ACTIVE', deletedAt: null },
+          select: { id: true, name: true, username: true },
+        });
+        if (allAgents.length > 0) {
+          subs = allAgents;
+        }
+      }
+    }
+
+    const userIds = Array.from(new Set([managerId, ...subs.map((s) => s.id)]));
+    return { userIds, subs, isSupervisory };
+  }
+
   async getPreSalesManagerDashboard(managerId: string) {
     const { start: todayStart, end: todayEnd } = getTodayRange();
 
-    // Find all subordinates
-    const subs = await this.prisma.user.findMany({
-      where: { managerId, status: 'ACTIVE' },
-      select: { id: true, name: true, username: true },
-    });
-    const userIds = [managerId, ...subs.map((s) => s.id)];
+    const { userIds, subs } = await this.resolvePreSalesTeam(managerId);
 
     const [
       newLeadsCount,
@@ -30,7 +59,10 @@ export class ManagerDashboardService {
     ] = await Promise.all([
       this.prisma.lead.count({
         where: {
-          assignedUserId: { in: userIds },
+          OR: [
+            { assignedUserId: { in: userIds } },
+            { assignedUserId: null }, // Unassigned queue for pre-sales team
+          ],
           status: 'NEW',
           deletedAt: null,
         },
@@ -50,7 +82,13 @@ export class ManagerDashboardService {
         },
       }),
       this.prisma.lead.count({
-        where: { assignedUserId: { in: userIds }, deletedAt: null },
+        where: {
+          OR: [
+            { assignedUserId: { in: userIds } },
+            { assignedUserId: null, status: 'NEW' },
+          ],
+          deletedAt: null,
+        },
       }),
       this.prisma.followUp.count({
         where: {
@@ -70,7 +108,13 @@ export class ManagerDashboardService {
       this.prisma.siteVisit.count({ where: { salesExecId: { in: userIds } } }),
       this.prisma.lead.groupBy({
         by: ['status'],
-        where: { assignedUserId: { in: userIds }, deletedAt: null },
+        where: {
+          OR: [
+            { assignedUserId: { in: userIds } },
+            { assignedUserId: null, status: 'NEW' },
+          ],
+          deletedAt: null,
+        },
         _count: { status: true },
       }),
       this.prisma.followUp.findMany({
@@ -124,6 +168,18 @@ export class ManagerDashboardService {
     pipelineStages.forEach((s) => (pipelineMap[s] = 0));
     pipelineCounts.forEach((p) => (pipelineMap[p.status] = p._count.status));
 
+    // Universal aliases for frontend compatibility
+    pipelineMap['new'] = pipelineMap['NEW'];
+    pipelineMap['contacted'] = pipelineMap['CONTACTED'];
+    pipelineMap['interested'] = pipelineMap['INTERESTED'];
+    pipelineMap['qualified'] = pipelineMap['QUALIFIED'];
+    pipelineMap['siteVisit'] =
+      (pipelineMap['SITE_VISIT_SCHEDULED'] || 0) +
+      (pipelineMap['SITE_VISIT_COMPLETED'] || 0);
+    pipelineMap['negotiation'] = pipelineMap['NEGOTIATION'] || 0;
+    pipelineMap['booked'] = pipelineMap['BOOKING'] || 0;
+    pipelineMap['lost'] = pipelineMap['LOST'] || 0;
+
     const conversionRate =
       newLeadsCount > 0
         ? Math.round(
@@ -166,15 +222,14 @@ export class ManagerDashboardService {
     const startDate = getStartDate(timeRange);
     const dateFilter = startDate ? { gte: startDate } : undefined;
 
-    // Find all subordinates
-    const subs = await this.prisma.user.findMany({
-      where: { managerId, status: 'ACTIVE' },
-      select: { id: true },
-    });
-    const userIds = [managerId, ...subs.map((s) => s.id)];
+    const { userIds } = await this.resolvePreSalesTeam(managerId);
 
     const commonWhere = {
-      assignedUserId: { in: userIds },
+      OR: [
+        { assignedUserId: { in: userIds } },
+        { assignedUserId: null },
+      ],
+      deletedAt: null,
       ...(dateFilter ? { updatedAt: dateFilter } : {}),
     };
 
@@ -382,6 +437,14 @@ export class ManagerDashboardService {
         siteVisits,
         booked,
         lost: lostLeads,
+        NEW: newLeads,
+        CONTACTED: contacted,
+        INTERESTED: interested,
+        QUALIFIED: qualified,
+        SITE_VISIT_SCHEDULED: visitScheduled,
+        SITE_VISIT_COMPLETED: visitCompleted,
+        BOOKING: booked,
+        LOST: lostLeads,
       },
       calls: {
         made: callsMade,

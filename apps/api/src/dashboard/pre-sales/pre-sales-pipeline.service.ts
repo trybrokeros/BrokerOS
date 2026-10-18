@@ -18,13 +18,10 @@ export class PreSalesPipelineService {
   }
 
   async computePipeline(userId: string) {
-    const { start: monthStart, end: monthEnd } = getMonthRange();
-
     const pipelineCounts = await this.prisma.lead.groupBy({
       by: ['status'],
       where: {
         assignedUserId: userId,
-        createdAt: { gte: monthStart, lte: monthEnd },
         deletedAt: null,
       },
       _count: { status: true },
@@ -46,6 +43,18 @@ export class PreSalesPipelineService {
     pipelineCounts.forEach((p) => {
       pipelineMap[p.status] = p._count.status;
     });
+
+    // Provide universal aliases for frontend compatibility
+    pipelineMap['new'] = pipelineMap['NEW'];
+    pipelineMap['contacted'] = pipelineMap['CONTACTED'];
+    pipelineMap['interested'] = pipelineMap['INTERESTED'];
+    pipelineMap['qualified'] = pipelineMap['QUALIFIED'];
+    pipelineMap['siteVisit'] =
+      (pipelineMap['SITE_VISIT_SCHEDULED'] || 0) +
+      (pipelineMap['SITE_VISIT_COMPLETED'] || 0);
+    pipelineMap['negotiation'] = pipelineMap['NEGOTIATION'] || 0;
+    pipelineMap['booked'] = pipelineMap['BOOKING'] || 0;
+    pipelineMap['lost'] = pipelineMap['LOST'] || 0;
 
     return pipelineMap;
   }
