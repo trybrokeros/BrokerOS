@@ -230,4 +230,203 @@ describe('API E2E: RBAC & Business Line Partitioning (isCpProject)', () => {
       ).rejects.toThrow('Commission record not found');
     });
   });
+
+  describe('A10: Least-Privilege Role Scoping & RolesGuard Enforcement', () => {
+    it('verifies BusinessManagerDashboardController is protected with executive roles', async () => {
+      const { Reflector } = await import('@nestjs/core');
+      const { ROLES_KEY } = await import('../../src/auth/roles.decorator.js');
+      const { BusinessManagerDashboardController } = await import(
+        '../../src/dashboard/business-manager/business-manager-dashboard.controller.js'
+      );
+
+      const reflector = new Reflector();
+      const roles = reflector.get<string[]>(
+        ROLES_KEY,
+        BusinessManagerDashboardController,
+      );
+
+      expect(roles).toBeDefined();
+      expect(roles).toEqual(['ADMIN', 'DIRECTOR', 'BUSINESS_MANAGER']);
+    }, 25000);
+
+    it('verifies SalesManagerDashboardController is restricted to manager and director roles', async () => {
+      const { Reflector } = await import('@nestjs/core');
+      const { ROLES_KEY } = await import('../../src/auth/roles.decorator.js');
+      const { SalesManagerDashboardController } = await import(
+        '../../src/dashboard/core/dashboard.controller.js'
+      );
+
+      const reflector = new Reflector();
+      const roles = reflector.get<string[]>(
+        ROLES_KEY,
+        SalesManagerDashboardController,
+      );
+
+      expect(roles).toBeDefined();
+      expect(roles).toEqual([
+        'ADMIN',
+        'DIRECTOR',
+        'BUSINESS_MANAGER',
+        'SALES_MANAGER',
+      ]);
+    }, 60000);
+
+    it('verifies RolesGuard blocks unauthorized role access and permits authorized role access', async () => {
+      const { Reflector } = await import('@nestjs/core');
+      const { RolesGuard } = await import('../../src/auth/roles.guard.js');
+      const { SalesManagerDashboardController } = await import(
+        '../../src/dashboard/core/dashboard.controller.js'
+      );
+
+      const reflector = new Reflector();
+      const guard = new RolesGuard(reflector);
+
+      // Context simulating SALES_EXECUTIVE trying to access sales manager endpoint
+      const unauthorizedContext = {
+        getHandler: () => SalesManagerDashboardController.prototype.getDashboard,
+        getClass: () => SalesManagerDashboardController,
+        switchToHttp: () => ({
+          getRequest: () => ({
+            user: { id: 'exec-1', role: 'SALES_EXECUTIVE' },
+          }),
+        }),
+      } as any;
+
+      const denied = await guard.canActivate(unauthorizedContext);
+      expect(denied).toBe(false);
+
+      // Context simulating SALES_MANAGER accessing sales manager endpoint
+      const managerContext = {
+        getHandler: () => SalesManagerDashboardController.prototype.getDashboard,
+        getClass: () => SalesManagerDashboardController,
+        switchToHttp: () => ({
+          getRequest: () => ({
+            user: { id: 'mgr-1', role: 'SALES_MANAGER' },
+          }),
+        }),
+      } as any;
+
+      const allowed = await guard.canActivate(managerContext);
+      expect(allowed).toBe(true);
+
+      // Context simulating ADMIN supervisory access
+      const adminContext = {
+        getHandler: () => SalesManagerDashboardController.prototype.getDashboard,
+        getClass: () => SalesManagerDashboardController,
+        switchToHttp: () => ({
+          getRequest: () => ({
+            user: { id: 'admin-1', role: 'ADMIN' },
+          }),
+        }),
+      } as any;
+
+      const adminAllowed = await guard.canActivate(adminContext);
+      expect(adminAllowed).toBe(true);
+    }, 25000);
+
+    it('verifies CrmTelephonyController connect carrier mutation is restricted to ADMIN and DIRECTOR', async () => {
+      const { Reflector } = await import('@nestjs/core');
+      const { ROLES_KEY } = await import('../../src/auth/roles.decorator.js');
+      const { CrmTelephonyController } = await import(
+        '../../src/crm-telephony/crm-telephony.controller.js'
+      );
+
+      const reflector = new Reflector();
+      const roles = reflector.get<string[]>(
+        ROLES_KEY,
+        CrmTelephonyController.prototype.connect,
+      );
+
+      expect(roles).toBeDefined();
+      expect(roles).toEqual(['ADMIN', 'DIRECTOR']);
+    }, 25000);
+
+    it('verifies PaymentsController mutations are restricted to finance, post-sales, and management', async () => {
+      const { Reflector } = await import('@nestjs/core');
+      const { ROLES_KEY } = await import('../../src/auth/roles.decorator.js');
+      const { PaymentsController } = await import(
+        '../../src/payments/payments.controller.js'
+      );
+
+      const reflector = new Reflector();
+      const payRoles = reflector.get<string[]>(
+        ROLES_KEY,
+        PaymentsController.prototype.markAsPaid,
+      );
+
+      expect(payRoles).toBeDefined();
+      expect(payRoles).toContain('FINANCE');
+      expect(payRoles).toContain('POST_SALES_MANAGER');
+      expect(payRoles).not.toContain('PRE_SALES');
+      expect(payRoles).not.toContain('SALES_EXECUTIVE');
+    }, 25000);
+
+    it('verifies BookingController cancellation is restricted to management and authorized partners', async () => {
+      const { Reflector } = await import('@nestjs/core');
+      const { ROLES_KEY } = await import('../../src/auth/roles.decorator.js');
+      const { BookingController } = await import(
+        '../../src/leads/lead-booking.controller.js'
+      );
+
+      const reflector = new Reflector();
+      const cancelRoles = reflector.get<string[]>(
+        ROLES_KEY,
+        BookingController.prototype.cancelBooking,
+      );
+
+      expect(cancelRoles).toBeDefined();
+      expect(cancelRoles).toContain('SALES_MANAGER');
+      expect(cancelRoles).toContain('ADMIN');
+      expect(cancelRoles).toContain('CHANNEL_PARTNER');
+      expect(cancelRoles).not.toContain('SALES_EXECUTIVE');
+    }, 25000);
+
+    it('verifies ProjectsController allows CHANNEL_PARTNER to create projects and assign field teams', async () => {
+      const { Reflector } = await import('@nestjs/core');
+      const { ROLES_KEY } = await import('../../src/auth/roles.decorator.js');
+      const { ProjectsController } = await import(
+        '../../src/inventory/projects/projects.controller.js'
+      );
+
+      const reflector = new Reflector();
+      const createRoles = reflector.get<string[]>(
+        ROLES_KEY,
+        ProjectsController.prototype.createProject,
+      );
+      const assignRoles = reflector.get<string[]>(
+        ROLES_KEY,
+        ProjectsController.prototype.assignProject,
+      );
+      const assignTowerRoles = reflector.get<string[]>(
+        ROLES_KEY,
+        ProjectsController.prototype.assignTower,
+      );
+
+      expect(createRoles).toContain('CHANNEL_PARTNER');
+      expect(assignRoles).toContain('CHANNEL_PARTNER');
+      expect(assignTowerRoles).toContain('CHANNEL_PARTNER');
+    }, 25000);
+
+    it('verifies VoiceIntegrationsController is restricted to admin, director, and marketing', async () => {
+      const { Reflector } = await import('@nestjs/core');
+      const { ROLES_KEY } = await import('../../src/auth/roles.decorator.js');
+      const { VoiceIntegrationsController } = await import(
+        '../../src/marketing/voice/controllers/voice-integrations.controller.js'
+      );
+
+      const reflector = new Reflector();
+      const voiceRoles = reflector.get<string[]>(
+        ROLES_KEY,
+        VoiceIntegrationsController,
+      );
+
+      expect(voiceRoles).toBeDefined();
+      expect(voiceRoles).toEqual([
+        'ADMIN',
+        'DIRECTOR',
+        'MARKETING',
+        'BUSINESS_MANAGER',
+      ]);
+    }, 25000);
+  });
 });

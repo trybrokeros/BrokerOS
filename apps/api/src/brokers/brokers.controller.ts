@@ -27,9 +27,11 @@ import {
   ArriveAtMeetingDto,
   CompleteMeetingDto,
 } from './dto/broker.dto.js';
+import { Roles } from '../auth/roles.decorator.js';
 
 @Controller('api/brokers')
 @UseGuards(AuthGuard)
+@Roles('ADMIN', 'DIRECTOR', 'BUSINESS_MANAGER', 'SOURCING_MANAGER', 'CLOSING_MANAGER', 'FINANCE', 'POST_SALES_MANAGER', 'CHANNEL_PARTNER')
 export class BrokersController {
   constructor(
     private readonly brokersService: BrokersService,
@@ -58,6 +60,7 @@ export class BrokersController {
   }
 
   @Post('commissions/:recordId/complete')
+  @Roles('ADMIN', 'DIRECTOR', 'BUSINESS_MANAGER', 'FINANCE', 'SOURCING_MANAGER', 'POST_SALES_MANAGER', 'CHANNEL_PARTNER')
   @UseInterceptors(FileInterceptor('file'))
   completeCommission(
     @Param('recordId') recordId: string,

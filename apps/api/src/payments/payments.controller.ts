@@ -12,12 +12,14 @@ import {
 import { PaymentsService } from './payments.service.js';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CreateScheduleDto, MarkAsPaidDto } from './dto/payment.dto.js';
+import { Roles } from '../auth/roles.decorator.js';
 
 @Controller('api/payments')
 export class PaymentsController {
-  constructor(private readonly paymentsService: PaymentsService) {}
+  constructor(private readonly paymentsService: PaymentsService) { }
 
   @Post('schedule/:bookingId')
+  @Roles('ADMIN', 'DIRECTOR', 'BUSINESS_MANAGER', 'POST_SALES_MANAGER', 'POST_SALES', 'FINANCE', 'CLOSING_MANAGER', 'CHANNEL_PARTNER')
   async createSchedule(
     @Param('bookingId') bookingId: string,
     @Body() body: CreateScheduleDto,
@@ -31,6 +33,7 @@ export class PaymentsController {
   }
 
   @Get('closing-manager')
+  @Roles('ADMIN', 'DIRECTOR', 'BUSINESS_MANAGER', 'CLOSING_MANAGER', 'FINANCE', 'POST_SALES_MANAGER', 'CHANNEL_PARTNER')
   async getPendingPayments(@Query('managerId') managerId: string) {
     return this.paymentsService.getPendingPayments(managerId);
   }
@@ -41,6 +44,7 @@ export class PaymentsController {
   }
 
   @Post(':scheduleId/pay')
+  @Roles('ADMIN', 'DIRECTOR', 'BUSINESS_MANAGER', 'FINANCE', 'POST_SALES_MANAGER', 'POST_SALES', 'CLOSING_MANAGER', 'CHANNEL_PARTNER')
   @UseInterceptors(FileInterceptor('receipt'))
   async markAsPaid(
     @Param('scheduleId') scheduleId: string,
