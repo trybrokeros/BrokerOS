@@ -14,12 +14,36 @@ export class SalesManagerDashboardService {
   ) {}
 
   async getSalesManagerDashboard(managerId: string) {
-    // Find all subordinates
-    const subs = await this.prisma.user.findMany({
-      where: { managerId, status: 'ACTIVE' },
+    const manager = await this.prisma.user.findUnique({
+      where: { id: managerId },
+      include: { role: true },
+    });
+    const isSupervisory =
+      manager?.role?.code === 'ADMIN' ||
+      manager?.role?.code === 'DIRECTOR' ||
+      manager?.role?.code === 'BUSINESS_MANAGER';
+
+    let subs = await this.prisma.user.findMany({
+      where: { managerId, status: 'ACTIVE', deletedAt: null },
       select: { id: true, name: true, username: true, image: true },
     });
-    const userIds = [managerId, ...subs.map((s) => s.id)];
+
+    if (isSupervisory || subs.length === 0) {
+      const seRole = await this.prisma.role.findFirst({
+        where: { code: 'SALES_EXECUTIVE' },
+      });
+      if (seRole) {
+        const allExecs = await this.prisma.user.findMany({
+          where: { roleId: seRole.id, status: 'ACTIVE', deletedAt: null },
+          select: { id: true, name: true, username: true, image: true },
+        });
+        if (allExecs.length > 0) {
+          subs = allExecs;
+        }
+      }
+    }
+
+    const userIds = Array.from(new Set([managerId, ...subs.map((s) => s.id)]));
 
     const [widgetsAndPipeline, dailyTasks, teamLeaderboard] = await Promise.all(
       [

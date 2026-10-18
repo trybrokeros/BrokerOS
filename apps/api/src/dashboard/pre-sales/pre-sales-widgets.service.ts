@@ -31,12 +31,11 @@ export class PreSalesWidgetsService {
       siteVisitsThisMonth,
       bookingsThisMonth,
     ] = await Promise.all([
-      // New Leads this month assigned to user
+      // New Leads assigned to user
       this.prisma.lead.count({
         where: {
           assignedUserId: userId,
           status: 'NEW',
-          createdAt: { gte: monthStart, lte: monthEnd },
           deletedAt: null,
         },
       }),
