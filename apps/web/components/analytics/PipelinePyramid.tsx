@@ -1,7 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
+import { TrendingDown, ArrowDown } from "lucide-react";
 
 export interface PipelineStageData {
   stage: string;
@@ -14,100 +15,89 @@ interface PipelinePyramidProps {
 }
 
 export function PipelinePyramid({ data }: PipelinePyramidProps) {
-  const maxCount = data.length > 0 ? data[0].count : 1;
-  const heightPerSlice = 52;
-  const gap = 6;
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
-  const width = 560;
-  const height = data.length * (heightPerSlice + gap) + 20;
-  const centerX = width / 2;
+  if (!data || data.length === 0) {
+    return (
+      <div className="py-12 text-center text-xs font-semibold text-slate-400 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+        No pipeline stages defined.
+      </div>
+    );
+  }
+
+  const topCount = Math.max(data[0].count, 1);
 
   return (
-    <div className="w-full flex justify-center py-6 relative animate-enter">
-      <svg
-        viewBox={`0 0 ${width} ${height}`}
-        className="w-full max-w-[560px] h-auto overflow-visible"
-      >
-        <defs>
-          <filter id="soft-shadow" x="-20%" y="-20%" width="140%" height="140%">
-            <feDropShadow
-              dx="0"
-              dy="4"
-              stdDeviation="4"
-              floodOpacity="0.1"
-              floodColor="#000000"
-            />
-          </filter>
-        </defs>
+    <div className="w-full max-w-xl mx-auto py-4 space-y-3">
+      {data.map((item, index) => {
+        const pctOfTop = Math.round((item.count / topCount) * 100);
+        const widthPct = Math.max(pctOfTop, 28);
+        const isHovered = hoveredIdx === index;
 
-        {data.map((item, index) => {
-          const topWidthRatio = maxCount > 0 ? item.count / maxCount : 0;
-          const calculatedTopWidth = topWidthRatio * width;
-          const topWidth = Math.max(calculatedTopWidth, 120);
-
-          let bottomWidthRatio = topWidthRatio;
-          if (index < data.length - 1) {
-            bottomWidthRatio =
-              maxCount > 0 ? data[index + 1].count / maxCount : 0;
-          } else {
-            bottomWidthRatio = topWidthRatio * 0.7;
+        // Calculate drop-off from previous stage
+        let dropoff = 0;
+        if (index > 0) {
+          const prevCount = data[index - 1].count;
+          if (prevCount > 0) {
+            dropoff = Math.round(((prevCount - item.count) / prevCount) * 100);
           }
-          const calculatedBottomWidth = bottomWidthRatio * width;
-          const bottomWidth = Math.max(calculatedBottomWidth, 80);
+        }
 
-          const yTop = index * (heightPerSlice + gap);
-          const yBottom = yTop + heightPerSlice;
+        return (
+          <div key={item.stage} className="flex flex-col items-center">
+            {/* Drop-off bridge indicator */}
+            {index > 0 && dropoff > 0 && (
+              <div className="flex items-center gap-1.5 py-1 text-[10px] font-extrabold text-slate-400">
+                <ArrowDown size={11} className="text-slate-300" />
+                <span>
+                  -{dropoff}% drop-off
+                </span>
+              </div>
+            )}
 
-          const xTopLeft = centerX - topWidth / 2;
-          const xTopRight = centerX + topWidth / 2;
-          const xBottomLeft = centerX - bottomWidth / 2;
-          const xBottomRight = centerX + bottomWidth / 2;
-
-          const points = `${xTopLeft},${yTop} ${xTopRight},${yTop} ${xBottomRight},${yBottom} ${xBottomLeft},${yBottom}`;
-
-          return (
-            <motion.g
-              key={item.stage}
-              initial={{ opacity: 0, y: -10 }}
+            {/* Stage Pod */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: index * 0.1, ease: "easeOut" }}
+              transition={{ duration: 0.35, delay: index * 0.08 }}
+              onMouseEnter={() => setHoveredIdx(index)}
+              onMouseLeave={() => setHoveredIdx(null)}
+              style={{
+                width: `${widthPct}%`,
+                transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+              }}
+              className={`relative rounded-2xl p-3 sm:p-4 text-white shadow-md cursor-pointer transition-transform ${
+                isHovered ? "scale-[1.03] shadow-xl z-10 ring-2 ring-slate-900/20" : ""
+              }`}
             >
-              {/* The slice shape */}
-              <polygon
-                points={points}
-                fill={item.color}
-                opacity={0.95}
-                className="hover:opacity-100 transition-opacity cursor-pointer stroke-white stroke-[1.5px]"
-                filter="url(#soft-shadow)"
+              <div
+                className="absolute inset-0 rounded-2xl opacity-90 transition-opacity"
+                style={{
+                  backgroundColor: item.color,
+                  boxShadow: "0 1px 0 rgba(255,255,255,0.2) inset",
+                }}
               />
 
-              {/* Metric count */}
-              <text
-                x={centerX}
-                y={yTop + heightPerSlice / 2 - 3}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fill="#ffffff"
-                className="font-extrabold text-base tracking-tight pointer-events-none drop-shadow-sm tabular-nums"
-              >
-                {item.count}
-              </text>
+              <div className="relative z-10 flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <span className="text-[10px] font-extrabold uppercase tracking-widest text-white/80 block truncate">
+                    {item.stage}
+                  </span>
+                  <div className="text-lg sm:text-xl font-black tabular-nums tracking-tight">
+                    {item.count.toLocaleString()}
+                  </div>
+                </div>
 
-              {/* Stage label */}
-              <text
-                x={centerX}
-                y={yTop + heightPerSlice / 2 + 13}
-                textAnchor="middle"
-                dominantBaseline="middle"
-                fill="#ffffff"
-                className="font-extrabold text-[9px] uppercase tracking-widest pointer-events-none drop-shadow-sm opacity-95"
-              >
-                {item.stage}
-              </text>
-            </motion.g>
-          );
-        })}
-      </svg>
+                <div className="text-right shrink-0">
+                  <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-white/20 backdrop-blur-xs text-white">
+                    {pctOfTop}%
+                  </span>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        );
+      })}
     </div>
   );
 }
