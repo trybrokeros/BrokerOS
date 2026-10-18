@@ -19,20 +19,37 @@ export class RolesGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const user = request.user;
 
-    if (!user || !user.roleId) {
+    if (!user) {
       return false;
     }
 
-    // Fetch the user's role from the database
-    const role = await prismaClient.role.findUnique({
-      where: { id: user.roleId },
-    });
+    let roleCode: string | undefined =
+      typeof user.role === 'string' ? user.role : user.role?.code;
 
-    if (!role) {
+    if (!roleCode && user.roleId) {
+      const role = await prismaClient.role.findUnique({
+        where: { id: user.roleId },
+      });
+      roleCode = role?.code;
+    }
+
+    if (!roleCode && user.id) {
+      const dbUser = await prismaClient.user.findUnique({
+        where: { id: user.id },
+        include: { role: true },
+      });
+      roleCode = dbUser?.role?.code;
+    }
+
+    if (!roleCode) {
       return false;
     }
 
-    // Check if the user's role code is in the required roles array
-    return requiredRoles.includes(role.code);
+    // System Admins and Directors have universal supervisory authorization
+    if (roleCode === 'ADMIN' || roleCode === 'DIRECTOR') {
+      return true;
+    }
+
+    return requiredRoles.includes(roleCode);
   }
 }

@@ -112,4 +112,36 @@ describe('RolesGuard', () => {
     const result = await guard.canActivate(context);
     expect(result).toBe(false);
   });
+
+  it('should return true if user role code is provided directly on user object', async () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['SALES_MANAGER']);
+    const context = {
+      getHandler: jest.fn(),
+      getClass: jest.fn(),
+      switchToHttp: jest.fn().mockReturnValue({
+        getRequest: jest.fn().mockReturnValue({
+          user: { role: 'SALES_MANAGER' },
+        }),
+      }),
+    } as unknown as ExecutionContext;
+
+    const result = await guard.canActivate(context);
+    expect(result).toBe(true);
+  });
+
+  it('should allow ADMIN even if required role is different', async () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue(['PRE_SALES']);
+    const context = {
+      getHandler: jest.fn(),
+      getClass: jest.fn(),
+      switchToHttp: jest.fn().mockReturnValue({
+        getRequest: jest.fn().mockReturnValue({
+          user: { role: 'ADMIN' },
+        }),
+      }),
+    } as unknown as ExecutionContext;
+
+    const result = await guard.canActivate(context);
+    expect(result).toBe(true);
+  });
 });
