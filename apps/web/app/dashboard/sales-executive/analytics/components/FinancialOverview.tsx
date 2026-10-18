@@ -1,16 +1,17 @@
 "use client";
 
 import React from "react";
+import { IndianRupee, Wallet, TrendingUp, Sparkles } from "lucide-react";
 import { StatCard } from "@/components/analytics/StatCard";
-import { IndianRupee, Wallet, TrendingUp } from "lucide-react";
 
 export function FinancialOverview({ financialData }: { financialData: any }) {
   if (!financialData) return null;
 
   const formatINR = (val: number) => {
-    return `₹${Number(val || 0).toLocaleString("en-IN", {
-      maximumFractionDigits: 0,
-    })}`;
+    const num = Number(val || 0);
+    if (num >= 10000000) return `₹${(num / 10000000).toFixed(2)} Cr`;
+    if (num >= 100000) return `₹${(num / 100000).toFixed(2)} L`;
+    return `₹${num.toLocaleString("en-IN")}`;
   };
 
   return (
@@ -20,21 +21,27 @@ export function FinancialOverview({ financialData }: { financialData: any }) {
         value={formatINR(financialData.totalRevenue)}
         subtitle="Locked-in Gross Booking Value"
         icon={IndianRupee}
-        delay={0.05}
+        trend="up"
+        trendValue="Closed Deals"
+        delay={0.04}
       />
       <StatCard
         title="Realized Commission"
         value={formatINR(financialData.realizedCommission)}
         subtitle="Earned from Confirmed Bookings"
         icon={Wallet}
-        delay={0.1}
+        trend="up"
+        trendValue="Realized"
+        delay={0.08}
       />
       <StatCard
         title="Projected Commission"
         value={formatINR(financialData.projectedCommission)}
         subtitle="Pipeline from Active Negotiations"
         icon={TrendingUp}
-        delay={0.15}
+        trend="neutral"
+        trendValue="In-Flight"
+        delay={0.12}
       />
     </div>
   );
