@@ -26,23 +26,29 @@ export function PendingListWidget({
   emptyMessage = "No pending items.",
 }: PendingListWidgetProps) {
   return (
-    <div className="bg-white border border-slate-200/80 rounded-3xl p-5 shadow-2xs flex flex-col justify-between h-full">
+    <div
+      className="bg-white/95 backdrop-blur-md border border-slate-200/90 rounded-3xl p-5 flex flex-col justify-between h-full transition-all duration-300"
+      style={{
+        boxShadow:
+          "0 1px 0 rgba(255, 255, 255, 0.95) inset, 0 16px 36px -24px rgba(15, 23, 42, 0.12)",
+      }}
+    >
       <div>
         <div className="flex justify-between items-center mb-3">
-          <h2 className="text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider m-0">
+          <h2 className="text-xs font-black text-slate-900 uppercase tracking-wider m-0">
             {title}
           </h2>
-          <span className="text-[10px] font-extrabold text-[var(--text-muted)] bg-slate-100 px-2 py-0.5 rounded-full tabular-nums">
+          <span className="text-[10px] font-black text-slate-600 bg-slate-100 border border-slate-200/60 px-2 py-0.5 rounded-full tabular-nums">
             {list.length}
           </span>
         </div>
 
         {list.length === 0 ? (
-          <div className="py-10 flex items-center justify-center text-xs font-semibold text-[var(--text-muted)] text-center">
+          <div className="py-12 flex items-center justify-center text-xs font-semibold text-slate-400 text-center">
             {emptyMessage}
           </div>
         ) : (
-          <div className="divide-y divide-slate-100 max-h-64 overflow-y-auto pr-1">
+          <div className="flex flex-col gap-1.5 max-h-64 overflow-y-auto pr-1">
             {list.map((lead) => {
               const badgeStyle = STATUS_COLORS[lead.status] || {
                 bg: "bg-slate-50",
@@ -53,22 +59,22 @@ export function PendingListWidget({
                 <Link
                   href={`/dashboard/post-sales/lead-management/${lead.id}`}
                   key={lead.id}
-                  className="flex items-center justify-between py-2.5 px-2 rounded-xl hover:bg-slate-50 transition-colors no-underline group"
+                  className="flex items-center justify-between p-2.5 rounded-2xl bg-slate-50/60 hover:bg-slate-50 hover:border-slate-300 border border-slate-200/70 transition-all duration-200 no-underline group shadow-2xs hover:shadow-xs"
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
                     <Avatar name={lead.firstName} size={30} />
                     <div className="min-w-0">
-                      <div className="text-xs font-bold text-[var(--text-primary)] truncate group-hover:text-[var(--brand-700)] transition-colors">
+                      <div className="text-xs font-bold text-slate-900 truncate group-hover:text-[var(--brand-700)] transition-colors">
                         {`${lead.firstName} ${lead.lastName || ""}`.trim()}
                       </div>
-                      <div className="text-[10px] font-semibold text-[var(--text-muted)] mt-0.5 tabular-nums truncate">
+                      <div className="text-[10px] font-semibold text-slate-500 mt-0.5 tabular-nums truncate">
                         {lead.phone || "No phone"}
                       </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0">
                     <span
-                      className={`text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full border ${badgeStyle.bg} ${badgeStyle.text} ${badgeStyle.border}`}
+                      className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border ${badgeStyle.bg} ${badgeStyle.text} ${badgeStyle.border}`}
                     >
                       {lead.subStatus && lead.status === "HANDOVER"
                         ? lead.subStatus
@@ -86,7 +92,7 @@ export function PendingListWidget({
       <div className="mt-3 pt-3 border-t border-slate-100">
         <Link
           href={`/dashboard/post-sales/lead-management?status=${statusFilter}`}
-          className="block text-center text-xs font-bold text-[var(--brand-700)] hover:text-purple-900 bg-purple-50/70 hover:bg-purple-100/70 py-2 rounded-xl transition-all border border-purple-200/50 no-underline shadow-2xs active:scale-[0.98]"
+          className="block text-center text-xs font-black text-[var(--brand-700)] hover:text-purple-900 bg-purple-50/70 hover:bg-purple-100/70 py-2 rounded-xl transition-all border border-purple-200/50 no-underline shadow-2xs active:scale-[0.98]"
         >
           View all {title.toLowerCase()}
         </Link>
