@@ -14,9 +14,10 @@ import {
   AlertCircle,
   ListChecks,
   Clock,
-  Download,
   BarChart3,
   Loader2,
+  Headphones,
+  Sparkles,
 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { ExportAnalyticsReportButton } from "@/components/analytics/ExportAnalyticsReportButton";
@@ -90,43 +91,6 @@ export default function PreSalesAnalytics() {
     load();
   }, [timeRange]);
 
-  if (loading && !data) {
-    return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-3">
-        <Loader2 className="w-8 h-8 text-[var(--brand-600)] animate-spin" />
-        <p className="text-xs font-semibold text-[var(--text-muted)]">
-          Aggregating pre-sales analytics…
-        </p>
-      </div>
-    );
-  }
-
-  if (error || !data) {
-    return (
-      <div className="bg-rose-50 border border-rose-200 rounded-3xl p-6 m-4 flex items-center gap-3 animate-enter">
-        <AlertCircle size={20} className="text-rose-600 shrink-0" />
-        <div>
-          <h3 className="text-sm font-extrabold text-rose-900 m-0">
-            Error loading pre-sales analytics
-          </h3>
-          <p className="text-xs text-rose-700 mt-1 m-0">
-            {error || "Unknown error occurred while fetching metrics."}
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  const pipelineStages = [
-    { name: "Total Leads", value: data.pipeline.totalLeads },
-    { name: "New Leads", value: data.pipeline.newLeads },
-    { name: "Contacted", value: data.pipeline.contacted },
-    { name: "Interested", value: data.pipeline.interested },
-    { name: "Qualified", value: data.pipeline.qualified },
-    { name: "Site Visits", value: data.pipeline.siteVisits },
-    { name: "Booked", value: data.pipeline.booked },
-  ];
-
   const ranges = [
     { id: "weekly", label: "Weekly" },
     { id: "monthly", label: "Monthly" },
@@ -168,39 +132,78 @@ export default function PreSalesAnalytics() {
       }
     : null;
 
+  if (loading && !data) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-3">
+        <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+        <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
+          Synthesizing Pre-Sales Telemetry…
+        </p>
+      </div>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <div className="bg-rose-50 border border-rose-200/90 rounded-3xl p-6 m-4 flex items-center gap-4 shadow-sm">
+        <AlertCircle size={22} className="text-rose-600 shrink-0" />
+        <div>
+          <h3 className="text-sm font-extrabold text-rose-950 m-0">
+            Error loading pre-sales analytics
+          </h3>
+          <p className="text-xs text-rose-700 font-medium mt-1 m-0">
+            {error || "Unknown error occurred while fetching metrics."}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const pipelineStages = [
+    { name: "Total Leads", value: data.pipeline.totalLeads },
+    { name: "New Leads", value: data.pipeline.newLeads },
+    { name: "Contacted", value: data.pipeline.contacted },
+    { name: "Interested", value: data.pipeline.interested },
+    { name: "Qualified", value: data.pipeline.qualified },
+    { name: "Site Visits", value: data.pipeline.siteVisits },
+    { name: "Booked", value: data.pipeline.booked },
+  ];
+
   return (
-    <div className="p-4 md:p-8 max-w-[1600px] mx-auto space-y-6 animate-enter">
-      {/* Header */}
+    <div className="p-4 sm:p-8 max-w-[1600px] mx-auto space-y-8 animate-in fade-in duration-300">
+      {/* Header with Title, Range Switcher & Export */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-extrabold text-[var(--text-primary)] tracking-tight flex items-center gap-2.5 m-0">
-            <div className="w-8 h-8 rounded-xl bg-purple-50 flex items-center justify-center text-[var(--brand-700)]">
-              <BarChart3 size={18} />
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-2xl bg-indigo-50 border border-indigo-200/80 flex items-center justify-center text-indigo-600 shadow-2xs">
+              <Headphones size={18} className="stroke-[2.2]" />
             </div>
-            <span>Pre-Sales Performance Analytics</span>
-          </h1>
-          <p className="text-xs text-[var(--text-muted)] font-medium mt-0.5 m-0">
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight m-0">
+              Pre-Sales Performance Analytics
+            </h1>
+          </div>
+          <p className="text-xs text-slate-500 font-medium mt-1 m-0">
             Pipeline velocity, telephonic efficiency, and qualification conversions.
           </p>
         </div>
 
-        {/* Time Range & Export */}
-        <div className="flex flex-wrap items-center gap-2.5">
-          <div className="flex bg-slate-100 p-1 rounded-full border border-slate-200/60 shadow-2xs">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex bg-slate-100 p-1 rounded-full border border-slate-200/80 shadow-2xs">
             {ranges.map((r) => (
               <button
                 key={r.id}
                 onClick={() => setTimeRange(r.id)}
-                className={`px-3.5 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
                   timeRange === r.id
-                    ? "bg-white text-[var(--text-primary)] shadow-xs"
-                    : "text-slate-500 hover:text-slate-800"
+                    ? "bg-white text-slate-900 shadow-xs font-extrabold"
+                    : "text-slate-500 hover:text-slate-900"
                 }`}
               >
                 {r.label}
               </button>
             ))}
           </div>
+
           <ExportAnalyticsReportButton
             payload={reportPayload}
             filenamePrefix="presales_analytics"
@@ -208,123 +211,142 @@ export default function PreSalesAnalytics() {
         </div>
       </div>
 
-      {/* KPI Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3.5">
+      {/* KPI Stats Grid with Concentric Elevation */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         <StatCard
           title="Total Pipeline"
           value={data.pipeline.totalLeads}
+          subtitle="Active leads in queue"
           icon={Target}
-          delay={0.05}
+          delay={0.04}
         />
         <StatCard
           title="Calls Made"
           value={data.calls.made}
           subtitle="Outbound dials"
           icon={PhoneOutgoing}
-          delay={0.1}
+          delay={0.08}
         />
         <StatCard
-          title="Connected"
+          title="Conversations"
           value={data.calls.connected}
-          subtitle="Direct talks"
+          subtitle={`${data.calls.connectedPercentage}% connection rate`}
           icon={PhoneIncoming}
-          delay={0.15}
+          trend={data.calls.connectedPercentage >= 35 ? "up" : "neutral"}
+          trendValue={`${data.calls.connectedPercentage}% connect`}
+          delay={0.12}
         />
         <StatCard
           title="Follow-ups Done"
           value={data.followUps.completed}
           subtitle="Scheduled callbacks"
           icon={ListChecks}
-          delay={0.2}
+          delay={0.16}
         />
         <StatCard
           title="Lost / Dropped"
           value={data.pipeline.lost}
+          subtitle="Disqualified or cold"
           icon={XCircle}
           trend="down"
           trendValue="Requires audit"
-          delay={0.25}
+          delay={0.2}
         />
       </div>
 
-      {/* Analytics Bento Grid */}
+      {/* Bento Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        {/* Pipeline Bar Chart & Calls */}
+        {/* Main Stage & Telephony Section */}
         <div className="lg:col-span-2 space-y-6">
           <PremiumBarChart
             data={pipelineStages}
             title="Pipeline Stage Progression"
-            description="Cumulative lead advancement through stages"
+            description="Cumulative lead advancement through qualification stages"
             dataKey="value"
             categoryKey="name"
-            color="#9333ea"
+            color="#6366f1"
           />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Call Outcomes */}
-            <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-2xs space-y-4">
-              <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-                <div>
-                  <h3 className="text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider m-0">
-                    Call Outcomes
+          {/* Disposition & Avg Talk Time Card */}
+          <div className="bg-white rounded-3xl p-6 border border-slate-200/90 shadow-[0_1px_0_rgba(255,255,255,0.95)_inset,0_14px_34px_-18px_rgba(15,23,42,0.08)] space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 gap-3">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                  <h3 className="text-xs font-extrabold uppercase tracking-widest text-slate-800 m-0">
+                    Call Outcomes & Talk Time
                   </h3>
-                  <p className="text-[11px] text-[var(--text-muted)] font-medium mt-0.5 m-0">
-                    Disposition breakdown
-                  </p>
                 </div>
-                <div className="flex items-center gap-2 bg-purple-50 px-2.5 py-1 rounded-xl border border-purple-200/60">
-                  <Clock size={13} className="text-[var(--brand-700)]" />
-                  <div className="text-right">
-                    <span className="text-[9px] uppercase font-bold text-[var(--brand-700)] block">
-                      Avg Talk Time
-                    </span>
-                    <span className="text-xs font-extrabold text-purple-950 tabular-nums">
-                      {data.calls.avgTalkTimeSeconds}s
-                    </span>
-                  </div>
+                <p className="text-xs text-slate-500 font-medium mt-0.5 m-0">
+                  Dial disposition breakdown across the selected period
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2.5 bg-slate-50 px-3 py-1.5 rounded-2xl border border-slate-200/80">
+                <Clock size={14} className="text-indigo-600" />
+                <div className="text-right">
+                  <span className="text-[9px] uppercase font-extrabold text-slate-400 block tracking-wider">
+                    Avg Talk Time
+                  </span>
+                  <span className="text-xs font-black text-slate-900 tabular-nums">
+                    {data.calls.avgTalkTimeSeconds}s
+                  </span>
                 </div>
               </div>
-              <CallOutcomes outcomes={data.calls} />
             </div>
 
-            {/* Call Performance */}
-            <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-2xs flex flex-col items-center justify-center space-y-3">
-              <h3 className="text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider w-full text-left m-0">
-                Call Connection Ratio
-              </h3>
-              <CircularPercentage
-                percentage={data.calls.connectedPercentage}
-                label="Connected Rate"
-                subLabel={`${data.calls.connected} of ${data.calls.made} calls`}
-                color={data.calls.connectedPercentage > 30 ? "success" : "warning"}
-                delay={0.3}
-              />
-            </div>
+            <CallOutcomes outcomes={data.calls} />
           </div>
         </div>
 
-        {/* Circular Metrics & Lead Sources */}
+        {/* Side Gauges & Lead Acquisition */}
         <div className="lg:col-span-1 space-y-6">
-          <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-2xs flex flex-col items-center justify-center space-y-3">
-            <h3 className="text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider w-full text-left m-0">
-              Pipeline Health
-            </h3>
+          {/* Telephonic Connect Rate Ring */}
+          <div className="bg-white rounded-3xl p-6 border border-slate-200/90 shadow-[0_1px_0_rgba(255,255,255,0.95)_inset,0_14px_34px_-18px_rgba(15,23,42,0.08)] flex flex-col items-center justify-center">
+            <div className="w-full flex items-center justify-between pb-2 border-b border-slate-100 mb-2">
+              <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
+                Connection Ratio
+              </span>
+              <span className="text-[10px] font-black text-slate-900">
+                {data.calls.connected} / {data.calls.made}
+              </span>
+            </div>
             <CircularPercentage
-              percentage={data.conversions.leadToSiteVisitPercentage}
-              label="Lead to Site Visit"
-              subLabel="Overall pipeline conversion rate"
-              color="primary"
-              delay={0.35}
+              percentage={data.calls.connectedPercentage}
+              label="Connected Rate"
+              subLabel="Percentage of outbound dials answered"
+              color={data.calls.connectedPercentage >= 35 ? "success" : "warning"}
+              delay={0.2}
             />
           </div>
 
-          <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-2xs space-y-3">
+          {/* Lead to Site Visit Conversion Ring */}
+          <div className="bg-white rounded-3xl p-6 border border-slate-200/90 shadow-[0_1px_0_rgba(255,255,255,0.95)_inset,0_14px_34px_-18px_rgba(15,23,42,0.08)] flex flex-col items-center justify-center">
+            <div className="w-full flex items-center justify-between pb-2 border-b border-slate-100 mb-2">
+              <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
+                Pipeline Health
+              </span>
+              <span className="text-[10px] font-black text-slate-900">
+                {data.pipeline.siteVisits} SVs Booked
+              </span>
+            </div>
+            <CircularPercentage
+              percentage={data.conversions.leadToSiteVisitPercentage}
+              label="Lead to Site Visit"
+              subLabel="Overall pipeline qualification conversion"
+              color="primary"
+              delay={0.25}
+            />
+          </div>
+
+          {/* Top Channels */}
+          <div className="bg-white rounded-3xl p-6 border border-slate-200/90 shadow-[0_1px_0_rgba(255,255,255,0.95)_inset,0_14px_34px_-18px_rgba(15,23,42,0.08)] space-y-3">
             <div>
-              <h3 className="text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider m-0">
+              <h3 className="text-xs font-extrabold uppercase tracking-widest text-slate-800 m-0">
                 Top Lead Channels
               </h3>
-              <p className="text-[11px] text-[var(--text-muted)] font-medium mt-0.5 m-0">
-                Source attribution for site visits
+              <p className="text-xs text-slate-500 font-medium mt-0.5 m-0">
+                Source attribution for incoming inquiries
               </p>
             </div>
             <LeadSourceChart data={data.sources} />

@@ -13,14 +13,7 @@ import { EmployeeDailyTasks } from "../../_components/EmployeeDailyTasks";
 import { EmployeeBacklogs } from "../../_components/EmployeeBacklogs";
 import { EmployeeAnalyticsView } from "../../_components/EmployeeAnalyticsView";
 import { ArrowLeft, UserCircle2 } from "lucide-react";
-
-const PIPELINE_STAGES = [
-  { key: "new", label: "New", color: "#8b5cf6" },
-  { key: "contacted", label: "Contacted", color: "#6366f1" },
-  { key: "siteVisit", label: "Site Visit", color: "#3b82f6" },
-  { key: "negotiation", label: "Negotiation", color: "#0ea5e9" },
-  { key: "booked", label: "Booked", color: "#10b981" },
-];
+import { PIPELINE_STAGES } from "../../_components/constants";
 
 export default function EmployeeDashboardView() {
   const params = useParams();
