@@ -27,10 +27,12 @@ import {
   CreateAnnouncementDto,
   UpdateAnnouncementDto,
 } from './dto/dashboard.dto.js';
+import { Roles } from '../../auth/roles.decorator.js';
 
 // ─── Pre-Sales Agent Dashboard ────────────────────────────────────────────────
 
 @Controller('api/dashboard/pre-sales')
+@Roles('ADMIN', 'DIRECTOR', 'BUSINESS_MANAGER', 'PRE_SALES_MANAGER', 'PRE_SALES')
 export class DashboardController {
   constructor(
     private readonly dashboardService: DashboardService,
@@ -78,6 +80,7 @@ export class DashboardController {
 // ─── Pre-Sales Manager Dashboard ─────────────────────────────────────────────
 
 @Controller('api/dashboard/pre-sales-manager')
+@Roles('ADMIN', 'DIRECTOR', 'BUSINESS_MANAGER', 'PRE_SALES_MANAGER')
 export class DashboardManagerController {
   constructor(private readonly dashboardService: DashboardService) {}
 
@@ -103,6 +106,7 @@ export class DashboardManagerController {
 // ─── Sales Manager Dashboard ──────────────────────────────────────────────────
 
 @Controller('api/dashboard/sales-manager')
+@Roles('ADMIN', 'DIRECTOR', 'BUSINESS_MANAGER', 'SALES_MANAGER')
 export class SalesManagerDashboardController {
   constructor(
     private readonly salesManagerService: SalesManagerDashboardService,
@@ -159,6 +163,7 @@ export class SalesManagerDashboardController {
 // ─── Sales Executive Dashboard ───────────────────────────────────────────────
 
 @Controller('api/dashboard/sales-executive')
+@Roles('ADMIN', 'DIRECTOR', 'BUSINESS_MANAGER', 'SALES_MANAGER', 'SALES_EXECUTIVE')
 export class SalesExecDashboardController {
   constructor(
     private readonly dashboardService: DashboardService,
@@ -185,6 +190,7 @@ export class SalesExecDashboardController {
 // ─── Post-Sales Dashboard ────────────────────────────────────────────────────
 
 @Controller('api/dashboard/post-sales')
+@Roles('ADMIN', 'DIRECTOR', 'BUSINESS_MANAGER', 'POST_SALES_MANAGER', 'POST_SALES')
 export class PostSalesDashboardController {
   constructor(
     private readonly postSalesDashboardService: PostSalesDashboardService,
@@ -212,6 +218,7 @@ export class PostSalesDashboardController {
 // ─── Employees (Manager-scoped) ───────────────────────────────────────────────
 
 @Controller('api/dashboard/pre-sales-manager/employees')
+@Roles('ADMIN', 'DIRECTOR', 'BUSINESS_MANAGER', 'PRE_SALES_MANAGER')
 export class EmployeesController {
   constructor(
     private readonly employeesService: EmployeesService,
@@ -322,6 +329,7 @@ export class EmployeesController {
 // ─── Sales Manager Employees ──────────────────────────────────────────────────
 
 @Controller('api/dashboard/sales-manager/employees')
+@Roles('ADMIN', 'DIRECTOR', 'BUSINESS_MANAGER', 'SALES_MANAGER')
 export class SalesManagerEmployeesController {
   constructor(
     private readonly employeesService: EmployeesService,
@@ -410,6 +418,7 @@ export class SalesManagerEmployeesController {
 // --- Channel Partner Employees --------------------------------------------------
 
 @Controller('api/dashboard/channel-partner/employees')
+@Roles('ADMIN', 'DIRECTOR', 'BUSINESS_MANAGER', 'CHANNEL_PARTNER')
 export class ChannelPartnerEmployeesController {
   constructor(
     private readonly employeesService: EmployeesService,
@@ -448,6 +457,7 @@ export class ChannelPartnerEmployeesController {
 // --- Post-Sales Manager Employees -----------------------------------------------
 
 @Controller('api/dashboard/post-sales-manager/employees')
+@Roles('ADMIN', 'DIRECTOR', 'BUSINESS_MANAGER', 'POST_SALES_MANAGER')
 export class PostSalesManagerEmployeesController {
   constructor(
     private readonly employeesService: EmployeesService,

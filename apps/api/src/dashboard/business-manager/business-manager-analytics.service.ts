@@ -50,7 +50,7 @@ export class BusinessManagerAnalyticsService {
     });
 
     // Lead fetching
-    const leadsWhere: any = {};
+    const leadsWhere: any = { deletedAt: null };
     if (dateFilter) {
       leadsWhere.createdAt = dateFilter;
     }
@@ -119,13 +119,16 @@ export class BusinessManagerAnalyticsService {
 
     for (const l of leads) {
       // Determine if lead is CP or Brokerage
-      // Either by assigned project being CP, or source being CHANNEL_PARTNER
+      // Either by assigned project being CP, source being CHANNEL_PARTNER, or assigned broker
       const isCp =
-        l.interestedProject?.isCpProject ||
-        l.source?.type === 'CHANNEL_PARTNER';
+        Boolean(l.interestedProject?.isCpProject) ||
+        l.source?.type === 'CHANNEL_PARTNER' ||
+        Boolean(l.brokerId);
       const target = isCp ? leadPipeline.cp : leadPipeline.brokerage;
 
-      if (target.hasOwnProperty(l.status)) {
+      if (l.status === 'SITE_VISIT_COMPLETED') {
+        target.SITE_VISIT_SCHEDULED++;
+      } else if (target.hasOwnProperty(l.status)) {
         (target as any)[l.status]++;
       }
     }

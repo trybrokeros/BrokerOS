@@ -21,7 +21,10 @@ import { BusinessManagerLeadsService } from './business-manager-leads.service.js
  * Query params:
  *   ?period=weekly|monthly|yearly   — date filter (default: all time)
  */
+import { Roles } from '../../auth/roles.decorator.js';
+
 @Controller('api/dashboard/business-manager')
+@Roles('ADMIN', 'DIRECTOR', 'BUSINESS_MANAGER')
 export class BusinessManagerDashboardController {
   constructor(
     private readonly businessManagerService: BusinessManagerDashboardService,
