@@ -20,10 +20,11 @@ import {
 } from "lucide-react";
 
 const PIPELINE_STAGES = [
-  { key: "siteVisit", label: "Site Visits", color: "#3b82f6" },
-  { key: "negotiation", label: "Negotiations", color: "#f59e0b" },
-  { key: "booked", label: "Booked", color: "#10b981" },
-  { key: "cancelled", label: "Cancelled", color: "#ef4444" },
+  { key: "SITE_VISIT_SCHEDULED", label: "SV Scheduled", color: "#3b82f6" },
+  { key: "SITE_VISIT_COMPLETED", label: "SV Completed", color: "#7c3aed" },
+  { key: "NEGOTIATION", label: "Negotiations", color: "#f59e0b" },
+  { key: "BOOKING", label: "Booked", color: "#10b981" },
+  { key: "LOST", label: "Lost / Cancelled", color: "#ef4444" },
 ];
 
 export default function SalesManagerDashboard() {
