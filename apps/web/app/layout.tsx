@@ -32,7 +32,10 @@ export default function RootLayout({
       lang="en"
       className={`${plusJakartaSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col font-sans bg-[var(--bg-base)] text-[var(--text-primary)] antialiased">
+      <body
+        suppressHydrationWarning
+        className="min-h-full flex flex-col font-sans bg-[var(--bg-base)] text-[var(--text-primary)] antialiased"
+      >
         {children}
         <Toaster
           position="bottom-right"

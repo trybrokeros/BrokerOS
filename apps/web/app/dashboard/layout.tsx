@@ -7,6 +7,7 @@ import {
   Building2,
   ChevronRight,
   ArrowLeft,
+  ShieldAlert,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -14,7 +15,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { ChatWidget } from "@/components/chat/ChatWidget";
 import { ROLE_CONFIG } from "@/components/dashboard/layout/role-colors.config";
-import { getRoleNavLinks } from "@/components/dashboard/layout/role-navigation.config";
+import {
+  getRoleNavLinks,
+  isSectionAllowedForRole,
+  ROLE_TO_ROUTE_MAP,
+} from "@/components/dashboard/layout/role-navigation.config";
 import { TelephonyProvider } from "@/features/telephony/context/TelephonyContext";
 import { ActiveCallWidget } from "@/features/telephony/components/ActiveCallWidget";
 
@@ -42,7 +47,11 @@ export default function DashboardLayout({
         .then((roles) => {
           if (Array.isArray(roles)) {
             const role = roles.find((r: any) => r.id === user.roleId);
-            if (role) setRoleCode(role.code);
+            if (role) {
+              setRoleCode(role.code);
+              // Set role cookie for edge/proxy route guard
+              document.cookie = `brokeros_role=${role.code}; path=/; SameSite=Lax; max-age=86400`;
+            }
           }
         })
         .catch(console.error)
@@ -54,9 +63,25 @@ export default function DashboardLayout({
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
+    document.cookie = "brokeros_role=; path=/; max-age=0";
     await authClient.signOut();
     router.push("/login");
   };
+
+  const userRole = roleCode || "UNKNOWN";
+  const pathSegments = pathname.split("/").filter(Boolean);
+  const currentSection = pathSegments[1] || "";
+  const isAuthorized = isSectionAllowedForRole(currentSection, userRole);
+
+  useEffect(() => {
+    if (!fetchingRoles && !isPending && !isAuthorized && roleCode) {
+      const fallback = ROLE_TO_ROUTE_MAP[roleCode] || "/dashboard";
+      const timer = setTimeout(() => {
+        router.replace(fallback);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [fetchingRoles, isPending, isAuthorized, roleCode, router]);
 
   /* ── Loading State ───────────────────────────────────────────────── */
   if (isPending || fetchingRoles) {
@@ -73,7 +98,6 @@ export default function DashboardLayout({
     );
   }
 
-  const userRole = roleCode || "UNKNOWN";
   const roleConfig = ROLE_CONFIG[userRole] || ROLE_CONFIG["PRE_SALES"];
   const navLinks = getRoleNavLinks(userRole, pathname);
 
@@ -224,18 +248,39 @@ export default function DashboardLayout({
 
           {/* Dynamic Page Content View */}
           <main className="flex-1 overflow-y-auto p-7 scrollbar-hide">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={pathname}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
-                transition={{ duration: 0.25, ease: EASE_OUT_EXPO }}
-                className="min-h-full"
-              >
-                {children}
-              </motion.div>
-            </AnimatePresence>
+            {!isAuthorized ? (
+              <div className="max-w-md mx-auto my-16 p-8 bg-white rounded-2xl border border-rose-100 shadow-sm text-center">
+                <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600">
+                  <ShieldAlert className="w-7 h-7" />
+                </div>
+                <h2 className="text-lg font-bold text-slate-900 tracking-tight mb-2">
+                  Access Restricted
+                </h2>
+                <p className="text-xs text-slate-500 leading-relaxed mb-6">
+                  Your assigned role <span className="font-semibold text-slate-700">({roleConfig.label})</span> does not have authorization to view the <span className="font-semibold text-slate-700">/{currentSection}</span> workspace. Redirecting you to your designated home...
+                </p>
+                <button
+                  onClick={() => router.replace(ROLE_TO_ROUTE_MAP[userRole] || "/dashboard")}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl shadow-xs transition-colors"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  <span>Return to My Workspace</span>
+                </button>
+              </div>
+            ) : (
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={pathname}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.25, ease: EASE_OUT_EXPO }}
+                  className="min-h-full"
+                >
+                  {children}
+                </motion.div>
+              </AnimatePresence>
+            )}
           </main>
         </div>
 
