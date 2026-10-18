@@ -57,3 +57,10 @@ export type { ScheduleMessageModalProps, ScheduleModalPayload } from "./Schedule
 export { ScheduledMessagesDock } from "./ScheduledMessagesDock";
 export type { ScheduledMessagesDockProps } from "./ScheduledMessagesDock";
 
+// Unified Inbox Components
+export { ConversationStatusDropdown } from "./ConversationStatusDropdown";
+export type { ConversationStatus } from "./ConversationStatusDropdown";
+export { CrmContextBadges } from "./CrmContextBadges";
+export type { CrmContextData } from "./CrmContextBadges";
+
+

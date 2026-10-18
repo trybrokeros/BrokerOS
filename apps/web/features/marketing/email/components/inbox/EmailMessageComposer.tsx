@@ -13,6 +13,8 @@ import {
   Server,
   X,
   CalendarClock,
+  PenLine,
+  ChevronDown,
 } from 'lucide-react';
 import { EmailQuickReplyModal } from './EmailQuickReplyModal';
 import { EmailTemplatePickerModal } from './EmailTemplatePickerModal';
@@ -239,57 +241,82 @@ export const EmailMessageComposer: React.FC<EmailMessageComposerProps> = ({
   };
 
   return (
-    <div className="p-3 bg-bg-surface border-t border-border-default">
-      {/* Thread Continuity Identity Banner */}
-      <div className="flex items-center justify-between gap-2 mb-2 px-1 text-[11px] text-text-tertiary">
-        <div className="flex items-center gap-1.5 min-w-0">
-          <Server className="w-3.5 h-3.5 text-blue-500 shrink-0" />
-          <span className="truncate">
-            Sending from: <strong className="text-text-primary font-medium">{assignedSenderEmail || 'sales@brokeros.com'}</strong> via <span className="font-mono text-blue-600 dark:text-blue-400 font-bold uppercase">{assignedProvider.replace('_', ' ')}</span>
+    <div className="p-3.5 bg-bg-surface border-t border-border-default space-y-2.5 shadow-2xs">
+      {/* Thread Continuity Identity Banner & Subject Controller */}
+      <div className="flex items-center justify-between gap-3 px-1 text-xs text-text-tertiary flex-wrap">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.7)] shrink-0" />
+          <span className="truncate text-text-secondary text-[11px]">
+            From: <strong className="text-text-primary font-medium">{assignedSenderEmail || 'sales@brokeros.com'}</strong>
+          </span>
+          <span className="px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/25 font-mono text-[9px] font-bold uppercase tracking-wider shrink-0">
+            {assignedProvider.replace('_', ' ')}
           </span>
         </div>
-        {!showSubjectInput && (
-          <button
-            type="button"
-            onClick={() => setShowSubjectInput(true)}
-            className="text-[10px] text-blue-600 hover:underline shrink-0 font-medium"
-          >
-            + Custom Subject
-          </button>
-        )}
+
+        {/* Integrated Subject Toggle Pill */}
+        <button
+          type="button"
+          onClick={() => setShowSubjectInput(!showSubjectInput)}
+          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold transition-all shadow-2xs cursor-pointer select-none active:scale-95 ${
+            showSubjectInput || subject.trim()
+              ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800'
+              : 'bg-bg-base hover:bg-bg-subtle text-text-secondary hover:text-text-primary border border-border-default'
+          }`}
+          title="Toggle custom email subject line"
+        >
+          <PenLine className="w-3.5 h-3.5 text-blue-500" />
+          <span className="truncate max-w-[200px]">
+            {subject.trim() ? `Subject: ${subject}` : 'Subject Line'}
+          </span>
+          <ChevronDown
+            className={`w-3 h-3 opacity-60 transition-transform ${showSubjectInput ? 'rotate-180' : ''}`}
+          />
+        </button>
       </div>
 
-      {/* Optional Subject Line Override */}
+      {/* Refined Collapsible Subject Input Bar */}
       {showSubjectInput && (
-        <div className="flex items-center gap-2 mb-2 px-1 animate-in slide-in-from-top-1">
+        <div className="flex items-center gap-2 p-1.5 bg-bg-base/70 border border-border-default rounded-xl shadow-2xs animate-in fade-in slide-in-from-top-1">
+          <span className="px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-700 dark:text-blue-300 text-[10px] font-bold uppercase tracking-wider shrink-0">
+            Subject
+          </span>
           <input
             type="text"
-            placeholder="Custom Subject Line (optional)..."
+            placeholder="e.g., Follow-up: Exclusive Property Details for Sneha..."
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
-            className="flex-1 px-3 py-1 bg-bg-base border border-border-default rounded-xl text-xs text-text-primary focus:outline-hidden focus:border-brand-500"
+            className="flex-1 bg-transparent px-2 py-1 text-xs text-text-primary placeholder:text-text-muted focus:outline-hidden"
           />
+          {subject && (
+            <button
+              type="button"
+              onClick={() => setSubject('')}
+              className="p-1 text-text-tertiary hover:text-text-primary rounded-lg text-xs cursor-pointer"
+              title="Clear subject line"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
           <button
             type="button"
-            onClick={() => {
-              setShowSubjectInput(false);
-              setSubject('');
-            }}
-            className="p-1 text-text-tertiary hover:text-text-primary rounded-lg"
+            onClick={() => setShowSubjectInput(false)}
+            className="text-[10px] font-semibold text-text-tertiary hover:text-text-secondary px-2 py-0.5 rounded hover:bg-bg-subtle cursor-pointer transition-colors"
+            title="Done editing subject line"
           >
-            <X className="w-3.5 h-3.5" />
+            Done
           </button>
         </div>
       )}
 
       {/* Action Bar Above Input */}
-      <div className="flex items-center justify-between gap-2 mb-2 px-1">
-        <div className="flex items-center gap-1.5">
+      <div className="flex items-center justify-between gap-2 px-1">
+        <div className="flex items-center gap-1.5 flex-wrap">
           {/* Quick Replies Button */}
           <button
             type="button"
             onClick={() => setIsQuickReplyModalOpen(true)}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium text-text-secondary hover:text-text-primary hover:bg-bg-subtle transition-colors"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold text-text-secondary hover:text-text-primary bg-bg-base hover:bg-bg-subtle border border-border-default transition-all shadow-2xs cursor-pointer active:scale-95"
             title="Insert canned response"
           >
             <Zap className="w-3.5 h-3.5 text-amber-500" />
@@ -300,7 +327,7 @@ export const EmailMessageComposer: React.FC<EmailMessageComposerProps> = ({
           <button
             type="button"
             onClick={() => setIsTemplateModalOpen(true)}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium text-text-secondary hover:text-text-primary hover:bg-bg-subtle transition-colors"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold text-text-secondary hover:text-text-primary bg-bg-base hover:bg-bg-subtle border border-border-default transition-all shadow-2xs cursor-pointer active:scale-95"
             title="Insert real-estate email template"
           >
             <FileText className="w-3.5 h-3.5 text-emerald-500" />
@@ -311,7 +338,7 @@ export const EmailMessageComposer: React.FC<EmailMessageComposerProps> = ({
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium text-text-secondary hover:text-text-primary hover:bg-bg-subtle transition-colors"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold text-text-secondary hover:text-text-primary bg-bg-base hover:bg-bg-subtle border border-border-default transition-all shadow-2xs cursor-pointer active:scale-95"
             title="Attach brochure or document"
           >
             <Paperclip className="w-3.5 h-3.5 text-blue-500" />
@@ -323,7 +350,7 @@ export const EmailMessageComposer: React.FC<EmailMessageComposerProps> = ({
             type="button"
             onClick={() => setIsScheduleModalOpen(true)}
             disabled={!text.trim() || disabled}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium text-text-secondary hover:text-text-primary hover:bg-bg-subtle transition-colors disabled:opacity-40"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold text-text-secondary hover:text-text-primary bg-bg-base hover:bg-bg-subtle border border-border-default transition-all shadow-2xs cursor-pointer disabled:opacity-40 active:scale-95"
             title="Schedule email for later..."
           >
             <CalendarClock className="w-3.5 h-3.5 text-blue-500" />
@@ -343,12 +370,12 @@ export const EmailMessageComposer: React.FC<EmailMessageComposerProps> = ({
           type="button"
           onClick={handleAiDraft}
           disabled={aiDrafting || disabled}
-          className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-medium bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/20 transition-all shadow-2xs disabled:opacity-50"
+          className="flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-gradient-to-r from-purple-500/15 via-purple-500/10 to-purple-600/15 hover:from-purple-500/25 hover:to-purple-600/25 text-purple-700 dark:text-purple-300 border border-purple-500/30 transition-all shadow-2xs disabled:opacity-50 cursor-pointer active:scale-95"
         >
           {aiDrafting ? (
             <Loader2 className="w-3.5 h-3.5 animate-spin" />
           ) : (
-            <Sparkles className="w-3.5 h-3.5" />
+            <Sparkles className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
           )}
           <span>{aiDrafting ? 'Drafting...' : 'Draft with AI'}</span>
         </button>
@@ -405,7 +432,7 @@ export const EmailMessageComposer: React.FC<EmailMessageComposerProps> = ({
       )}
 
       {/* Textarea Input + Send Button */}
-      <div className="flex items-end gap-2 bg-bg-base border border-border-default rounded-2xl p-1.5 focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500/20 transition-all">
+      <div className="flex items-end gap-2 bg-bg-base border border-border-default rounded-2xl p-2 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all shadow-2xs">
         <textarea
           ref={textareaRef}
           rows={2}
@@ -422,16 +449,16 @@ export const EmailMessageComposer: React.FC<EmailMessageComposerProps> = ({
               ? 'Select an email thread to reply...'
               : 'Write email reply... (Type / for quick replies, Enter to send)'
           }
-          className="flex-1 bg-transparent resize-none border-none outline-hidden px-3 py-2 text-sm text-text-primary placeholder:text-text-muted max-h-40 leading-relaxed"
+          className="flex-1 bg-transparent resize-none border-none outline-hidden px-3 py-2 text-sm text-text-primary placeholder:text-text-muted max-h-40 leading-relaxed font-medium"
         />
 
         {/* Split Send / Schedule Button */}
-        <div className="flex items-center shrink-0">
+        <div className="flex items-center shrink-0 shadow-xs rounded-xl overflow-hidden">
           <button
             type="button"
             onClick={handleSend}
             disabled={!text.trim() || sending || disabled}
-            className="p-2.5 rounded-l-xl bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-40 disabled:hover:bg-blue-600 transition-colors shadow-sm"
+            className="p-2.5 bg-blue-600 hover:bg-blue-500 active:scale-[0.98] text-white font-bold disabled:opacity-40 transition-all shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] cursor-pointer"
             title="Send Email Reply (Enter)"
           >
             {sending ? (
@@ -444,7 +471,7 @@ export const EmailMessageComposer: React.FC<EmailMessageComposerProps> = ({
             type="button"
             onClick={() => setIsScheduleModalOpen(true)}
             disabled={!text.trim() || sending || disabled}
-            className="p-2.5 rounded-r-xl bg-blue-600 hover:bg-blue-700 text-white border-l border-blue-500/40 disabled:opacity-40 transition-colors shadow-sm"
+            className="p-2.5 bg-blue-600 hover:bg-blue-500 active:scale-[0.98] text-white font-bold border-l border-blue-500/40 disabled:opacity-40 transition-all shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] cursor-pointer"
             title="Schedule email for later..."
           >
             <CalendarClock className="w-4 h-4" />
