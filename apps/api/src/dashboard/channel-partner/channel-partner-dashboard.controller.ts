@@ -1,8 +1,10 @@
 import { Controller, Get, Req, Query } from '@nestjs/common';
 import { ChannelPartnerDashboardService } from './channel-partner-dashboard.service.js';
 import { ChannelPartnerAnalyticsService } from './channel-partner-analytics.service.js';
+import { Roles } from '../../auth/roles.decorator.js';
 
 @Controller('api/dashboard/channel-partner')
+@Roles('ADMIN', 'DIRECTOR', 'BUSINESS_MANAGER', 'CHANNEL_PARTNER')
 export class ChannelPartnerDashboardController {
   constructor(
     private readonly dashboardService: ChannelPartnerDashboardService,

@@ -314,6 +314,47 @@ export class ChannelPartnerDashboardService {
       .sort((a: any, b: any) => b.bookings - a.bookings)
       .slice(0, 5);
 
+    // Pipeline aggregation across CP Leads
+    const pipelineCounts = await this.prisma.lead.groupBy({
+      by: ['status'],
+      where: {
+        OR: [
+          { brokerId: { not: null } },
+          { interestedProject: { isCpProject: true } },
+        ],
+        deletedAt: null,
+      },
+      _count: { status: true },
+    });
+
+    const pipelineStages = [
+      'NEW',
+      'CONTACTED',
+      'INTERESTED',
+      'QUALIFIED',
+      'SITE_VISIT_SCHEDULED',
+      'SITE_VISIT_COMPLETED',
+      'NEGOTIATION',
+      'BOOKING',
+      'LOST',
+    ];
+    const pipelineMap: Record<string, number> = {};
+    pipelineStages.forEach((s) => (pipelineMap[s] = 0));
+    pipelineCounts.forEach((p) => {
+      pipelineMap[p.status] = p._count.status;
+    });
+
+    pipelineMap['new'] = pipelineMap['NEW'];
+    pipelineMap['contacted'] = pipelineMap['CONTACTED'];
+    pipelineMap['interested'] = pipelineMap['INTERESTED'];
+    pipelineMap['qualified'] = pipelineMap['QUALIFIED'];
+    pipelineMap['siteVisit'] =
+      (pipelineMap['SITE_VISIT_SCHEDULED'] || 0) +
+      (pipelineMap['SITE_VISIT_COMPLETED'] || 0);
+    pipelineMap['negotiation'] = pipelineMap['NEGOTIATION'] || 0;
+    pipelineMap['booked'] = pipelineMap['BOOKING'] || totalBookings;
+    pipelineMap['lost'] = pipelineMap['LOST'] || 0;
+
     return {
       broker: {
         id: user.id,
@@ -330,6 +371,7 @@ export class ChannelPartnerDashboardService {
         totalFollowsPending,
         totalLeads,
       },
+      pipeline: pipelineMap,
       actionTasks,
       leaderboards: {
         topProjects,
