@@ -16,8 +16,8 @@ export class BookingService {
     private bookingPostSales: BookingPostSalesService,
   ) {}
 
-  async getBooking(leadId: string) {
-    return this.bookingQuery.getBooking(leadId);
+  async getBooking(leadId: string, userId?: string, roleId?: string) {
+    return this.bookingQuery.getBooking(leadId, userId, roleId);
   }
 
   async createBooking(leadId: string, data: CreateBookingDto) {

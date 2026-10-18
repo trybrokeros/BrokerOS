@@ -73,7 +73,7 @@ describe('BookingService', () => {
     mockQuery.getAllBookings.mockResolvedValue([{ id: 'b-1' }]);
 
     expect(await service.getBooking('l-1')).toEqual({ id: 'b-1' });
-    expect(bookingQuery.getBooking).toHaveBeenCalledWith('l-1');
+    expect(bookingQuery.getBooking).toHaveBeenCalledWith('l-1', undefined, undefined);
 
     expect(await service.getAllBookings('u-1', 'r-1')).toEqual([{ id: 'b-1' }]);
     expect(bookingQuery.getAllBookings).toHaveBeenCalledWith('u-1', 'r-1');
