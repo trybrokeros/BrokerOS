@@ -1,11 +1,14 @@
 import { betterAuth, BetterAuthOptions } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { prismaClient } from './database/prisma-client.js';
-import { username, bearer } from 'better-auth/plugins';
+import { username, bearer, twoFactor } from 'better-auth/plugins';
 import { createAuthMiddleware } from 'better-auth/api';
 
 const authConfig = {
   trustedOrigins: [
+    ...(process.env.ALLOWED_ORIGINS
+      ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim()).filter(Boolean)
+      : []),
     process.env.FRONTEND_URL || 'http://localhost:3000',
     process.env.MOBILE_URL || 'exp://192.168.0.105:8081',
     'crm://',
@@ -14,10 +17,10 @@ const authConfig = {
     provider: 'postgresql',
   }),
   advanced: {
-    disableCSRFCheck: true,
+    // CSRF protection enabled: validates Origin & Referer against trustedOrigins
     defaultCookieAttributes: {
-      sameSite: 'none',
-      secure: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
     },
   },
   emailAndPassword: {
@@ -39,7 +42,13 @@ const authConfig = {
       },
     },
   },
-  plugins: [username(), bearer()],
+  plugins: [
+    username(),
+    bearer(),
+    twoFactor({
+      issuer: 'BrokerOS',
+    }),
+  ],
   hooks: {
     before: createAuthMiddleware(async (ctx) => {
       // Intercept the login request
