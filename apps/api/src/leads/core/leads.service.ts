@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from '../../lib/database/prisma.service.js';
 import { NotificationsService } from '../../notifications/notifications.service.js';
 import { Prisma, LeadStatus, NotificationType } from '@brokeros/prisma';
@@ -32,9 +36,32 @@ export class LeadsService {
   // ---------------------------------------------------------------------------
 
   async findAll(filters?: GetLeadsFilterDto) {
-    const where: Prisma.LeadWhereInput = {};
+    const where: Prisma.LeadWhereInput = {
+      deletedAt: null,
+    };
 
     if (filters?.assignedToId) {
+      // IDOR check: if querying another employee's leads, verify caller is Manager or Admin
+      if (
+        filters.userId &&
+        filters.roleId &&
+        filters.assignedToId !== filters.userId
+      ) {
+        const callerRole = await this.prisma.role.findUnique({
+          where: { id: filters.roleId },
+        });
+        const isManagerOrAdmin =
+          callerRole?.code === 'ADMIN' ||
+          callerRole?.code === 'DIRECTOR' ||
+          (callerRole?.code && callerRole.code.includes('MANAGER'));
+
+        if (!isManagerOrAdmin) {
+          throw new ForbiddenException(
+            'You do not have permission to access leads assigned to other employees.',
+          );
+        }
+      }
+
       const assignedUser = await this.prisma.user.findUnique({
         where: { id: filters.assignedToId },
         include: { role: true },
@@ -259,7 +286,7 @@ export class LeadsService {
   }
 
   async findOne(id: string, userId?: string, roleId?: string) {
-    const where: Prisma.LeadWhereUniqueInput = { id };
+    const where: any = { id, deletedAt: null };
 
     if (roleId && userId) {
       const role = await this.prisma.role.findUnique({ where: { id: roleId } });

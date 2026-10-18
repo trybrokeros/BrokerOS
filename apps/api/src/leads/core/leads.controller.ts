@@ -23,6 +23,7 @@ import {
   UpdateLeadDto,
   GetLeadsFilterDto,
 } from './dto/lead.dto.js';
+import { Roles } from '../../auth/roles.decorator.js';
 
 @Controller('api/leads')
 export class LeadsController {
@@ -48,6 +49,7 @@ export class LeadsController {
   }
 
   @Post('assign')
+  @Roles('ADMIN', 'DIRECTOR', 'BUSINESS_MANAGER', 'SALES_MANAGER', 'PRE_SALES_MANAGER', 'CHANNEL_PARTNER')
   assignLeads(@Req() req: any, @Body() data: AssignLeadsDto) {
     return this.leadsService.assignLeads(
       data.leadIds,
@@ -64,6 +66,8 @@ export class LeadsController {
   ) {
     return this.leadsService.findAll({
       assignedToId: employeeId,
+      userId: req.user?.id,
+      roleId: req.user?.roleId,
     });
   }
 

@@ -54,8 +54,10 @@ describe('BookingController', () => {
     const expected = { id: 'b-1' };
     mockBookingService.getBooking.mockResolvedValue(expected);
 
-    const res = await controller.getBooking('l-1');
-    expect(service.getBooking).toHaveBeenCalledWith('l-1');
+    const res = await controller.getBooking('l-1', {
+      user: { id: 'u-1', roleId: 'r-1' },
+    });
+    expect(service.getBooking).toHaveBeenCalledWith('l-1', 'u-1', 'r-1');
     expect(res).toEqual(expected);
   });
 
