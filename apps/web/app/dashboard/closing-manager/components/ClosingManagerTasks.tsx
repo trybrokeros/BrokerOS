@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+import { motion } from "framer-motion";
+
 export function ClosingManagerTasks({ dashData }: { dashData: any }) {
   const [activeTab, setActiveTab] = useState<
     "DOCUMENTS" | "LOANS" | "AGREEMENTS" | "HANDOVERS" | "FOLLOW_UPS"
@@ -24,55 +26,69 @@ export function ClosingManagerTasks({ dashData }: { dashData: any }) {
   const handovers = lists.handoverPending || [];
   const followUps = lists.todayFollowups || [];
 
+  const tabs = [
+    { id: "DOCUMENTS", label: "Documents", count: documents.length },
+    { id: "LOANS", label: "Loans", count: loans.length },
+    { id: "AGREEMENTS", label: "Agreements", count: agreements.length },
+    { id: "HANDOVERS", label: "Handovers", count: handovers.length },
+    { id: "FOLLOW_UPS", label: "Follow-ups", count: followUps.length },
+  ];
+
   return (
-    <div className="bg-white border border-slate-200/80 rounded-3xl p-5 shadow-2xs flex flex-col justify-between h-full mt-4">
+    <div
+      className="bg-white/95 backdrop-blur-md border border-slate-200/90 rounded-3xl p-6 transition-all duration-300 flex flex-col justify-between h-full mt-4"
+      style={{
+        boxShadow:
+          "0 1px 0 rgba(255, 255, 255, 0.95) inset, 0 16px 36px -24px rgba(15, 23, 42, 0.12)",
+      }}
+    >
       <div>
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-xl bg-purple-50 flex items-center justify-center text-[var(--brand-700)]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-purple-50/90 border border-purple-200/60 flex items-center justify-center text-[var(--brand-700)] shadow-2xs">
               <ClipboardList size={16} />
             </div>
-            <h2 className="text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider m-0">
-              Pending Pipeline Milestones & Follow-ups
-            </h2>
+            <div>
+              <h2 className="text-xs font-black text-slate-900 uppercase tracking-wider m-0">
+                Pending Pipeline Milestones &amp; Follow-ups
+              </h2>
+              <p className="text-[11px] font-medium text-slate-500 mt-0.5 m-0">
+                Manage deal closing tasks, loan sanctions, registration agreements and customer touchpoints
+              </p>
+            </div>
           </div>
+          <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200/60">
+            {documents.length + loans.length + agreements.length + handovers.length + followUps.length} Pending
+          </span>
         </div>
-        <p className="text-[11px] font-medium text-[var(--text-muted)] mt-0.5 mb-3 m-0">
-          Manage deal closing tasks, loan sanctions, registration agreements and customer touchpoints
-        </p>
 
-        <div className="flex bg-slate-100 p-1 rounded-full border border-slate-200/60 w-fit mb-4 overflow-x-auto">
-          {[
-            {
-              id: "DOCUMENTS",
-              label: `Documents (${documents.length})`,
-            },
-            { id: "LOANS", label: `Loans (${loans.length})` },
-            {
-              id: "AGREEMENTS",
-              label: `Agreements (${agreements.length})`,
-            },
-            {
-              id: "HANDOVERS",
-              label: `Handovers (${handovers.length})`,
-            },
-            {
-              id: "FOLLOW_UPS",
-              label: `Follow-ups (${followUps.length})`,
-            },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-                activeTab === tab.id
-                  ? "bg-white text-[var(--text-primary)] shadow-xs"
-                  : "text-slate-500 hover:text-slate-800"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+        {/* Fluid tab pill bar */}
+        <div className="flex items-center gap-1 p-1 bg-slate-100/80 rounded-2xl border border-slate-200/70 overflow-x-auto mb-4">
+          {tabs.map((tab) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`relative px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-200 cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
+                  isActive ? "text-slate-900" : "text-slate-500 hover:text-slate-800"
+                }`}
+              >
+                {isActive && (
+                  <motion.div
+                    layoutId="closingTasksActiveTab"
+                    className="absolute inset-0 bg-white rounded-xl shadow-xs border border-slate-200/80"
+                    transition={{ type: "spring", stiffness: 450, damping: 35 }}
+                  />
+                )}
+                <span className="relative z-10">{tab.label}</span>
+                <span className="relative z-10 px-1.5 py-0.2 rounded-full text-[9px] font-black bg-slate-100 text-slate-700 tabular-nums">
+                  {tab.count}
+                </span>
+              </button>
+            );
+          })}
         </div>
 
         <div className="max-h-[460px] overflow-y-auto pr-1">
