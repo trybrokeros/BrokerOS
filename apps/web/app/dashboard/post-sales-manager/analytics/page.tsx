@@ -13,7 +13,7 @@ import {
   InventorySellThroughChart,
   InventorySellThroughData,
 } from "../components/InventorySellThroughChart";
-import { Loader2, TrendingUp } from "lucide-react";
+import { Loader2, Users2, AlertCircle } from "lucide-react";
 import { ExportAnalyticsReportButton } from "@/components/analytics/ExportAnalyticsReportButton";
 
 interface AnalyticsData {
@@ -40,7 +40,7 @@ interface AnalyticsData {
   inventorySellThrough: InventorySellThroughData[];
 }
 
-export default function PostSalesAnalytics() {
+export default function PostSalesManagerAnalytics() {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [status, setStatus] = useState<"loading" | "success" | "error">(
     "loading"
@@ -75,71 +75,136 @@ export default function PostSalesAnalytics() {
     load();
   }, [timeRange]);
 
+  const ranges = [
+    { id: "weekly", label: "Weekly" },
+    { id: "monthly", label: "Monthly" },
+    { id: "yearly", label: "Yearly" },
+    { id: "all-time", label: "All Time" },
+  ];
+
   const reportPayload = data
     ? {
-      departmentName: "Post-Sales Manager Operations & Handover Analytics",
-      departmentCode: "POST_SALES_MANAGER",
-      timeRange,
-      generatedAt: new Date().toLocaleString(),
-      summaryCards: [
-        { label: "Booked Pipeline", value: data.widgets?.totalBooked ?? 0, subtitle: "Total Booked" },
-        { label: "Handover Completed", value: data.widgets?.totalHandoverCompleted ?? 0, subtitle: "Possessions delivered" },
-        { label: "Total Revenue Collected", value: `₹${(data.widgets?.totalRevenue || 0).toLocaleString()}`, subtitle: "Collections" },
-        { label: "Inbound Brokerage Earned", value: `₹${(data.widgets?.totalCommission || 0).toLocaleString()}`, subtitle: "Brokerage Commission" },
-        { label: "Avg Handover Velocity", value: `${data.velocity ?? 0} days`, subtitle: "Booking to keys" },
-      ],
-      funnelStages: [
-        { name: "Booking", count: data.funnel?.booking ?? 0, color: "#ec4899" },
-        { name: "Document Verification", count: data.funnel?.document ?? 0, color: "#8b5cf6" },
-        { name: "Loan Sanction", count: data.funnel?.loan ?? 0, color: "#f59e0b" },
-        { name: "Sale Agreement", count: data.funnel?.agreement ?? 0, color: "#3b82f6" },
-        { name: "Possession Handover", count: data.funnel?.handover ?? 0, color: "#10b981" },
-      ],
-      financialMetrics: [
-        { label: "Aggregate Booking Collections", value: `₹${(data.widgets?.totalRevenue || 0).toLocaleString()}` },
-        { label: "Inbound Builder Commission", value: `₹${(data.widgets?.totalCommission || 0).toLocaleString()}` },
-      ],
-      activityMetrics: [
-        { label: "Loan Cases Approved", value: data.loanSuccessRate?.approved ?? 0 },
-        { label: "Loan Cases In Progress", value: data.loanSuccessRate?.inProgress ?? 0 },
-        { label: "Loan Cases Rejected", value: data.loanSuccessRate?.rejected ?? 0 },
-        { label: "Handovers Scheduled", value: data.handoverReadiness?.scheduled ?? 0 },
-        { label: "Keys Handed Over", value: data.handoverReadiness?.handedOver ?? 0 },
-      ],
-    }
+        departmentName: "Post-Sales Manager Operations & Handover Analytics",
+        departmentCode: "POST_SALES_MANAGER",
+        timeRange,
+        generatedAt: new Date().toLocaleString(),
+        summaryCards: [
+          {
+            label: "Booked Pipeline",
+            value: data.widgets?.totalBooked ?? 0,
+            subtitle: "Total Booked",
+          },
+          {
+            label: "Handover Completed",
+            value: data.widgets?.totalHandoverCompleted ?? 0,
+            subtitle: "Possessions delivered",
+          },
+          {
+            label: "Total Revenue Collected",
+            value: `₹${(data.widgets?.totalRevenue || 0).toLocaleString()}`,
+            subtitle: "Collections",
+          },
+          {
+            label: "Inbound Brokerage Earned",
+            value: `₹${(data.widgets?.totalCommission || 0).toLocaleString()}`,
+            subtitle: "Brokerage Commission",
+          },
+          {
+            label: "Avg Handover Velocity",
+            value: `${data.velocity ?? 0} days`,
+            subtitle: "Booking to keys",
+          },
+        ],
+        funnelStages: [
+          {
+            name: "Booking",
+            count: data.funnel?.booking ?? 0,
+            color: "#ec4899",
+          },
+          {
+            name: "Document Verification",
+            count: data.funnel?.document ?? 0,
+            color: "#8b5cf6",
+          },
+          {
+            name: "Loan Sanction",
+            count: data.funnel?.loan ?? 0,
+            color: "#f59e0b",
+          },
+          {
+            name: "Sale Agreement",
+            count: data.funnel?.agreement ?? 0,
+            color: "#3b82f6",
+          },
+          {
+            name: "Possession Handover",
+            count: data.funnel?.handover ?? 0,
+            color: "#10b981",
+          },
+        ],
+        financialMetrics: [
+          {
+            label: "Aggregate Booking Collections",
+            value: `₹${(data.widgets?.totalRevenue || 0).toLocaleString()}`,
+          },
+          {
+            label: "Inbound Builder Commission",
+            value: `₹${(data.widgets?.totalCommission || 0).toLocaleString()}`,
+          },
+        ],
+        activityMetrics: [
+          {
+            label: "Loan Cases Approved",
+            value: data.loanSuccessRate?.approved ?? 0,
+          },
+          {
+            label: "Loan Cases In Progress",
+            value: data.loanSuccessRate?.inProgress ?? 0,
+          },
+          {
+            label: "Loan Cases Rejected",
+            value: data.loanSuccessRate?.rejected ?? 0,
+          },
+          {
+            label: "Handovers Scheduled",
+            value: data.handoverReadiness?.scheduled ?? 0,
+          },
+          {
+            label: "Keys Handed Over",
+            value: data.handoverReadiness?.handedOver ?? 0,
+          },
+        ],
+      }
     : null;
 
   return (
-    <div className="p-4 md:p-8 max-w-[1600px] mx-auto space-y-8 animate-enter">
+    <div className="p-4 sm:p-8 max-w-[1600px] mx-auto space-y-8 animate-in fade-in duration-300">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-extrabold text-[var(--text-primary)] tracking-tight flex items-center gap-2.5 m-0">
-            <div className="w-8 h-8 rounded-xl bg-purple-50 flex items-center justify-center text-[var(--brand-700)]">
-              <TrendingUp size={18} />
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-2xl bg-indigo-50 border border-indigo-200/80 flex items-center justify-center text-indigo-600 shadow-2xs">
+              <Users2 size={18} className="stroke-[2.2]" />
             </div>
-            <span>Post-Sales Analytics & Handover Velocity</span>
-          </h1>
-          <p className="text-xs text-[var(--text-muted)] font-medium mt-0.5 m-0">
-            Monitor post-sales conversion funnels, loan sanction ratios & possession readiness
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight m-0">
+              Post-Sales Management & Operations Intelligence
+            </h1>
+          </div>
+          <p className="text-xs text-slate-500 font-medium mt-1 m-0">
+            Monitor department-wide conversion funnels, mortgage loan sanction throughput & possession cycle times.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
-          <div className="flex bg-slate-100 p-1 rounded-full border border-slate-200/60">
-            {[
-              { id: "weekly", label: "Weekly" },
-              { id: "monthly", label: "Monthly" },
-              { id: "yearly", label: "Yearly" },
-              { id: "all-time", label: "All Time" },
-            ].map((r) => (
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex bg-slate-100 p-1 rounded-full border border-slate-200/80 shadow-2xs">
+            {ranges.map((r) => (
               <button
                 key={r.id}
                 onClick={() => setTimeRange(r.id)}
-                className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
                   timeRange === r.id
-                    ? "bg-white text-[var(--text-primary)] shadow-xs"
-                    : "text-slate-500 hover:text-slate-800"
+                    ? "bg-white text-slate-900 shadow-xs font-extrabold"
+                    : "text-slate-500 hover:text-slate-900"
                 }`}
               >
                 {r.label}
@@ -156,40 +221,41 @@ export default function PostSalesAnalytics() {
 
       {status === "loading" && (
         <div className="min-h-[40vh] flex flex-col items-center justify-center gap-3">
-          <Loader2 className="w-8 h-8 text-[var(--brand-600)] animate-spin" />
-          <p className="text-xs font-semibold text-[var(--text-muted)]">
-            Loading analytics…
+          <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+          <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
+            Aggregating Managerial Post-Sales Telemetry…
           </p>
         </div>
       )}
 
       {status === "error" && (
-        <div className="bg-rose-50 text-rose-700 p-6 rounded-3xl border border-rose-200 text-xs font-bold">
-          {error || "Failed to load post-sales analytics."}
+        <div className="bg-rose-50 border border-rose-200/90 rounded-3xl p-6 flex items-center gap-4 text-xs font-bold text-rose-800 shadow-sm">
+          <AlertCircle size={22} className="text-rose-600 shrink-0" />
+          <span>{error || "Failed to load post-sales manager analytics."}</span>
         </div>
       )}
 
       {status === "success" && data && (
         <div className="space-y-8">
-          {/* Top Widgets */}
+          {/* Top KPI Widgets */}
           <PostSalesAnalyticsWidgets widgets={data.widgets} />
 
-          {/* Post-Sales Funnel & Velocity */}
+          {/* Funnel Progression & Velocity Gauge */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
             <div className="lg:col-span-2">
               <PremiumBarChart
                 data={[
                   { name: "Booking", value: data.funnel.booking },
                   { name: "Document", value: data.funnel.document },
-                  { name: "Loan", value: data.funnel.loan },
+                  { name: "Bank Loan", value: data.funnel.loan },
                   { name: "Agreement", value: data.funnel.agreement },
                   { name: "Handover", value: data.funnel.handover },
                 ]}
-                title="Post-Sales Funnel Progression"
-                description="Conversion journey from initial booking to key handover."
+                title="Departmental Funnel Progression"
+                description="Conversion journey from initial booking to possession keys across all officers"
                 dataKey="value"
                 categoryKey="name"
-                color="#9333ea"
+                color="#6366f1"
               />
             </div>
             <div className="lg:col-span-1 h-full">
@@ -197,11 +263,11 @@ export default function PostSalesAnalytics() {
             </div>
           </div>
 
-          {/* Status Pie Charts */}
+          {/* Loan Approval & Handover Readiness Donut Charts */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
             <StatusPieChart
               title="Loan Approval Success Rate"
-              description="Breakdown of customer mortgage cases"
+              description="Breakdown of customer mortgage cases across all lender partners"
               data={[
                 {
                   name: "Approved",
@@ -216,18 +282,18 @@ export default function PostSalesAnalytics() {
                 {
                   name: "Rejected",
                   value: data.loanSuccessRate.rejected,
-                  color: "#ef4444",
+                  color: "#f43f5e",
                 },
               ]}
             />
             <StatusPieChart
               title="Handover Readiness Status"
-              description="Status of possession/handover readiness"
+              description="Status of possession readiness and unit key handovers"
               data={[
                 {
                   name: "Not Ready",
                   value: data.handoverReadiness.notReady,
-                  color: "#ef4444",
+                  color: "#f43f5e",
                 },
                 {
                   name: "Scheduled",
@@ -243,20 +309,20 @@ export default function PostSalesAnalytics() {
             />
           </div>
 
-          {/* Internal Project Analytics */}
+          {/* Internal Sales Distribution & Inventory Sell-Through */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
             <StatusPieChart
-              title="Internal Project Sales Distribution"
-              description="Share of sold/reserved units per development"
+              title="Project Sales Distribution"
+              description="Share of sold and reserved units across active projects"
               data={data.internalSalesDistribution.map((p, index) => {
                 const colors = [
-                  "#9333ea",
                   "#6366f1",
+                  "#8b5cf6",
                   "#ec4899",
                   "#f59e0b",
                   "#10b981",
-                  "#06b6d4",
-                  "#3b82f6",
+                  "#0ea5e9",
+                  "#14b8a6",
                 ];
                 return {
                   name: p.projectName,
