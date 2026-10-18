@@ -14,6 +14,7 @@ import {
   SyncMetaCampaignsDto,
   BulkAssignMetaLeadsDto,
 } from '../dto/meta-ads.dto.js';
+import { Roles } from '../../../../auth/roles.decorator.js';
 
 @Controller('api/marketing/ads/meta')
 export class MetaAdsController {
@@ -25,16 +26,19 @@ export class MetaAdsController {
   }
 
   @Post('integrations')
+  @Roles('ADMIN', 'DIRECTOR', 'MARKETING')
   async connectIntegration(@Body() dto: ConnectMetaIntegrationDto) {
     return this.metaAdsService.connectIntegration(dto);
   }
 
   @Delete('integrations/:id')
+  @Roles('ADMIN', 'DIRECTOR', 'MARKETING')
   async deleteIntegration(@Param('id') id: string) {
     return this.metaAdsService.deleteIntegration(id);
   }
 
   @Post('integrations/:id/sync')
+  @Roles('ADMIN', 'DIRECTOR', 'MARKETING')
   async syncIntegration(
     @Param('id') id: string,
     @Body() dto: SyncMetaCampaignsDto,
@@ -43,6 +47,7 @@ export class MetaAdsController {
   }
 
   @Post('test-connection')
+  @Roles('ADMIN', 'DIRECTOR', 'MARKETING')
   async testConnection(@Body() dto: TestMetaTokenDto) {
     return this.metaAdsService.testConnection(dto);
   }
@@ -58,11 +63,13 @@ export class MetaAdsController {
   }
 
   @Post('leads/bulk-assign')
+  @Roles('ADMIN', 'DIRECTOR', 'MARKETING', 'PRE_SALES_MANAGER', 'SALES_MANAGER')
   async bulkAssignLeads(@Body() dto: BulkAssignMetaLeadsDto) {
     return this.metaAdsService.bulkAssignLeadsToPreSales(dto);
   }
 
   @Post('campaigns/:id/leads/bulk-assign')
+  @Roles('ADMIN', 'DIRECTOR', 'MARKETING', 'PRE_SALES_MANAGER', 'SALES_MANAGER')
   async bulkAssignCampaignLeads(
     @Param('id') id: string,
     @Body() dto: BulkAssignMetaLeadsDto,
