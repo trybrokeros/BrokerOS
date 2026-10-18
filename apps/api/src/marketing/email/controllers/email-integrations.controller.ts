@@ -13,8 +13,10 @@ import {
   AddSenderDomainDto,
   UpdateSenderDomainDto,
 } from '../dto/email.dto.js';
+import { Roles } from '../../../auth/roles.decorator.js';
 
 @Controller('api/marketing/integrations')
+@Roles('ADMIN', 'DIRECTOR', 'MARKETING', 'BUSINESS_MANAGER')
 export class EmailIntegrationsController {
   constructor(private readonly emailService: EmailService) {}
 
