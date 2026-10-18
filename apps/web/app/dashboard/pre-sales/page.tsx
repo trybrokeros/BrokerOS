@@ -18,14 +18,7 @@ import {
   MapPin,
   Trophy,
 } from "lucide-react";
-
-const PIPELINE_STAGES = [
-  { key: "new", label: "New", color: "oklch(0.65 0.22 280)" },
-  { key: "contacted", label: "Contacted", color: "oklch(0.60 0.20 260)" },
-  { key: "siteVisit", label: "Site Visit", color: "oklch(0.55 0.18 240)" },
-  { key: "negotiation", label: "Negotiation", color: "oklch(0.58 0.16 200)" },
-  { key: "booked", label: "Booked", color: "oklch(0.62 0.18 145)" },
-];
+import { PIPELINE_STAGES } from "./constants";
 
 export default function PreSalesDashboard() {
   const { data: session } = authClient.useSession();
@@ -145,9 +138,25 @@ export default function PreSalesDashboard() {
           />
 
           {/* Daily Tasks — two circle progresses */}
-          <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs flex flex-col justify-between">
-            <div className="text-xs font-bold text-[var(--text-primary)] tracking-tight mb-4">
-              Daily Manager Quotas
+          <div
+            className="bg-white/95 backdrop-blur-md border border-slate-200/90 rounded-3xl p-6 flex flex-col justify-between transition-all duration-300"
+            style={{
+              boxShadow:
+                "0 1px 0 rgba(255, 255, 255, 0.95) inset, 0 16px 36px -24px rgba(15, 23, 42, 0.12)",
+            }}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-xl bg-purple-50/90 border border-purple-200/60 flex items-center justify-center text-[var(--brand-700)] shadow-2xs">
+                  <ClipboardList size={15} />
+                </div>
+                <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider m-0">
+                  Daily Manager Quotas
+                </h3>
+              </div>
+              <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200/60">
+                Pacing
+              </span>
             </div>
             <div className="flex justify-around items-center py-2">
               <CircleProgress
