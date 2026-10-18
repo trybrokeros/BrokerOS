@@ -17,14 +17,7 @@ import {
   MapPin,
   Percent,
 } from "lucide-react";
-
-const PIPELINE_STAGES = [
-  { key: "new", label: "New", color: "#8b5cf6" },
-  { key: "contacted", label: "Contacted", color: "#6366f1" },
-  { key: "siteVisit", label: "Site Visit", color: "#3b82f6" },
-  { key: "negotiation", label: "Negotiation", color: "#0ea5e9" },
-  { key: "booked", label: "Booked", color: "#10b981" },
-];
+import { PIPELINE_STAGES } from "./_components/constants";
 
 export default function PreSalesManagerDashboard() {
   const { data: session } = authClient.useSession();
@@ -181,32 +174,57 @@ export default function PreSalesManagerDashboard() {
 
 function TeamBacklogsCard({ backlogs }: { backlogs: any[] }) {
   return (
-    <div className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-2xs">
-      <div className="text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider mb-4">
-        Team Backlogs & Untouched
+    <div
+      className="bg-white/95 backdrop-blur-md border border-slate-200/90 rounded-3xl p-6 flex flex-col justify-between transition-all duration-300"
+      style={{
+        boxShadow:
+          "0 1px 0 rgba(255, 255, 255, 0.95) inset, 0 16px 36px -24px rgba(15, 23, 42, 0.12)",
+      }}
+    >
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-xl bg-rose-50/90 border border-rose-200/60 flex items-center justify-center text-rose-700 shadow-2xs">
+            <AlertCircle size={16} />
+          </div>
+          <div>
+            <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider m-0">
+              Team Backlogs &amp; Untouched Leads
+            </h3>
+            <p className="text-[11px] font-medium text-slate-500 mt-0.5 m-0">
+              Agent queue bottlenecks and overdue follow-up tracking
+            </p>
+          </div>
+        </div>
+        <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200/60">
+          {backlogs.length} Agents Tracked
+        </span>
       </div>
+
       {backlogs.length === 0 ? (
-        <div className="text-center text-[var(--text-muted)] text-xs font-medium py-8">
-          No agent backlogs found. All queues clear!
+        <div className="text-center text-slate-400 text-xs font-semibold py-12 flex flex-col items-center gap-2">
+          <div className="w-10 h-10 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center">
+            <AlertCircle size={20} className="text-slate-300" />
+          </div>
+          <span>No agent backlogs found. All sales queues clear!</span>
         </div>
       ) : (
-        <div className="flex flex-col gap-2.5">
+        <div className="flex flex-col gap-2.5 max-h-[360px] overflow-y-auto pr-1">
           {backlogs.map((agent: any) => (
             <div
               key={agent.id}
-              className="flex items-center justify-between p-3 bg-slate-50/70 hover:bg-slate-50 rounded-2xl border border-slate-100 transition-colors"
+              className="flex items-center justify-between p-3 bg-slate-50/60 hover:bg-slate-50 hover:border-slate-300 rounded-2xl border border-slate-200/70 transition-all duration-200 shadow-2xs hover:shadow-xs"
             >
               <div className="flex items-center gap-3">
                 <Avatar name={agent.name} size={32} />
-                <span className="text-xs font-bold text-[var(--text-primary)]">
+                <span className="text-xs font-bold text-slate-900">
                   {agent.name}
                 </span>
               </div>
               <div className="flex gap-2">
-                <span className="bg-rose-50 text-rose-700 border border-rose-200 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold tabular-nums">
+                <span className="bg-rose-50 text-rose-700 border border-rose-200/70 px-2.5 py-0.5 rounded-full text-[10px] font-black tabular-nums">
                   {agent.missedFollowUps} Missed F-ups
                 </span>
-                <span className="bg-amber-50 text-amber-800 border border-amber-200 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold tabular-nums">
+                <span className="bg-amber-50 text-amber-800 border border-amber-200/70 px-2.5 py-0.5 rounded-full text-[10px] font-black tabular-nums">
                   {agent.untouchedLeads} Untouched
                 </span>
               </div>
