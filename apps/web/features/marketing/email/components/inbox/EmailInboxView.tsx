@@ -193,7 +193,7 @@ export const EmailInboxView: React.FC<EmailInboxViewProps> = ({
   };
 
   return (
-    <div className="flex h-[calc(100vh-8.5rem)] bg-bg-surface border border-border-default rounded-2xl overflow-hidden shadow-sm">
+    <div className="relative flex h-[calc(100vh-8.5rem)] bg-bg-surface border border-border-default rounded-2xl overflow-hidden shadow-sm">
       {/* 1. Left Panel: Conversations List */}
       <EmailConversationList
         conversations={conversations}
@@ -219,6 +219,7 @@ export const EmailInboxView: React.FC<EmailInboxViewProps> = ({
               onUpdateStatus={(status) => updateStatus(activeConversation.id, status)}
               onAssignAgent={(agentId) => assignAgent(activeConversation.id, agentId)}
               onToggleContactDrawer={() => setIsDrawerOpen(!isDrawerOpen)}
+              isDrawerOpen={isDrawerOpen}
             />
 
             <EmailConversationThread
