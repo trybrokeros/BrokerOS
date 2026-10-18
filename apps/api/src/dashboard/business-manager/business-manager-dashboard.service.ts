@@ -121,6 +121,44 @@ export class BusinessManagerDashboardService {
 
     const actionItems = await this.getActionItems();
 
+    // ─── Pipeline Distribution ───────────────────────────────────────────────
+
+    const pipelineCounts = await this.prisma.lead.groupBy({
+      by: ['status'],
+      where: {
+        deletedAt: null,
+        ...(startDate ? { createdAt: { gte: startDate } } : {}),
+      },
+      _count: { status: true },
+    });
+
+    const pipelineMap: Record<string, number> = {
+      NEW: 0,
+      CONTACTED: 0,
+      INTERESTED: 0,
+      QUALIFIED: 0,
+      SITE_VISIT_SCHEDULED: 0,
+      SITE_VISIT_COMPLETED: 0,
+      NEGOTIATION: 0,
+      BOOKING: 0,
+      LOST: 0,
+    };
+    pipelineCounts.forEach((p) => {
+      pipelineMap[p.status] = p._count.status;
+    });
+
+    pipelineMap['new'] = pipelineMap['NEW'];
+    pipelineMap['contacted'] = pipelineMap['CONTACTED'];
+    pipelineMap['interested'] = pipelineMap['INTERESTED'];
+    pipelineMap['qualified'] = pipelineMap['QUALIFIED'];
+    pipelineMap['siteVisit'] =
+      (pipelineMap['SITE_VISIT_SCHEDULED'] || 0) +
+      (pipelineMap['SITE_VISIT_COMPLETED'] || 0);
+    pipelineMap['negotiation'] = pipelineMap['NEGOTIATION'] || 0;
+    pipelineMap['booked'] = brokerageBookings.length || pipelineMap['BOOKING'] || 0;
+    pipelineMap['cpBooked'] = cpBookings.length || 0;
+    pipelineMap['lost'] = pipelineMap['LOST'] || 0;
+
     // ─── Revenue Split ────────────────────────────────────────────────────────
 
     return {
@@ -143,6 +181,7 @@ export class BusinessManagerDashboardService {
         brokerageLeads: totalBrokerageLeads,
         cpLeads: totalCpLeads,
       },
+      pipeline: pipelineMap,
       revenueByBusiness: {
         brokerage: brokerageRevenue,
         cp: cpRevenue,
