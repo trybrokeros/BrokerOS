@@ -8,105 +8,67 @@ import {
   Target,
 } from "lucide-react";
 
-const rankColors = [
-  { bg: "#fef9c3", text: "#a16207", border: "#fde68a" },  // Gold
-  { bg: "#f1f5f9", text: "#475569", border: "#e2e8f0" },  // Silver
-  { bg: "#ffedd5", text: "#c2410c", border: "#fed7aa" },  // Bronze
-  { bg: "#eff6ff", text: "#1d4ed8", border: "#bfdbfe" },  // Blue
-  { bg: "#f0fdf4", text: "#15803d", border: "#bbf7d0" },  // Green
-];
-
 function LeaderboardCard({
   title,
+  subtitle,
   icon: Icon,
-  accentColor,
+  badgeBg,
+  badgeText,
+  badgeBorder,
   items,
   metricLabel,
   metricKey,
-  avatarBg,
-  avatarColor,
 }: {
   title: string;
+  subtitle: string;
   icon: any;
-  accentColor: string;
+  badgeBg: string;
+  badgeText: string;
+  badgeBorder: string;
   items: any[];
   metricLabel: string;
   metricKey: string;
-  avatarBg: string;
-  avatarColor: string;
 }) {
+  const medals = ["🥇", "🥈", "🥉"];
+
   return (
     <div
+      className="bg-white/95 backdrop-blur-md border border-slate-200/90 rounded-3xl p-6 transition-all duration-300 flex flex-col justify-between"
       style={{
-        background: "var(--bg-surface)",
-        border: "1px solid var(--border-subtle)",
-        borderRadius: "var(--radius-xl)",
-        padding: 24,
-        boxShadow: "var(--shadow-sm)",
-        display: "flex",
-        flexDirection: "column",
-        gap: 16,
+        boxShadow:
+          "0 1px 0 rgba(255, 255, 255, 0.95) inset, 0 16px 36px -24px rgba(15, 23, 42, 0.12)",
       }}
     >
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <div
-          style={{
-            width: 34,
-            height: 34,
-            borderRadius: "var(--radius-md)",
-            background: `${accentColor}15`,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Icon size={16} style={{ color: accentColor }} />
-        </div>
-        <div>
-          <h3
-            style={{
-              margin: 0,
-              fontSize: "var(--text-base)",
-              fontWeight: 700,
-              color: "var(--text-primary)",
-              letterSpacing: "-0.01em",
-            }}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2.5">
+          <div
+            className={`w-8 h-8 rounded-xl border flex items-center justify-center shrink-0 ${badgeBg} ${badgeText} ${badgeBorder} shadow-2xs`}
           >
-            {title}
-          </h3>
-          <p
-            style={{
-              margin: 0,
-              fontSize: 11,
-              fontWeight: 600,
-              color: "var(--text-muted)",
-              textTransform: "uppercase",
-              letterSpacing: "0.04em",
-            }}
-          >
-            Top 5
-          </p>
+            <Icon size={16} />
+          </div>
+          <div>
+            <h3 className="m-0 text-xs font-black text-slate-900 uppercase tracking-wider">
+              {title}
+            </h3>
+            <p className="m-0 text-[10px] font-semibold text-slate-400">
+              {subtitle}
+            </p>
+          </div>
         </div>
+        <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200/60">
+          Top 5
+        </span>
       </div>
 
       {/* Rows */}
       {items.length === 0 ? (
-        <p
-          style={{
-            fontSize: "var(--text-sm)",
-            color: "var(--text-muted)",
-            margin: 0,
-            textAlign: "center",
-            padding: "16px 0",
-          }}
-        >
-          No data available yet
+        <p className="text-xs text-slate-400 font-semibold m-0 text-center py-8">
+          No leaderboard data recorded yet
         </p>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div className="flex flex-col gap-2">
           {items.map((item: any, idx: number) => {
-            const rank = rankColors[Math.min(idx, 4)];
             const name: string = item.name || "Unknown";
             const initial = name[0]?.toUpperCase() || "?";
             const metricValue = item[metricKey] ?? 0;
@@ -114,108 +76,31 @@ function LeaderboardCard({
             return (
               <div
                 key={item.id || idx}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: "10px 12px",
-                  borderRadius: "var(--radius-lg)",
-                  border: "1px solid transparent",
-                  cursor: "default",
-                  transition: "background 150ms ease, border-color 150ms ease",
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.background =
-                    "var(--bg-subtle)";
-                  (e.currentTarget as HTMLElement).style.borderColor =
-                    "var(--border-subtle)";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLElement).style.background =
-                    "transparent";
-                  (e.currentTarget as HTMLElement).style.borderColor =
-                    "transparent";
-                }}
+                className="flex items-center justify-between p-2.5 rounded-2xl bg-slate-50/60 hover:bg-slate-50 hover:border-slate-300 border border-slate-200/70 transition-all duration-200 shadow-2xs hover:shadow-xs"
               >
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  {/* Rank badge */}
-                  <div
-                    style={{
-                      width: 30,
-                      height: 30,
-                      borderRadius: "var(--radius-md)",
-                      background: rank.bg,
-                      color: rank.text,
-                      border: `1px solid ${rank.border}`,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: 11,
-                      fontWeight: 900,
-                      flexShrink: 0,
-                    }}
-                  >
-                    #{idx + 1}
+                <div className="flex items-center gap-2.5 min-w-0">
+                  {/* Rank medal/badge */}
+                  <div className="w-7 h-7 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-xs font-black shrink-0 shadow-2xs">
+                    {idx < 3 ? medals[idx] : `#${idx + 1}`}
                   </div>
 
                   {/* Avatar */}
-                  <div
-                    style={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: "50%",
-                      background: avatarBg,
-                      color: avatarColor,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontWeight: 800,
-                      fontSize: 13,
-                      flexShrink: 0,
-                    }}
-                  >
+                  <div className="w-7 h-7 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center font-black text-xs shrink-0">
                     {initial}
                   </div>
 
                   {/* Name */}
-                  <span
-                    style={{
-                      fontSize: "var(--text-sm)",
-                      fontWeight: 700,
-                      color: "var(--text-secondary)",
-                      maxWidth: 120,
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
+                  <span className="text-xs font-bold text-slate-800 truncate max-w-[130px]">
                     {name}
                   </span>
                 </div>
 
                 {/* Metric */}
-                <div style={{ textAlign: "right" }}>
-                  <div
-                    style={{
-                      fontSize: "var(--text-lg)",
-                      fontWeight: 900,
-                      color: "var(--text-primary)",
-                      letterSpacing: "-0.02em",
-                    }}
-                  >
-                    {typeof metricValue === "number" && metricKey !== "commission"
-                      ? metricValue
-                      : metricValue}
+                <div className="text-right shrink-0">
+                  <div className="text-sm font-black text-slate-900 tabular-nums">
+                    {metricValue}
                   </div>
-                  <div
-                    style={{
-                      fontSize: 10,
-                      fontWeight: 700,
-                      color: "var(--text-muted)",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.04em",
-                    }}
-                  >
+                  <div className="text-[9px] font-black text-slate-400 uppercase tracking-wider">
                     {metricLabel}
                   </div>
                 </div>
@@ -239,52 +124,50 @@ export function BMLeaderboards({ leaderboards }: { leaderboards: any }) {
   } = leaderboards;
 
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "1fr 1fr",
-        gap: 16,
-      }}
-    >
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
       <LeaderboardCard
         title="Top Sales Executives"
+        subtitle="Internal sales team closures"
         icon={TrendingUp}
-        accentColor="#6366f1"
+        badgeBg="bg-indigo-50/90"
+        badgeText="text-indigo-700"
+        badgeBorder="border-indigo-200/70"
         items={topSalesExecs}
         metricLabel="Bookings"
         metricKey="bookings"
-        avatarBg="#6366f115"
-        avatarColor="#6366f1"
       />
       <LeaderboardCard
         title="Top Sourcing Managers"
+        subtitle="Active broker partner network"
         icon={Users}
-        accentColor="#0ea5e9"
+        badgeBg="bg-sky-50/90"
+        badgeText="text-sky-700"
+        badgeBorder="border-sky-200/70"
         items={topSourcingManagers}
-        metricLabel="Active Brokers"
+        metricLabel="Brokers"
         metricKey="activeBrokers"
-        avatarBg="#0ea5e915"
-        avatarColor="#0ea5e9"
       />
       <LeaderboardCard
         title="Top Closing Managers"
+        subtitle="Channel partner deal closures"
         icon={Award}
-        accentColor="#10b981"
+        badgeBg="bg-emerald-50/90"
+        badgeText="text-emerald-700"
+        badgeBorder="border-emerald-200/70"
         items={topClosingManagers}
         metricLabel="Deals Closed"
         metricKey="bookings"
-        avatarBg="#10b98115"
-        avatarColor="#10b981"
       />
       <LeaderboardCard
-        title="Top Brokers"
+        title="Top External Brokers"
+        subtitle="Highest volume partner firms"
         icon={Briefcase}
-        accentColor="#f59e0b"
+        badgeBg="bg-amber-50/90"
+        badgeText="text-amber-700"
+        badgeBorder="border-amber-200/70"
         items={topBrokers}
         metricLabel="Bookings"
         metricKey="bookings"
-        avatarBg="#f59e0b15"
-        avatarColor="#f59e0b"
       />
     </div>
   );

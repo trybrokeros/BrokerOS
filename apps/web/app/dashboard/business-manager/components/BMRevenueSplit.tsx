@@ -1,6 +1,7 @@
 "use client";
 
-import { TrendingUp, TrendingDown, Minus } from "lucide-react";
+import React from "react";
+import { TrendingUp, PieChart, Building2, Briefcase } from "lucide-react";
 
 interface RevenueItem {
   brokerage: number;
@@ -17,210 +18,86 @@ export function BMRevenueSplit({ revenueByBusiness }: { revenueByBusiness: Reven
 
   const formatCr = (n: number) =>
     n >= 10000000
-      ? `₹${(n / 10000000).toFixed(2)}Cr`
+      ? `₹${(n / 10000000).toFixed(2)} Cr`
       : n >= 100000
-        ? `₹${(n / 100000).toFixed(1)}L`
-        : `₹${n.toLocaleString("en-IN")}`;
+      ? `₹${(n / 100000).toFixed(1)} L`
+      : `₹${n.toLocaleString("en-IN")}`;
 
   return (
-    <div
-      style={{
-        background: "var(--bg-surface)",
-        border: "1px solid var(--border-subtle)",
-        borderRadius: "var(--radius-xl)",
-        padding: 24,
-        boxShadow: "var(--shadow-sm)",
-      }}
-    >
+    <div className="bg-white rounded-2xl p-6 border border-slate-200/90 shadow-[0_1px_0_rgba(255,255,255,0.95)_inset,0_12px_28px_-16px_rgba(20,24,36,0.08)] flex flex-col justify-between">
       {/* Header */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: 20,
-        }}
-      >
-        <div>
-          <h2
-            style={{
-              margin: 0,
-              fontSize: "var(--text-lg)",
-              fontWeight: 700,
-              color: "var(--text-primary)",
-              letterSpacing: "-0.01em",
-            }}
-          >
-            Revenue Split
-          </h2>
-          <p
-            style={{
-              margin: "4px 0 0 0",
-              fontSize: "var(--text-sm)",
-              color: "var(--text-muted)",
-            }}
-          >
-            Brokerage vs Channel Partner
-          </p>
-        </div>
-        <div
-          style={{
-            fontSize: "var(--text-2xl)",
-            fontWeight: 800,
-            color: "var(--text-primary)",
-            letterSpacing: "-0.03em",
-          }}
-        >
-          {formatCr(total)}
-        </div>
-      </div>
-
-      {/* Split bar */}
-      <div
-        style={{
-          height: 12,
-          borderRadius: 999,
-          overflow: "hidden",
-          background: "var(--bg-subtle)",
-          marginBottom: 16,
-          display: "flex",
-        }}
-      >
-        <div
-          style={{
-            width: `${brokeragePercent}%`,
-            background: "linear-gradient(90deg, #6366f1, #818cf8)",
-            transition: "width 800ms cubic-bezier(0.16,1,0.3,1)",
-          }}
-        />
-        <div
-          style={{
-            width: `${cpPercent}%`,
-            background: "linear-gradient(90deg, #0ea5e9, #38bdf8)",
-            transition: "width 800ms cubic-bezier(0.16,1,0.3,1)",
-          }}
-        />
-      </div>
-
-      {/* Legends */}
-      <div style={{ display: "flex", gap: 24 }}>
-        {/* Brokerage */}
-        <div
-          style={{
-            flex: 1,
-            padding: "14px 16px",
-            background: "#6366f110",
-            borderRadius: "var(--radius-lg)",
-            border: "1px solid #6366f125",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              marginBottom: 8,
-            }}
-          >
-            <div
-              style={{
-                width: 10,
-                height: 10,
-                borderRadius: 3,
-                background: "linear-gradient(90deg, #6366f1, #818cf8)",
-              }}
-            />
-            <span
-              style={{
-                fontSize: 11,
-                fontWeight: 700,
-                color: "#6366f1",
-                textTransform: "uppercase",
-                letterSpacing: "0.05em",
-              }}
-            >
-              Brokerage
-            </span>
+      <div>
+        <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-700">
+              <PieChart size={16} strokeWidth={2.2} />
+            </div>
+            <div>
+              <h2 className="text-xs font-bold text-slate-900 tracking-tight m-0">
+                Two-World Revenue Partition
+              </h2>
+              <span className="text-[10px] text-slate-400">
+                Direct Brokerage vs External Channel Partner
+              </span>
+            </div>
           </div>
-          <div
-            style={{
-              fontSize: "var(--text-xl)",
-              fontWeight: 800,
-              color: "var(--text-primary)",
-              letterSpacing: "-0.02em",
-            }}
-          >
-            {formatCr(brokerage)}
-          </div>
-          <div
-            style={{
-              fontSize: "var(--text-sm)",
-              fontWeight: 600,
-              color: "#6366f1",
-              marginTop: 2,
-            }}
-          >
-            {brokeragePercent}% of total
+          <div className="text-xl font-extrabold text-slate-900 tnum">
+            {formatCr(total)}
           </div>
         </div>
 
-        {/* CP */}
-        <div
-          style={{
-            flex: 1,
-            padding: "14px 16px",
-            background: "#0ea5e910",
-            borderRadius: "var(--radius-lg)",
-            border: "1px solid #0ea5e925",
-          }}
-        >
+        {/* Split bar (Rapport ov-mix Style) */}
+        <div className="h-4 w-full bg-slate-100 rounded-xl overflow-hidden flex gap-1 p-1 mb-5 shadow-inner">
           <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              marginBottom: 8,
-            }}
-          >
-            <div
-              style={{
-                width: 10,
-                height: 10,
-                borderRadius: 3,
-                background: "linear-gradient(90deg, #0ea5e9, #38bdf8)",
-              }}
-            />
-            <span
-              style={{
-                fontSize: 11,
-                fontWeight: 700,
-                color: "#0ea5e9",
-                textTransform: "uppercase",
-                letterSpacing: "0.05em",
-              }}
-            >
-              Channel Partner
-            </span>
+            className="h-full bg-indigo-600 rounded-lg transition-all duration-700"
+            style={{ width: `${brokeragePercent}%` }}
+            title={`Direct Brokerage: ${brokeragePercent}%`}
+          />
+          <div
+            className="h-full bg-sky-500 rounded-lg transition-all duration-700"
+            style={{ width: `${cpPercent}%` }}
+            title={`CP Network: ${cpPercent}%`}
+          />
+        </div>
+
+        {/* Legends */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {/* Direct Sales Brokerage */}
+          <div className="p-4 rounded-xl bg-indigo-50/70 border border-indigo-100 flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-2">
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-indigo-900">
+                <span className="w-2 h-2 rounded-full bg-indigo-600" />
+                Direct Sales (Internal)
+              </span>
+              <span className="text-[10px] font-extrabold text-indigo-700 bg-white/80 border border-indigo-200 px-1.5 py-0.2 rounded-md">
+                isCpProject = false
+              </span>
+            </div>
+            <div className="text-lg font-extrabold text-slate-900 tnum">
+              {formatCr(brokerage)}
+            </div>
+            <div className="text-xs font-bold text-indigo-700 mt-1">
+              {brokeragePercent}% of total revenue
+            </div>
           </div>
-          <div
-            style={{
-              fontSize: "var(--text-xl)",
-              fontWeight: 800,
-              color: "var(--text-primary)",
-              letterSpacing: "-0.02em",
-            }}
-          >
-            {formatCr(cp)}
-          </div>
-          <div
-            style={{
-              fontSize: "var(--text-sm)",
-              fontWeight: 600,
-              color: "#0ea5e9",
-              marginTop: 2,
-            }}
-          >
-            {cpPercent}% of total
+
+          {/* CP Network */}
+          <div className="p-4 rounded-xl bg-sky-50/70 border border-sky-100 flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-2">
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-sky-900">
+                <span className="w-2 h-2 rounded-full bg-sky-500" />
+                CP Broker Network
+              </span>
+              <span className="text-[10px] font-extrabold text-sky-700 bg-white/80 border border-sky-200 px-1.5 py-0.2 rounded-md">
+                isCpProject = true
+              </span>
+            </div>
+            <div className="text-lg font-extrabold text-slate-900 tnum">
+              {formatCr(cp)}
+            </div>
+            <div className="text-xs font-bold text-sky-700 mt-1">
+              {cpPercent}% of total revenue
+            </div>
           </div>
         </div>
       </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { Building2, Handshake } from "lucide-react";
+import { Building2, Handshake, ArrowUpRight } from "lucide-react";
 
 interface BusinessKpis {
   brokerageRevenue: number;
@@ -22,97 +22,66 @@ function fmt(n: number): string {
 
 function BizCard({
   label,
+  subtitle,
   icon: Icon,
-  accentColor,
-  bg,
-  border,
+  badgeBg,
+  badgeText,
+  badgeBorder,
   rows,
 }: {
   label: string;
+  subtitle: string;
   icon: any;
-  accentColor: string;
-  bg: string;
-  border: string;
+  badgeBg: string;
+  badgeText: string;
+  badgeBorder: string;
   rows: { label: string; value: string | number }[];
 }) {
   return (
     <div
+      className="flex-1 bg-white/95 backdrop-blur-md border border-slate-200/90 rounded-2xl p-5 transition-all duration-200 hover:border-slate-300 shadow-2xs hover:shadow-xs flex flex-col justify-between"
       style={{
-        flex: 1,
-        background: bg,
-        border: `1px solid ${border}`,
-        borderRadius: "var(--radius-xl)",
-        padding: 22,
-        boxShadow: "var(--shadow-sm)",
+        boxShadow:
+          "0 1px 0 rgba(255, 255, 255, 0.95) inset, 0 10px 24px -18px rgba(15, 23, 42, 0.08)",
       }}
     >
-      {/* Title */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
-          marginBottom: 18,
-        }}
-      >
-        <div
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: "var(--radius-md)",
-            background: `${accentColor}20`,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Icon size={18} style={{ color: accentColor }} />
-        </div>
-        <h3
-          style={{
-            margin: 0,
-            fontSize: "var(--text-base)",
-            fontWeight: 700,
-            color: "var(--text-primary)",
-            letterSpacing: "-0.01em",
-          }}
-        >
-          {label}
-        </h3>
-      </div>
-
-      {/* Rows */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-        {rows.map((row) => (
-          <div
-            key={row.label}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <span
-              style={{
-                fontSize: "var(--text-sm)",
-                fontWeight: 600,
-                color: "var(--text-muted)",
-              }}
+      <div>
+        {/* Title */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2.5">
+            <div
+              className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border ${badgeBg} ${badgeText} ${badgeBorder} shadow-2xs`}
             >
-              {row.label}
-            </span>
-            <span
-              style={{
-                fontSize: "var(--text-base)",
-                fontWeight: 800,
-                color: "var(--text-primary)",
-                letterSpacing: "-0.02em",
-              }}
-            >
-              {row.value}
-            </span>
+              <Icon size={17} />
+            </div>
+            <div>
+              <h3 className="m-0 text-xs font-black text-slate-900 tracking-tight">
+                {label}
+              </h3>
+              <p className="m-0 text-[10px] font-semibold text-slate-400">
+                {subtitle}
+              </p>
+            </div>
           </div>
-        ))}
+          <ArrowUpRight size={14} className="text-slate-400" />
+        </div>
+
+        {/* Rows */}
+        <div className="flex flex-col gap-2.5">
+          {rows.map((row) => (
+            <div
+              key={row.label}
+              className="flex items-center justify-between p-2 rounded-xl bg-slate-50/70 border border-slate-100"
+            >
+              <span className="text-xs font-bold text-slate-500">
+                {row.label}
+              </span>
+              <span className="text-xs font-black text-slate-900 tabular-nums">
+                {row.value}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -123,33 +92,34 @@ export function BMBusinessOverview({ kpis }: { kpis: BusinessKpis }) {
 
   return (
     <div
+      className="bg-white/95 backdrop-blur-md border border-slate-200/90 rounded-3xl p-6 transition-all duration-300 flex flex-col justify-between h-full"
       style={{
-        background: "var(--bg-surface)",
-        border: "1px solid var(--border-subtle)",
-        borderRadius: "var(--radius-xl)",
-        padding: 24,
-        boxShadow: "var(--shadow-sm)",
+        boxShadow:
+          "0 1px 0 rgba(255, 255, 255, 0.95) inset, 0 16px 36px -24px rgba(15, 23, 42, 0.12)",
       }}
     >
-      <h2
-        style={{
-          margin: "0 0 18px 0",
-          fontSize: "var(--text-lg)",
-          fontWeight: 700,
-          color: "var(--text-primary)",
-          letterSpacing: "-0.01em",
-        }}
-      >
-        Business Line Breakdown
-      </h2>
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h2 className="text-xs font-black text-slate-900 uppercase tracking-wider m-0">
+            Business Line Breakdown
+          </h2>
+          <p className="text-[11px] font-medium text-slate-500 mt-0.5 m-0">
+            Comparative performance of internal brokerage vs external CP
+          </p>
+        </div>
+        <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200/60">
+          Dual Engines
+        </span>
+      </div>
 
-      <div style={{ display: "flex", gap: 16 }}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <BizCard
           label="Brokerage"
+          subtitle="Direct sales operations"
           icon={Building2}
-          accentColor="#6366f1"
-          bg="#6366f108"
-          border="#6366f120"
+          badgeBg="bg-indigo-50/90"
+          badgeText="text-indigo-700"
+          badgeBorder="border-indigo-200/70"
           rows={[
             { label: "Revenue", value: fmt(kpis.brokerageRevenue) },
             { label: "Bookings", value: kpis.brokerageBookings },
@@ -158,10 +128,11 @@ export function BMBusinessOverview({ kpis }: { kpis: BusinessKpis }) {
         />
         <BizCard
           label="Channel Partner"
+          subtitle="External broker network"
           icon={Handshake}
-          accentColor="#0ea5e9"
-          bg="#0ea5e908"
-          border="#0ea5e920"
+          badgeBg="bg-sky-50/90"
+          badgeText="text-sky-700"
+          badgeBorder="border-sky-200/70"
           rows={[
             { label: "Revenue", value: fmt(kpis.cpRevenue) },
             { label: "Bookings", value: kpis.cpBookings },

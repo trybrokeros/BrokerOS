@@ -24,38 +24,35 @@ interface ActionItem {
 
 const severityConfig: Record<
   ActionSeverity,
-  { icon: any; bg: string; iconColor: string; border: string; badge: string; badgeBg: string }
+  { icon: any; bg: string; iconColor: string; border: string; badge: string; badgeBg: string; badgeText: string }
 > = {
   CRITICAL: {
     icon: AlertTriangle,
-    bg: "#fff1f2",
-    iconColor: "#e11d48",
-    border: "#fecdd3",
+    bg: "bg-rose-50/70",
+    iconColor: "text-rose-600",
+    border: "border-rose-200/80",
     badge: "CRITICAL",
-    badgeBg: "#fecdd3",
+    badgeBg: "bg-rose-100/80",
+    badgeText: "text-rose-700",
   },
   WARNING: {
     icon: Clock,
-    bg: "#fffbeb",
-    iconColor: "#d97706",
-    border: "#fde68a",
+    bg: "bg-amber-50/70",
+    iconColor: "text-amber-600",
+    border: "border-amber-200/80",
     badge: "ACTION NEEDED",
-    badgeBg: "#fde68a",
+    badgeBg: "bg-amber-100/80",
+    badgeText: "text-amber-800",
   },
   INFO: {
     icon: Info,
-    bg: "#f0f9ff",
-    iconColor: "#0284c7",
-    border: "#bae6fd",
+    bg: "bg-sky-50/70",
+    iconColor: "text-sky-600",
+    border: "border-sky-200/80",
     badge: "INFO",
-    badgeBg: "#bae6fd",
+    badgeBg: "bg-sky-100/80",
+    badgeText: "text-sky-800",
   },
-};
-
-const typeIcons: Record<ActionType, any> = {
-  PENDING_APPROVAL: CheckCircle2,
-  OVERDUE_PAYMENT: CreditCard,
-  HIGH_BACKLOG: Clock,
 };
 
 function timeAgo(dateStr: string): string {
@@ -75,172 +72,67 @@ export function BMActionItems({ actionItems }: { actionItems: ActionItem[] }) {
 
   return (
     <div
+      className="bg-white/95 backdrop-blur-md border border-slate-200/90 rounded-3xl p-6 transition-all duration-300"
       style={{
-        background: "var(--bg-surface)",
-        border: "1px solid var(--border-subtle)",
-        borderRadius: "var(--radius-xl)",
-        padding: 24,
-        boxShadow: "var(--shadow-sm)",
+        boxShadow:
+          "0 1px 0 rgba(255, 255, 255, 0.95) inset, 0 16px 36px -24px rgba(15, 23, 42, 0.12)",
       }}
     >
       {/* Header */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: 20,
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div
-            style={{
-              width: 34,
-              height: 34,
-              borderRadius: "var(--radius-md)",
-              background: "#e11d4815",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <AlertTriangle size={16} style={{ color: "#e11d48" }} />
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-xl bg-rose-50/90 border border-rose-200/60 flex items-center justify-center text-rose-700 shadow-2xs">
+            <AlertTriangle size={16} />
           </div>
           <div>
-            <h2
-              style={{
-                margin: 0,
-                fontSize: "var(--text-lg)",
-                fontWeight: 700,
-                color: "var(--text-primary)",
-                letterSpacing: "-0.01em",
-              }}
-            >
-              Action Required
+            <h2 className="text-xs font-black text-slate-900 uppercase tracking-wider m-0">
+              Cross-Department Operational Triage
             </h2>
-            <p
-              style={{
-                margin: 0,
-                fontSize: 11,
-                fontWeight: 600,
-                color: "var(--text-muted)",
-                textTransform: "uppercase",
-                letterSpacing: "0.04em",
-              }}
-            >
-              {actionItems.length} item{actionItems.length !== 1 ? "s" : ""} need attention
+            <p className="text-[11px] font-medium text-slate-500 mt-0.5 m-0">
+              Escalated bottlenecks across Sales, CP, and Post-Sales operations
             </p>
           </div>
         </div>
+        <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full bg-rose-50 text-rose-700 border border-rose-200/70 tabular-nums">
+          {actionItems.length} Urgent Items
+        </span>
       </div>
 
       {/* Items list */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {actionItems.map((item, i) => {
+      <div className="flex flex-col gap-2.5 max-h-[360px] overflow-y-auto pr-1">
+        {actionItems.map((item) => {
           const cfg = severityConfig[item.severity] || severityConfig.INFO;
           const SevIcon = cfg.icon;
-          const TypeIcon = typeIcons[item.type] || Info;
 
           return (
             <div
               key={item.id}
-              style={{
-                display: "flex",
-                alignItems: "flex-start",
-                gap: 14,
-                padding: "14px 16px",
-                borderRadius: "var(--radius-lg)",
-                background: cfg.bg,
-                border: `1px solid ${cfg.border}`,
-                animation: `enter 0.4s cubic-bezier(0.16,1,0.3,1) both`,
-                animationDelay: `${i * 0.06}s`,
-                cursor: "default",
-                transition: "opacity 150ms ease",
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.opacity = "0.88";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.opacity = "1";
-              }}
+              className={`flex items-start justify-between p-3.5 rounded-2xl border ${cfg.bg} ${cfg.border} transition-all duration-200 hover:shadow-2xs`}
             >
-              {/* Icon */}
-              <div
-                style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: "var(--radius-md)",
-                  background: `${cfg.iconColor}20`,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                  marginTop: 1,
-                }}
-              >
-                <SevIcon size={16} style={{ color: cfg.iconColor }} />
-              </div>
-
-              {/* Content */}
-              <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="flex items-start gap-3 min-w-0">
                 <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                    marginBottom: 4,
-                  }}
+                  className={`w-8 h-8 rounded-xl bg-white/90 border border-slate-200/70 flex items-center justify-center shrink-0 shadow-2xs ${cfg.iconColor}`}
                 >
-                  <span
-                    style={{
-                      fontSize: "var(--text-sm)",
-                      fontWeight: 700,
-                      color: "var(--text-primary)",
-                    }}
-                  >
-                    {item.title}
-                  </span>
-                  <span
-                    style={{
-                      fontSize: 9,
-                      fontWeight: 800,
-                      color: cfg.iconColor,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.06em",
-                      background: cfg.badgeBg,
-                      padding: "2px 7px",
-                      borderRadius: 999,
-                    }}
-                  >
-                    {cfg.badge}
-                  </span>
+                  <SevIcon size={15} />
                 </div>
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: "var(--text-sm)",
-                    color: "var(--text-secondary)",
-                    lineHeight: 1.5,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                    maxWidth: "100%",
-                  }}
-                >
-                  {item.description}
-                </p>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <span className="text-xs font-bold text-slate-900 truncate">
+                      {item.title}
+                    </span>
+                    <span
+                      className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${cfg.badgeBg} ${cfg.badgeText}`}
+                    >
+                      {cfg.badge}
+                    </span>
+                  </div>
+                  <p className="m-0 text-xs text-slate-600 font-medium truncate max-w-xl">
+                    {item.description}
+                  </p>
+                </div>
               </div>
 
-              {/* Time */}
-              <div
-                style={{
-                  fontSize: 11,
-                  fontWeight: 600,
-                  color: "var(--text-muted)",
-                  whiteSpace: "nowrap",
-                  flexShrink: 0,
-                }}
-              >
+              <div className="text-[11px] font-semibold text-slate-400 tabular-nums shrink-0 ml-3 mt-0.5">
                 {timeAgo(item.date)}
               </div>
             </div>
