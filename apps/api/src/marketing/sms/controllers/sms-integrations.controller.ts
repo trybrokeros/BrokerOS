@@ -13,8 +13,10 @@ import {
   AddSenderNumberDto,
   UpdateSenderNumberDto,
 } from '../dto/sms.dto.js';
+import { Roles } from '../../../auth/roles.decorator.js';
 
 @Controller('api/marketing/sms/integrations')
+@Roles('ADMIN', 'DIRECTOR', 'MARKETING', 'BUSINESS_MANAGER')
 export class SmsIntegrationsController {
   constructor(private readonly smsService: SmsService) {}
 

@@ -17,6 +17,7 @@ import {
   TestGoogleTokenDto,
   SyncGoogleCampaignsDto,
 } from '../dto/google-ads.dto.js';
+import { Roles } from '../../../../auth/roles.decorator.js';
 
 @Controller('api/marketing/ads/google')
 export class GoogleAdsController {
@@ -38,6 +39,7 @@ export class GoogleAdsController {
    * Handles Google OAuth callback, code exchange, and auto-discovers customer accounts.
    */
   @Post('oauth/callback')
+  @Roles('ADMIN', 'DIRECTOR', 'MARKETING')
   @HttpCode(HttpStatus.OK)
   async handleOAuthCallback(@Body() dto: GoogleOAuthCallbackDto) {
     return this.googleAdsService.handleOAuthCallback(dto);
@@ -47,6 +49,7 @@ export class GoogleAdsController {
    * Tests credential verification before saving.
    */
   @Post('test-connection')
+  @Roles('ADMIN', 'DIRECTOR', 'MARKETING')
   @HttpCode(HttpStatus.OK)
   async testConnection(@Body() dto: TestGoogleTokenDto) {
     return this.googleAdsService.testConnection(dto);
@@ -64,6 +67,7 @@ export class GoogleAdsController {
    * Connects a new Google Ads account integration.
    */
   @Post('integrations')
+  @Roles('ADMIN', 'DIRECTOR', 'MARKETING')
   async connectIntegration(@Body() dto: ConnectGoogleIntegrationDto) {
     return this.googleAdsService.connectIntegration(dto);
   }
@@ -72,6 +76,7 @@ export class GoogleAdsController {
    * Disconnects a Google Ads account.
    */
   @Delete('integrations/:id')
+  @Roles('ADMIN', 'DIRECTOR', 'MARKETING')
   async deleteIntegration(@Param('id') id: string) {
     return this.googleAdsService.deleteIntegration(id);
   }
@@ -80,6 +85,7 @@ export class GoogleAdsController {
    * Triggers an on-demand live GAQL sync.
    */
   @Post('integrations/:id/sync')
+  @Roles('ADMIN', 'DIRECTOR', 'MARKETING')
   @HttpCode(HttpStatus.OK)
   async syncIntegration(
     @Param('id') id: string,
