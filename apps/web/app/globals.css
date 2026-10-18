@@ -55,7 +55,8 @@
   --brand-300: oklch(0.815 0.125 275);
   --brand-400: oklch(0.715 0.185 275);
   --brand-500: oklch(0.625 0.225 275);
-  --brand-600: oklch(0.535 0.235 275); /* Primary Action */
+  --brand-600: oklch(0.535 0.235 275);
+  /* Primary Action */
   --brand-700: oklch(0.455 0.215 275);
   --brand-800: oklch(0.375 0.175 275);
   --brand-900: oklch(0.285 0.135 275);
@@ -141,7 +142,12 @@ body {
 }
 
 /* ─── Headings & Paragraph Typography Defaults ─────────────────────── */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   text-wrap: balance;
   letter-spacing: -0.025em;
   font-weight: 700;
@@ -186,10 +192,12 @@ p {
 
 /* ─── Utility Classes ──────────────────────────────────────────────── */
 @layer utilities {
+
   /* Scrollbar hide */
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -206,6 +214,7 @@ p {
       box-shadow var(--duration-base) var(--ease-out-expo),
       border-color var(--duration-base) var(--ease-out-expo);
   }
+
   .hover-lift:hover {
     transform: translateY(-2px);
     box-shadow: var(--shadow-md);
@@ -215,6 +224,7 @@ p {
   .press-effect {
     transition: transform var(--duration-fast) var(--ease-in-out);
   }
+
   .press-effect:active:not(:disabled) {
     transform: scale(0.96);
   }
@@ -273,6 +283,7 @@ p {
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -280,15 +291,23 @@ p {
 }
 
 @keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes pulse-subtle {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
     transform: scale(1);
   }
+
   50% {
     opacity: 0.75;
     transform: scale(0.98);
@@ -296,15 +315,75 @@ p {
 }
 
 @keyframes pulse-brand {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 0 0 0 oklch(0.535 0.235 275 / 0);
   }
+
   50% {
     box-shadow: 0 0 0 6px oklch(0.535 0.235 275 / 0.15);
   }
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ─── Template-Inspired Craftsmanship (Rapport & Wharf Foundations) ─── */
+@layer utilities {
+
+  /* Warm Parchment & Earthy Surfaces */
+  .surface-parchment {
+    background-color: #f7f5ef;
+    color: #17191a;
+  }
+
+  .surface-pine {
+    background-color: #2f5c50;
+    color: #fbf8f2;
+  }
+
+  .surface-butter {
+    background-color: #f2c94c;
+    color: #17191a;
+  }
+
+  .surface-tomato {
+    background-color: #c8431f;
+    color: #fbf8f2;
+  }
+
+  .surface-ink {
+    background-color: #17191a;
+    color: #fbf8f2;
+  }
+
+  /* Dual-layer card depth: crisp top inset highlight + soft diffused shadow */
+  .card-template {
+    background-color: var(--bg-surface);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.9) inset, 0 20px 48px -24px rgba(30, 24, 20, 0.12);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: var(--radius-2xl);
+  }
+
+  /* Optical concentric tile */
+  .tile-template {
+    border-radius: var(--radius-xl);
+    border: 1px solid rgba(0, 0, 0, 0.07);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.8) inset, 0 12px 28px -18px rgba(30, 24, 20, 0.08);
+  }
+
+  /* Tabular numeric typography */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+    letter-spacing: -0.02em;
+  }
 }

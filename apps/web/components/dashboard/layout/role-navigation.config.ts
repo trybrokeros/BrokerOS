@@ -346,3 +346,46 @@ export function getRoleNavLinks(userRole: string, pathname: string): NavLinkItem
     { name: "Overview", href: "/dashboard/pre-sales", icon: LayoutDashboard, roles: ["*"] },
   ];
 }
+
+export const ROLE_TO_ROUTE_MAP: Record<string, string> = {
+  PRE_SALES: "/dashboard/pre-sales",
+  PRE_SALES_MANAGER: "/dashboard/pre-sales-manager",
+  SALES_EXECUTIVE: "/dashboard/sales-executive",
+  SALES_MANAGER: "/dashboard/sales-manager",
+  POST_SALES: "/dashboard/post-sales",
+  POST_SALES_MANAGER: "/dashboard/post-sales-manager",
+  FINANCE: "/dashboard/finance",
+  BUSINESS_MANAGER: "/dashboard/business-manager",
+  DIRECTOR: "/dashboard/director",
+  ADMIN: "/dashboard/admin",
+  MARKETING: "/dashboard/marketing",
+  SOURCING_MANAGER: "/dashboard/sourcing-manager",
+  CLOSING_MANAGER: "/dashboard/closing-manager",
+  CHANNEL_PARTNER: "/dashboard/channel-partner",
+};
+
+export const ROLE_SECTION_PERMISSIONS: Record<string, string[]> = {
+  admin: ["ADMIN"],
+  finance: ["FINANCE", "DIRECTOR", "ADMIN"],
+  "business-manager": ["BUSINESS_MANAGER", "ADMIN"],
+  director: ["DIRECTOR", "ADMIN"],
+  "pre-sales-manager": ["PRE_SALES_MANAGER", "ADMIN"],
+  "pre-sales": ["PRE_SALES", "PRE_SALES_MANAGER", "DIRECTOR", "ADMIN"],
+  "sales-manager": ["SALES_MANAGER", "ADMIN"],
+  "sales-executive": ["SALES_EXECUTIVE", "SALES_MANAGER", "ADMIN"],
+  "post-sales-manager": ["POST_SALES_MANAGER", "ADMIN"],
+  "post-sales": ["POST_SALES", "POST_SALES_MANAGER", "DIRECTOR", "ADMIN"],
+  "sourcing-manager": ["SOURCING_MANAGER", "ADMIN"],
+  "closing-manager": ["CLOSING_MANAGER", "ADMIN"],
+  "channel-partner": ["CHANNEL_PARTNER", "ADMIN"],
+  marketing: ["MARKETING", "BUSINESS_MANAGER", "DIRECTOR", "ADMIN"],
+};
+
+export function isSectionAllowedForRole(section: string, roleCode: string): boolean {
+  if (!section) return true;
+  if (roleCode === "ADMIN") return true;
+  const allowed = ROLE_SECTION_PERMISSIONS[section];
+  if (!allowed) return true; // Unrestricted sections (e.g. inbox, overview)
+  return allowed.includes(roleCode);
+}
+

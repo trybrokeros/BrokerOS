@@ -4,23 +4,7 @@ import { authClient } from "@/lib/auth-client";
 import { Building2, ShieldCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-
-const roleToRouteMap: Record<string, string> = {
-  PRE_SALES: "/dashboard/pre-sales",
-  PRE_SALES_MANAGER: "/dashboard/pre-sales-manager",
-  SALES_EXECUTIVE: "/dashboard/sales-executive",
-  SALES_MANAGER: "/dashboard/sales-manager",
-  POST_SALES: "/dashboard/post-sales",
-  POST_SALES_MANAGER: "/dashboard/post-sales-manager",
-  FINANCE: "/dashboard/finance",
-  BUSINESS_MANAGER: "/dashboard/business-manager",
-  DIRECTOR: "/dashboard/director",
-  ADMIN: "/dashboard/admin",
-  MARKETING: "/dashboard/marketing",
-  SOURCING_MANAGER: "/dashboard/sourcing-manager",
-  CLOSING_MANAGER: "/dashboard/closing-manager",
-  CHANNEL_PARTNER: "/dashboard/channel-partner",
-};
+import { ROLE_TO_ROUTE_MAP } from "@/components/dashboard/layout/role-navigation.config";
 
 export default function DashboardOverview() {
   const { data: session, isPending } = authClient.useSession();
@@ -36,8 +20,8 @@ export default function DashboardOverview() {
           .then((roles) => {
             if (Array.isArray(roles)) {
               const role = roles.find((r: any) => r.id === user.roleId);
-              if (role && roleToRouteMap[role.code]) {
-                router.replace(roleToRouteMap[role.code]);
+              if (role && ROLE_TO_ROUTE_MAP[role.code]) {
+                router.replace(ROLE_TO_ROUTE_MAP[role.code]);
               }
             }
           })
@@ -50,8 +34,8 @@ export default function DashboardOverview() {
     <div className="max-w-md mx-auto flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
       {/* Brand Icon with Spinner */}
       <div className="relative mb-6">
-        <div className="w-16 h-16 rounded-2xl bg-[var(--brand-600)] flex items-center justify-center text-white shadow-lg shadow-purple-600/25">
-          <Building2 className="w-8 h-8 text-white" strokeWidth={2.2} />
+        <div className="w-16 h-16 rounded-4xl bg-[var(--brand-600)] flex items-center justify-center text-white shadow-lg shadow-purple-600/25">
+          <Building2 className="w-7 h-7 text-white" strokeWidth={2.2} />
         </div>
         <div className="absolute -inset-2 rounded-3xl border-2 border-transparent border-t-[var(--brand-600)] animate-spin pointer-events-none" />
       </div>
