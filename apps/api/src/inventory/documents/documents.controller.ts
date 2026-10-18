@@ -16,6 +16,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { DocumentsService } from './documents.service.js';
 import { AuthGuard } from '@thallesp/nestjs-better-auth';
 import { UploadDocumentDto } from './dto/document.dto.js';
+import { Roles } from '../../auth/roles.decorator.js';
 
 @Controller('api/inventory/projects/:projectId/documents')
 @UseGuards(AuthGuard)
@@ -42,6 +43,7 @@ export class DocumentsController {
   }
 
   @Post()
+  @Roles('ADMIN', 'DIRECTOR', 'BUSINESS_MANAGER', 'SALES_MANAGER', 'SOURCING_MANAGER', 'CHANNEL_PARTNER')
   @UseInterceptors(FileInterceptor('file'))
   async uploadDocument(
     @Param('projectId') projectId: string,
@@ -87,6 +89,7 @@ export class DocumentsController {
   }
 
   @Delete(':id')
+  @Roles('ADMIN', 'DIRECTOR', 'BUSINESS_MANAGER', 'SALES_MANAGER', 'CHANNEL_PARTNER')
   async deleteDocument(@Param('id') id: string) {
     return this.documentsService.deleteDocument(id);
   }

@@ -15,6 +15,7 @@ import {
   CreateProjectDto,
   AssignProjectDto,
 } from './dto/project.dto.js';
+import { Roles } from '../../auth/roles.decorator.js';
 
 @Controller('api/inventory/projects')
 @UseGuards(AuthGuard)
@@ -28,6 +29,7 @@ export class ProjectsController {
   }
 
   @Post()
+  @Roles('ADMIN', 'DIRECTOR', 'BUSINESS_MANAGER', 'SALES_MANAGER', 'CHANNEL_PARTNER')
   async createProject(@Body() data: CreateProjectDto, @Req() req: any) {
     const userId = req.user?.id;
     return this.inventoryService.createProject(data, userId);
@@ -38,16 +40,8 @@ export class ProjectsController {
     @Param('projectId') projectId: string,
     @Req() req: any,
   ) {
-    try {
-      const userId = req.user?.id;
-      return await this.inventoryService.getProjectTowers(projectId, userId);
-    } catch (e) {
-      require('fs').writeFileSync(
-        'debug-error.log',
-        e.stack || e.message || String(e),
-      );
-      throw e;
-    }
+    const userId = req.user?.id;
+    return this.inventoryService.getProjectTowers(projectId, userId);
   }
 
   @Get('towers/:towerId/assignments')
@@ -56,6 +50,7 @@ export class ProjectsController {
   }
 
   @Post('towers/:towerId/assign')
+  @Roles('ADMIN', 'DIRECTOR', 'BUSINESS_MANAGER', 'SALES_MANAGER', 'PRE_SALES_MANAGER', 'SOURCING_MANAGER', 'CHANNEL_PARTNER')
   async assignTower(
     @Param('towerId') towerId: string,
     @Body() data: AssignProjectDto,
@@ -74,6 +69,7 @@ export class ProjectsController {
   }
 
   @Post(':projectId/assign')
+  @Roles('ADMIN', 'DIRECTOR', 'BUSINESS_MANAGER', 'SALES_MANAGER', 'PRE_SALES_MANAGER', 'SOURCING_MANAGER', 'CHANNEL_PARTNER')
   async assignProject(
     @Param('projectId') projectId: string,
     @Body() data: AssignProjectDto,

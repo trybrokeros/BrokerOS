@@ -2,9 +2,11 @@ import { Controller, Post, Body, Param, UseGuards } from '@nestjs/common';
 import { InventoryService } from '../core/inventory.service.js';
 import { AuthGuard } from '@thallesp/nestjs-better-auth';
 import { GenerateTowerPromptDto, SaveTowerDto } from './dto/tower.dto.js';
+import { Roles } from '../../auth/roles.decorator.js';
 
 @Controller('api/inventory/projects')
 @UseGuards(AuthGuard)
+@Roles('ADMIN', 'DIRECTOR', 'BUSINESS_MANAGER', 'SALES_MANAGER', 'CHANNEL_PARTNER')
 export class TowerGenController {
   constructor(private readonly inventoryService: InventoryService) {}
 
